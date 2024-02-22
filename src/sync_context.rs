@@ -40,14 +40,19 @@ impl MaaSyncContext {
         }
     }
 
-    pub fn run_recognizer(
+    pub fn run_recognizer<T>(
         &self,
         image: MaaImageBuffer,
         task_name: &str,
-        task_param: &str,
-    ) -> MaaResult<(MaaRectBuffer, String)> {
+        task_param: T,
+    ) -> MaaResult<(MaaRectBuffer, String)>
+    where
+        T: TaskParam,
+    {
         let rect_buffer = MaaRectBuffer::new();
         let result = MaaStringBuffer::new();
+
+        let task_param = task_param.get_param();
 
         let ret = unsafe {
             internal::MaaSyncContextRunRecognizer(
@@ -74,7 +79,7 @@ impl MaaSyncContext {
         task_name: &str,
         task_param: T,
         cur_box: MaaRectBuffer,
-        cur_rec_detail: String,
+        cur_rec_detail: &str,
     ) -> MaaResult<()>
     where
         T: TaskParam,

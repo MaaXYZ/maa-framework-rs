@@ -233,3 +233,15 @@ pub struct AdbDeviceInfo {
     pub adb_controller_type: MaaAdbControllerType,
     pub adb_config: String,
 }
+
+#[cfg(test)]
+mod test {
+    use super::MaaToolkit;
+
+    #[test]
+    fn test_init() {
+        let toolkit = MaaToolkit::new();
+
+        assert!(toolkit.is_ok());
+    }
+}

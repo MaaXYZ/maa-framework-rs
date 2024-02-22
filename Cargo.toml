@@ -14,7 +14,7 @@ thiserror = "1.0.57"
 bindgen = "0.69.4"
 
 [features]
-default=["toolkit","adb"]
+default=["toolkit","adb","win32","dbg","custom","internal"]
 toolkit=[]
 adb=[]
 win32=[]

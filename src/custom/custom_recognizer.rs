@@ -8,7 +8,7 @@ use crate::{
 pub trait MaaCustomRecognizer {
     fn analyze(
         &mut self,
-        sync_content: MaaSyncContext,
+        sync_context: MaaSyncContext,
         image: MaaImageBuffer,
         task_name: String,
         custom_recognition_param: String,

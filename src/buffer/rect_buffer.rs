@@ -1,8 +1,21 @@
+use std::fmt::Debug;
+
 use crate::internal;
 
 pub struct MaaRectBuffer {
     pub(crate) handle: internal::MaaRectHandle,
     destroy_at_drop: bool,
+}
+
+impl Debug for MaaRectBuffer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("MaaRectBuffer")
+            .field("x", &self.x())
+            .field("y", &self.y())
+            .field("width", &self.width())
+            .field("height", &self.height())
+            .finish()
+    }
 }
 
 impl From<internal::MaaRectHandle> for MaaRectBuffer {
@@ -43,28 +56,36 @@ impl MaaRectBuffer {
         unsafe { internal::MaaGetRectH(self.handle) }
     }
 
-    pub fn set_x(&self, x: i32) {
+    pub fn set_x(self, x: i32) -> Self {
         unsafe {
             internal::MaaSetRectX(self.handle, x);
-        }
+        };
+
+        self
     }
 
-    pub fn set_y(&self, y: i32) {
+    pub fn set_y(self, y: i32) -> Self {
         unsafe {
             internal::MaaSetRectY(self.handle, y);
-        }
+        };
+
+        self
     }
 
-    pub fn set_width(&self, width: i32) {
+    pub fn set_width(self, width: i32) -> Self {
         unsafe {
             internal::MaaSetRectW(self.handle, width);
         }
+
+        self
     }
 
-    pub fn set_height(&self, height: i32) {
+    pub fn set_height(self, height: i32) -> Self {
         unsafe {
             internal::MaaSetRectH(self.handle, height);
         }
+
+        self
     }
 }
 
