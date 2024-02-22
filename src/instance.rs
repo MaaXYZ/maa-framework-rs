@@ -70,14 +70,17 @@ unsafe impl<T> Send for MaaInstance<T> {}
 unsafe impl<T> Sync for MaaInstance<T> {}
 
 impl<T> MaaInstance<T> {
-    pub fn new(handler: T) -> Self
+    pub fn new(handler: Option<T>) -> Self
     where
         T: CallbackHandler,
     {
-        let callback_arg = Box::into_raw(Box::new(handler)) as *mut std::ffi::c_void;
-
-        let handle =
-            unsafe { internal::MaaCreate(Some(internal::callback_handler::<T>), callback_arg) };
+        let handle = unsafe {match handler {
+            Some(handler) => {
+                let callback_arg = Box::into_raw(Box::new(handler)) as *mut std::ffi::c_void;
+                internal::MaaCreate(Some(internal::callback_handler::<T>), callback_arg)
+            },
+            None => internal::MaaCreate(None, null_mut()),
+        }};
 
         MaaInstance {
             handle,
