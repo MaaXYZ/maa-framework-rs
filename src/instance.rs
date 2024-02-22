@@ -8,7 +8,7 @@ use crate::{
 };
 
 #[cfg(feature = "custom_recognizer")]
-use crate::custom::custom_recognier::{custom_recognier_analyze, MaaCustomRecognizer};
+use crate::custom::custom_recognizer::{custom_recognier_analyze, MaaCustomRecognizer};
 
 #[cfg(feature = "custom_action")]
 use crate::custom::custom_action::{
