@@ -1,0 +1,27 @@
+[package]
+name = "maa-framework"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = { version = "1.0.197", features=["derive"] }
+serde_json = "1.0.114"
+thiserror = "1.0.57"
+
+[build-dependencies]
+bindgen = "0.69.4"
+
+[features]
+default=["toolkit","adb"]
+toolkit=[]
+adb=[]
+win32=[]
+dbg=[]
+custom=["custom_recognizer","custom_controller","custom_action","sync_context"]
+custom_recognizer=["sync_context"]
+custom_controller=["sync_context"]
+custom_action=["sync_context"]
+sync_context=[]
+internal=[]
