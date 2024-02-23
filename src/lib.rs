@@ -2,6 +2,7 @@
 
 use std::{ffi::c_void, fmt::Display, ptr::null_mut};
 
+use msg::MaaMsg;
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "internal")]
@@ -53,7 +54,7 @@ impl TryFrom<internal::MaaStatus> for MaaStatus {
 }
 
 pub trait CallbackHandler {
-    fn handle(&self, msg: &str, details_json: &str);
+    fn handle(&self, msg: MaaMsg);
 }
 
 pub fn maa_version() -> String {

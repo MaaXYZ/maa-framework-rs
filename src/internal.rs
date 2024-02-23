@@ -3,7 +3,7 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-use crate::CallbackHandler;
+use crate::{msg::MaaMsg, CallbackHandler};
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
@@ -56,6 +56,7 @@ pub(crate) unsafe extern "C" fn callback_handler<T: CallbackHandler>(
 ) {
     let msg = string!(msg);
     let details_json = string!(details_json);
+    let maa_msg = MaaMsg::from(&msg, &details_json).unwrap();
     let handler = user_data.cast::<T>();
-    handler.as_ref().unwrap().handle(&msg, &details_json);
+    handler.as_ref().unwrap().handle(maa_msg);
 }

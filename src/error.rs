@@ -117,4 +117,13 @@ pub enum Error {
 
     #[error("MaaToolkit fails to unregister custom recognizer executor")]
     MaaToolkitUnregisterCustomRecognizerExecutorError,
+
+    #[error("(De)serialize error: {0}")]
+    SerdeError(String),
+}
+
+impl From<serde_json::Error> for Error {
+    fn from(e: serde_json::Error) -> Self {
+        Error::SerdeError(e.to_string())
+    }
 }
