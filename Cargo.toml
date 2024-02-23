@@ -1,7 +1,12 @@
 [package]
 name = "maa-framework"
+description = "Rust bindings for MaaFramework"
 version = "0.1.0"
 edition = "2021"
+license-file = "LICENSE.md"
+homepage = "https://github.com/MaaAssistantArknights/MaaFramework"
+repository = "https://github.com/MaaAssistantArknights/MaaFramework"
+readme = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
