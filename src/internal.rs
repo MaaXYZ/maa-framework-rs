@@ -57,6 +57,6 @@ pub(crate) unsafe extern "C" fn callback_handler<T: CallbackHandler>(
     let msg = string!(msg);
     let details_json = string!(details_json);
     let maa_msg = MaaMsg::from(&msg, &details_json).unwrap();
-    let handler = user_data.cast::<T>();
-    handler.as_ref().unwrap().handle(maa_msg);
+    let callback_handler = &mut *(user_data as *mut T);
+    callback_handler.handle(maa_msg);
 }

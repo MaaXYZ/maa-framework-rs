@@ -50,6 +50,19 @@ impl MaaInstOption {
     }
 }
 
+/// The MaaInstance struct is the main entry point for the Maa library.
+///
+/// It is used to create and manage the Maa instance for running tasks.
+///
+/// # Example
+///
+/// ```
+/// use maa_framework::instance::MaaInstance;
+///
+/// let instance = MaaInstance::new(None);
+/// // let param = serde_json::json!({"param": "value"});
+/// // instance.post_task("task", param);
+/// ```
 #[derive(Debug)]
 pub struct MaaInstance<T> {
     pub(crate) handle: internal::MaaInstanceHandle,
@@ -70,17 +83,25 @@ unsafe impl<T> Send for MaaInstance<T> {}
 unsafe impl<T> Sync for MaaInstance<T> {}
 
 impl<T> MaaInstance<T> {
+
+    /// Create a new MaaInstance.
+    ///
+    /// # Parameters
+    ///
+    /// * `handler` - An optional callback handler for handling Maa events.
     pub fn new(handler: Option<T>) -> Self
     where
         T: CallbackHandler,
     {
-        let handle = unsafe {match handler {
-            Some(handler) => {
-                let callback_arg = Box::into_raw(Box::new(handler)) as *mut std::ffi::c_void;
-                internal::MaaCreate(Some(internal::callback_handler::<T>), callback_arg)
-            },
-            None => internal::MaaCreate(None, null_mut()),
-        }};
+        let handle = unsafe {
+            match handler {
+                Some(handler) => {
+                    let callback_arg = Box::into_raw(Box::new(handler)) as *mut std::ffi::c_void;
+                    internal::MaaCreate(Some(internal::callback_handler::<T>), callback_arg)
+                }
+                None => internal::MaaCreate(None, null_mut()),
+            }
+        };
 
         MaaInstance {
             handle,

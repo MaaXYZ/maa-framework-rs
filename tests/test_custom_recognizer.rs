@@ -1,5 +1,7 @@
 use maa_framework::{
-    self, buffer::rect_buffer::MaaRectBuffer, custom::{custom_action::MaaCustomAction, custom_recognizer::MaaCustomRecognizer},
+    self,
+    buffer::rect_buffer::MaaRectBuffer,
+    custom::{custom_action::MaaCustomAction, custom_recognizer::MaaCustomRecognizer},
 };
 use serde_json::json;
 
@@ -60,16 +62,14 @@ impl MaaCustomRecognizer for CustomRecognizer {
 struct CustomAction;
 
 impl MaaCustomAction for CustomAction {
-
     fn run(
-            &mut self,
-            sync_context: maa_framework::sync_context::MaaSyncContext,
-            task_name: String,
-            custom_action_param: String,
-            cur_box: MaaRectBuffer,
-            cur_rec_detail: String,
-        ) -> bool {
-
+        &mut self,
+        sync_context: maa_framework::sync_context::MaaSyncContext,
+        task_name: String,
+        custom_action_param: String,
+        cur_box: MaaRectBuffer,
+        cur_rec_detail: String,
+    ) -> bool {
         let new_image = sync_context.screencap();
         let new_image = new_image.unwrap();
         println!("New image width: {}", new_image.width());
