@@ -17,6 +17,8 @@ thiserror = "^1.0"
 
 [build-dependencies]
 bindgen = "0.69.4"
+ureq = "2.9.6"
+zip = { version = "0.6.6", default-features = false, features = ["deflate"] }
 
 [features]
 default=["toolkit","adb","win32","dbg","custom","internal"]
@@ -30,3 +32,4 @@ custom_controller=["sync_context"]
 custom_action=["sync_context"]
 sync_context=[]
 internal=[]
+download=[]

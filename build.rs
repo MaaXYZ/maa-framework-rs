@@ -1,4 +1,7 @@
-use std::{path::PathBuf, process::Command};
+#[path = "build/bundled.rs"]
+mod bundled;
+#[path = "build/cmake_probe.rs"]
+mod cmake_probe;
 
 fn main() {
     println!("cargo:rerun-if-changed=./cmake/CMakeLists.txt");
@@ -6,12 +9,15 @@ fn main() {
     let mut include_dir = vec![];
     let mut lib_dir = vec![];
 
-    if cmake_probe(&mut include_dir, &mut lib_dir).is_err() {
+    #[cfg(not(feature = "bundled"))]
+    if cmake_probe::cmake_probe(&mut include_dir, &mut lib_dir).is_err() {
         panic!("Unable to find MaaFramework libraries");
     }
 
-    println!("include_dir: {:?}", include_dir);
-    println!("lib_dir: {:?}", lib_dir);
+    #[cfg(feature = "bundled")]
+    if bundled::get_bundled_dir(&mut include_dir, &mut lib_dir).is_err() {
+        panic!("Unable to download MaaFramework libraries");
+    }
 
     for dir in &include_dir {
         println!("cargo:include={}", dir.display());
@@ -44,35 +50,4 @@ fn main() {
     bindings
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
-}
-
-fn cmake_probe(include_dir: &mut Vec<PathBuf>, libs: &mut Vec<PathBuf>) -> Result<(), ()> {
-
-    let out_dir = std::env::var("OUT_DIR").map_err(|_| ())?;
-
-    let cmake_dir = PathBuf::from(out_dir).join("cmake");
-
-    let cmd = Command::new("cmake")
-        .arg("./cmake")
-        .arg("-B")
-        .arg(cmake_dir)
-        .arg("-DCMAKE_BUILD_TYPE=Release")
-        .output();
-
-    let output = cmd.map_err(|_| ())?;
-
-    let stderr = String::from_utf8(output.stderr).map_err(|_| ())?;
-
-    println!("{}", stderr);
-    for line in stderr.lines() {
-        if line.starts_with("IncludeDir") {
-            let path = line.split('=').nth(1).ok_or(())?;
-            include_dir.push(PathBuf::from(path));
-        } else if line.starts_with("MaaFrameworkLibraries") {
-            let path = line.split('=').nth(1).ok_or(())?;
-            libs.push(PathBuf::from(path).parent().unwrap().to_path_buf());
-        }
-    }
-
-    Ok(())
 }
