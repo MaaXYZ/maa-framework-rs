@@ -47,10 +47,15 @@ fn main() {
 }
 
 fn cmake_probe(include_dir: &mut Vec<PathBuf>, libs: &mut Vec<PathBuf>) -> Result<(), ()> {
+
+    let out_dir = std::env::var("OUT_DIR").map_err(|_| ())?;
+
+    let cmake_dir = PathBuf::from(out_dir).join("cmake");
+
     let cmd = Command::new("cmake")
         .arg("./cmake")
         .arg("-B")
-        .arg("build")
+        .arg(cmake_dir)
         .arg("-DCMAKE_BUILD_TYPE=Release")
         .output();
 
