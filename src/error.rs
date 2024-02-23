@@ -4,11 +4,15 @@ use thiserror::Error;
 use crate::{
     controller::MaaControllerOption,
     instance::{MaaInstOption, MaaTaskId},
-    resource::MaaResOption,
+    resource::MaaResOption, MaaGlobalOption,
 };
 
 #[derive(Error, Debug, Serialize, Deserialize)]
 pub enum Error {
+
+    #[error("Maa fails to set global option {0}")]
+    MaaSetGlobalOptionError(MaaGlobalOption),
+
     #[error("MaaToolkit failed to init")]
     MaaToolkitInitError,
 
