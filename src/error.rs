@@ -119,6 +119,9 @@ pub enum Error {
     #[error("MaaToolkit fails to unregister custom recognizer executor")]
     MaaToolkitUnregisterCustomRecognizerExecutorError,
 
+    #[error("MaaToolkit fails to find device")]
+    MaaToolkitPostFindDeviceError,
+
     #[error("(De)serialize error: {0}")]
     SerdeError(String),
 }

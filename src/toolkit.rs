@@ -35,9 +35,15 @@ impl MaaToolkit {
     /// Return an error if fails to convert MaaStringView to String
     #[cfg(feature = "adb")]
     pub fn find_adb_device(&self) -> MaaResult<Vec<AdbDeviceInfo>> {
-        let device_count = unsafe { internal::MaaToolkitPostFindDevice() };
+        let ret = unsafe { internal::MaaToolkitPostFindDevice() };
 
-        self.get_adb_devices_info(device_count.into())
+        if !maa_bool!(ret) {
+            return Err(Error::MaaToolkitPostFindDeviceError);
+        }
+
+        let device_count = unsafe { internal::MaaToolkitWaitForFindDeviceToComplete() };
+
+        self.get_adb_devices_info(device_count)
     }
 
     /// Find all the devices with a given adb path
@@ -48,9 +54,15 @@ impl MaaToolkit {
     #[cfg(feature = "adb")]
     pub fn find_adb_device_with_adb(&self,adb_path: &str) -> MaaResult<Vec<AdbDeviceInfo>> {
         let adb_path = string_view!(adb_path);
-        let device_count = unsafe { internal::MaaToolkitPostFindDeviceWithAdb(adb_path) };
+        let ret = unsafe { internal::MaaToolkitPostFindDeviceWithAdb(adb_path) };
 
-        self.get_adb_devices_info(device_count.into())
+        if !maa_bool!(ret) {
+            return Err(Error::MaaToolkitPostFindDeviceError);
+        }
+
+        let device_count = unsafe { internal::MaaToolkitWaitForFindDeviceToComplete() };
+
+        self.get_adb_devices_info(device_count)
     }
 
     #[cfg(feature = "adb")]
