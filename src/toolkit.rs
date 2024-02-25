@@ -34,10 +34,10 @@ impl MaaToolkit {
     ///
     /// Return an error if fails to convert MaaStringView to String
     #[cfg(feature = "adb")]
-    pub fn find_adb_device() -> MaaResult<Vec<AdbDeviceInfo>> {
+    pub fn find_adb_device(&self) -> MaaResult<Vec<AdbDeviceInfo>> {
         let device_count = unsafe { internal::MaaToolkitPostFindDevice() };
 
-        Self::get_adb_devices_info(device_count.into())
+        self.get_adb_devices_info(device_count.into())
     }
 
     /// Find all the devices with a given adb path
@@ -46,15 +46,15 @@ impl MaaToolkit {
     ///
     /// Return an error if fails to convert MaaStringView to String
     #[cfg(feature = "adb")]
-    pub fn find_adb_device_with_adb(adb_path: &str) -> MaaResult<Vec<AdbDeviceInfo>> {
+    pub fn find_adb_device_with_adb(&self,adb_path: &str) -> MaaResult<Vec<AdbDeviceInfo>> {
         let adb_path = string_view!(adb_path);
         let device_count = unsafe { internal::MaaToolkitPostFindDeviceWithAdb(adb_path) };
 
-        Self::get_adb_devices_info(device_count.into())
+        self.get_adb_devices_info(device_count.into())
     }
 
     #[cfg(feature = "adb")]
-    fn get_adb_devices_info(device_count: u64) -> MaaResult<Vec<AdbDeviceInfo>> {
+    fn get_adb_devices_info(&self, device_count: u64) -> MaaResult<Vec<AdbDeviceInfo>> {
         let mut devices = Vec::with_capacity(device_count as usize);
 
         for i in 0..device_count {
@@ -83,6 +83,7 @@ impl MaaToolkit {
     }
 
     pub fn register_custom_recognizer_executor<T>(
+        &self,
         handle: MaaInstance<T>,
         recognizer_name: &str,
         recognizer_exec_path: &str,
@@ -109,6 +110,7 @@ impl MaaToolkit {
     }
 
     pub fn unregister_custom_recognizer_executor<T>(
+        &self,
         handle: MaaInstance<T>,
         recognizer_name: &str,
     ) -> MaaResult<()> {
@@ -126,6 +128,7 @@ impl MaaToolkit {
     }
 
     pub fn register_custom_action_executor<T>(
+        &self,
         handle: MaaInstance<T>,
         action_name: &str,
         action_exec_path: &str,
@@ -152,6 +155,7 @@ impl MaaToolkit {
     }
 
     pub fn unregister_custom_action_executor<T>(
+        &self,
         handle: MaaInstance<T>,
         action_name: &str,
     ) -> MaaResult<()> {
@@ -174,7 +178,7 @@ impl MaaToolkit {
     /// - `window_name`: The window name of the window
     /// - `find`: If true, find the window using system win32 api, otherwise search the window with text match
     #[cfg(feature = "win32")]
-    pub fn find_win32_window(class_name: &str, window_name: &str, find: bool) -> Vec<MaaWin32Hwnd> {
+    pub fn find_win32_window(&self,class_name: &str, window_name: &str, find: bool) -> Vec<MaaWin32Hwnd> {
         let class_name = string_view!(class_name);
         let window_name = string_view!(window_name);
 
@@ -197,19 +201,19 @@ impl MaaToolkit {
     }
 
     #[cfg(feature = "win32")]
-    pub fn get_cursor_window() -> MaaWin32Hwnd {
+    pub fn get_cursor_window(&self) -> MaaWin32Hwnd {
         let hwnd = unsafe { internal::MaaToolkitGetCursorWindow() };
         MaaWin32Hwnd(hwnd)
     }
 
     #[cfg(feature = "win32")]
-    pub fn get_desktop_window() -> MaaWin32Hwnd {
+    pub fn get_desktop_window(&self) -> MaaWin32Hwnd {
         let hwnd = unsafe { internal::MaaToolkitGetDesktopWindow() };
         MaaWin32Hwnd(hwnd)
     }
 
     #[cfg(feature = "win32")]
-    pub fn get_foreground_window() -> MaaWin32Hwnd {
+    pub fn get_foreground_window(&self) -> MaaWin32Hwnd {
         let hwnd = unsafe { internal::MaaToolkitGetForegroundWindow() };
         MaaWin32Hwnd(hwnd)
     }
