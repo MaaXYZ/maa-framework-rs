@@ -34,7 +34,7 @@ impl MaaStringBuffer {
     }
 
     pub fn set_string(&self, content: &str) -> MaaResult<()> {
-        let content_str = string_view!(content);
+        string_view!(content, content_str);
         let ret = unsafe { internal::MaaSetString(self.handle, content_str) };
 
         maa_bool!(ret, MaaSetStringError, content.to_owned())

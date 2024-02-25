@@ -79,7 +79,7 @@ impl<T> MaaResourceInstance<T> {
     }
 
     pub fn post_path(&self, path: &str) -> MaaResId {
-        let path = string_view!(path);
+        string_view!(path,path);
         unsafe { internal::MaaResourcePostPath(self.handle, path) }
     }
 

@@ -58,10 +58,10 @@ impl<T> MaaControllerInstance<T> {
     where
         T: CallbackHandler,
     {
-        let adb_path = string_view!(adb_path);
-        let address = string_view!(address);
-        let config = string_view!(config);
-        let agent_path = string_view!(agent_path);
+        string_view!(adb_path, adb_path);
+        string_view!(address, address);
+        string_view!(config, config);
+        string_view!(agent_path, agent_path);
 
         let handle = unsafe {
             match handler {
@@ -145,9 +145,9 @@ impl<T> MaaControllerInstance<T> {
     where
         T: CallbackHandler,
     {
-        let read_path = string_view!(read_path);
-        let write_path = string_view!(write_path);
-        let config = string_view!(config);
+        string_view!(read_path, read_path);
+        string_view!(write_path, write_path);
+        string_view!(config, config);
 
         let handle = unsafe {
             match handler {
@@ -303,7 +303,7 @@ impl<T> MaaControllerInstance<T> {
     }
 
     pub fn post_input_text(&self, text: &str) -> MaaCtrlId {
-        let text = string_view!(text);
+        string_view!(text, text);
         unsafe { internal::MaaControllerPostInputText(self.handle, text) }
     }
 

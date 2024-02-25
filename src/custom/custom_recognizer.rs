@@ -44,7 +44,7 @@ where
         out_box,
     ) {
         Some(string) => {
-            let string = string_view!(string);
+            string_view!(string, string);
             internal::MaaSetString(out_string, string);
             internal::MaaBool::from(true)
         }

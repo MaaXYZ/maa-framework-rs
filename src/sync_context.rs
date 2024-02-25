@@ -26,8 +26,8 @@ impl MaaSyncContext {
         T: TaskParam,
     {
         let param = param.get_param();
-        let name = string_view!(task_name);
-        let param = string_view!(param);
+        string_view!(task_name,name);
+        string_view!(param, param);
 
         let ret = unsafe { internal::MaaSyncContextRunTask(self.handle, name, param) };
 
@@ -54,12 +54,15 @@ impl MaaSyncContext {
 
         let task_param = task_param.get_param();
 
+        string_view!(task_name, name);
+        string_view!(task_param, task_param);
+
         let ret = unsafe {
             internal::MaaSyncContextRunRecognizer(
                 self.handle,
                 image.handle,
-                string_view!(task_name),
-                string_view!(task_param),
+                name,
+                task_param,
                 rect_buffer.handle,
                 result.handle,
             )
@@ -84,10 +87,11 @@ impl MaaSyncContext {
     where
         T: TaskParam,
     {
+
         let param = task_param.get_param();
-        let name = string_view!(task_name);
-        let param = string_view!(param);
-        let cur_rec_detail = string_view!(cur_rec_detail);
+        string_view!(task_name, name);
+        string_view!(param, param);
+        string_view!(cur_rec_detail, cur_rec_detail);
 
         let ret = unsafe {
             internal::MaaSyncContextRunAction(
@@ -121,7 +125,7 @@ impl MaaSyncContext {
     }
 
     pub fn input_text(&self, text: &str) -> MaaResult<()> {
-        let text_str = string_view!(text);
+        string_view!(text, text_str);
         let ret = unsafe { internal::MaaSyncContextInputText(self.handle, text_str) };
 
         maa_bool!(ret, MaaSyncContextInputTextError, text.to_owned())
@@ -162,7 +166,7 @@ impl MaaSyncContext {
     pub fn get_task_result(&self, task_name: &str) -> MaaResult<String> {
         let result = MaaStringBuffer::new();
 
-        let task_name_str = string_view!(task_name);
+        string_view!(task_name, task_name_str);
 
         let ret = unsafe {
             internal::MaaSyncContextGetTaskResult(self.handle, task_name_str, result.handle)

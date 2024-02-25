@@ -156,13 +156,13 @@ impl<T> MaaInstance<T> {
     where
         P: TaskParam,
     {
-        let entry = string_view!(entry);
-        let param = string_view!(param.get_param());
+        string_view!(entry, entry);
+        string_view!(param.get_param(), param);
         unsafe { internal::MaaPostTask(self.handle, entry, param) }
     }
 
     pub fn set_task_param(&self, task_id: MaaTaskId, param: &str) -> MaaResult<()> {
-        let param = string_view!(param);
+        string_view!(param, param);
         let ret = unsafe { internal::MaaSetTaskParam(self.handle, task_id, param) };
 
         if maa_bool!(ret) {
@@ -224,7 +224,7 @@ impl<T> MaaInstance<T> {
     where
         R: MaaCustomRecognizer,
     {
-        let name_str = string_view!(name);
+        string_view!(name, name_str);
         let recognizer = Box::new(recognizer);
         let recognizer = Box::into_raw(recognizer) as *mut std::ffi::c_void;
 
@@ -258,7 +258,7 @@ impl<T> MaaInstance<T> {
 
     #[cfg(feature = "custom_recognizer")]
     pub fn unregister_custom_recognizer(&mut self, name: &str) -> MaaResult<()> {
-        let name_str = string_view!(name);
+        string_view!(name, name_str);
 
         let (recognizer, recognizer_api) = self.registered_custom_recognizers.remove(name).unwrap();
 
@@ -309,7 +309,7 @@ impl<T> MaaInstance<T> {
     where
         A: MaaCustomAction,
     {
-        let name_str = string_view!(name);
+        string_view!(name, name_str);
         let action = Box::new(action);
         let action = Box::into_raw(action) as *mut std::ffi::c_void;
 
@@ -339,7 +339,7 @@ impl<T> MaaInstance<T> {
 
     #[cfg(feature = "custom_action")]
     pub fn unregister_custom_action(&mut self, name: &str) -> MaaResult<()> {
-        let name_str = string_view!(name);
+        string_view!(name,name_str);
 
         let (action, action_api) = self.registered_custom_actions.remove(name).unwrap();
 

@@ -1,7 +1,7 @@
 [package]
 name = "maa-framework"
 description = "Rust bindings for MaaFramework"
-version = "0.1.2"
+version = "0.1.4"
 edition = "2021"
 license-file = "LICENSE.md"
 homepage = "https://github.com/MaaAssistantArknights/MaaFramework"

@@ -77,7 +77,7 @@ where
     let controller = &mut *(controller as *mut C);
     let ret = match controller.request_uuid() {
         Some(uuid) => {
-            let uuid = string_view!(uuid);
+            string_view!(uuid, uuid);
             internal::MaaSetString(buffer, uuid);
             true
         }

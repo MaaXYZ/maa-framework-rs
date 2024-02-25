@@ -44,9 +44,10 @@ macro_rules! string {
 
 #[macro_export]
 macro_rules! string_view {
-    ($string:expr) => {
-        $string.as_ptr() as *const std::os::raw::c_char
-    };
+    ($string:expr,$out:ident) => {
+        let string = std::ffi::CString::new($string).unwrap();
+        let $out = string.as_ptr() as *const std::os::raw::c_char;
+    }
 }
 
 pub(crate) unsafe extern "C" fn callback_handler<T: CallbackHandler>(
