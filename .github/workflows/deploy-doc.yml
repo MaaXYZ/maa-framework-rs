@@ -17,7 +17,7 @@ jobs:
       - name: Build Docs
         run: |
           cargo doc --no-deps --features download
-          cp -r target/doc doc
+          cp -r target/doc ./
       - name: Upload Docs
         uses: actions/upload-pages-artifact@v3
         with:
