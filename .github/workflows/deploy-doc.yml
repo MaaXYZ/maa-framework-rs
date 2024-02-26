@@ -19,7 +19,7 @@ jobs:
           cargo doc --no-deps --features download
           cp -r target/doc ./
       - name: Upload Docs
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           path: doc
 
@@ -29,6 +29,9 @@ jobs:
     permissions:
       pages: write
       id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy Doc
         uses: actions/deploy-pages@v4
