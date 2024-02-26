@@ -25,6 +25,11 @@ use self::win32::{MaaWin32ControllerType, MaaWin32Hwnd};
 
 pub use internal::MaaCtrlId;
 
+/// A handle to a controller instance
+///
+/// # Note
+///
+/// See [MaaInstance](crate::instance::MaaInstance) for lifetime hints.
 pub struct MaaControllerInstance<T> {
     pub(crate) handle: internal::MaaControllerHandle,
     _phantom: std::marker::PhantomData<T>,

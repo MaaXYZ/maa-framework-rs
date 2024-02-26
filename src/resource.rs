@@ -29,6 +29,11 @@ impl Display for MaaResOption {
     }
 }
 
+/// A resource instance
+///
+/// # Note
+///
+/// See [MaaInstance](crate::instance::MaaInstance) for lifetime hints.
 #[derive(Debug)]
 pub struct MaaResourceInstance<T> {
     pub(crate) handle: internal::MaaResourceHandle,
@@ -79,7 +84,7 @@ impl<T> MaaResourceInstance<T> {
     }
 
     pub fn post_path(&self, path: &str) -> MaaResId {
-        string_view!(path,path);
+        string_view!(path, path);
         unsafe { internal::MaaResourcePostPath(self.handle, path) }
     }
 

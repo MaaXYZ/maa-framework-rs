@@ -26,7 +26,7 @@ impl MaaSyncContext {
         T: TaskParam,
     {
         let param = param.get_param();
-        string_view!(task_name,name);
+        string_view!(task_name, name);
         string_view!(param, param);
 
         let ret = unsafe { internal::MaaSyncContextRunTask(self.handle, name, param) };
@@ -87,7 +87,6 @@ impl MaaSyncContext {
     where
         T: TaskParam,
     {
-
         let param = task_param.get_param();
         string_view!(task_name, name);
         string_view!(param, param);

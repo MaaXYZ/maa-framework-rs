@@ -52,8 +52,8 @@ impl MaaToolkit {
     ///
     /// Return an error if fails to convert MaaStringView to String
     #[cfg(feature = "adb")]
-    pub fn find_adb_device_with_adb(&self,adb_path: &str) -> MaaResult<Vec<AdbDeviceInfo>> {
-        string_view!(adb_path,adb_path);
+    pub fn find_adb_device_with_adb(&self, adb_path: &str) -> MaaResult<Vec<AdbDeviceInfo>> {
+        string_view!(adb_path, adb_path);
         let ret = unsafe { internal::MaaToolkitPostFindDeviceWithAdb(adb_path) };
 
         if !maa_bool!(ret) {
@@ -101,9 +101,9 @@ impl MaaToolkit {
         recognizer_exec_path: &str,
         recognizer_exec_param_json: &str,
     ) -> MaaResult<()> {
-        string_view!(recognizer_name,recognizer_name);
-        string_view!(recognizer_exec_path,recognizer_exec_path);
-        string_view!(recognizer_exec_param_json,recognizer_exec_param_json);
+        string_view!(recognizer_name, recognizer_name);
+        string_view!(recognizer_exec_path, recognizer_exec_path);
+        string_view!(recognizer_exec_param_json, recognizer_exec_param_json);
 
         let ret = unsafe {
             internal::MaaToolkitRegisterCustomRecognizerExecutor(
@@ -190,7 +190,12 @@ impl MaaToolkit {
     /// - `window_name`: The window name of the window
     /// - `find`: If true, find the window using system win32 api, otherwise search the window with text match
     #[cfg(feature = "win32")]
-    pub fn find_win32_window(&self,class_name: &str, window_name: &str, find: bool) -> Vec<MaaWin32Hwnd> {
+    pub fn find_win32_window(
+        &self,
+        class_name: &str,
+        window_name: &str,
+        find: bool,
+    ) -> Vec<MaaWin32Hwnd> {
         string_view!(class_name, class_name);
         string_view!(window_name, window_name);
 

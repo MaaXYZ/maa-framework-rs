@@ -47,7 +47,7 @@ macro_rules! string_view {
     ($string:expr,$out:ident) => {
         let string = std::ffi::CString::new($string).unwrap();
         let $out = string.as_ptr() as *const std::os::raw::c_char;
-    }
+    };
 }
 
 #[allow(clippy::unwrap_used)]

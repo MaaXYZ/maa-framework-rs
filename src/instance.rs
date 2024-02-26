@@ -1,9 +1,15 @@
-use std::{collections::HashMap, ffi::{c_void, CString}, fmt::Display, ops::Deref, ptr::null_mut};
+use std::{
+    collections::HashMap,
+    ffi::{c_void, CString},
+    fmt::Display,
+    ops::Deref,
+    ptr::null_mut,
+};
 
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    controller::MaaControllerInstance, error, internal::{self, to_cstring}, maa_bool, resource::MaaResourceInstance,
+    controller::MaaControllerInstance, error, internal, maa_bool, resource::MaaResourceInstance,
     string_view, CallbackHandler, MaaResult, MaaStatus,
 };
 
@@ -63,6 +69,12 @@ impl MaaInstOption {
 /// // let param = serde_json::json!({"param": "value"});
 /// // instance.post_task("task", param);
 /// ```
+///
+/// # Note
+///
+/// [MaaInstance],[MaaResourceInstance] and [MaaControllerInstance] use the same mechanism to manage the lifetime of the underlying C++ object.
+/// That is, if the object is created from the Rust code (like `MaaInstance::new`), the object will be destroyed when it goes out of scope. In this case, it is your responsibility to ensure that the object is not used after it has been destroyed.
+/// If the object is created from the C++ code, then you will not have to worry about the lifetime of the object.
 #[derive(Debug)]
 pub struct MaaInstance<T> {
     pub(crate) handle: internal::MaaInstanceHandle,
@@ -83,7 +95,6 @@ unsafe impl<T> Send for MaaInstance<T> {}
 unsafe impl<T> Sync for MaaInstance<T> {}
 
 impl<T> MaaInstance<T> {
-
     /// Create a new MaaInstance.
     ///
     /// # Parameters
@@ -340,7 +351,7 @@ impl<T> MaaInstance<T> {
 
     #[cfg(feature = "custom_action")]
     pub fn unregister_custom_action(&mut self, name: &str) -> MaaResult<()> {
-        string_view!(name,name_str);
+        string_view!(name, name_str);
 
         let (action, action_api) = self.registered_custom_actions.remove(name).unwrap();
 
@@ -386,7 +397,6 @@ impl<T> MaaInstance<T> {
 impl<T> Drop for MaaInstance<T> {
     fn drop(&mut self) {
         unsafe {
-            
             internal::MaaDestroy(self.handle);
         }
     }
