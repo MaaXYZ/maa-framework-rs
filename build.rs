@@ -14,7 +14,7 @@ fn main() {
         panic!("Unable to find MaaFramework libraries");
     }
 
-    #[cfg(feature = "bundled")]
+    #[cfg(feature = "download")]
     if bundled::get_bundled_dir(&mut include_dir, &mut lib_dir).is_err() {
         panic!("Unable to download MaaFramework libraries");
     }
