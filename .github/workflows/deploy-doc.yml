@@ -1,0 +1,46 @@
+﻿name: Build and Deploy Docs
+on:
+  push:
+    branches:
+      - main
+      - ci
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download MaaFramework
+        id: download
+        uses: robinraju/release-downloader@v1.9
+        with:
+          repository: MaaXYZ/MaaFramework
+          latest: true
+          fileName: "MAA-linux-x86_64-*.zip"
+          extract: true
+      - name: Add PATH
+        run: |
+          echo ${{ github.workspace }}/MAA-linux-x86_64-${{ steps.download.outputs.tag_name }} >> $GITHUB_PATH
+      - name: Setup Rust Cache
+        uses: Swatinem/rust-cache@v2
+      - name: Build Docs
+        run: |
+          cargo doc --no-deps
+          cp -r target/doc doc
+      - name: Upload Docs
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: doc
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy Doc
+        uses: actions/deploy-pages@v4
+        id: deployment
