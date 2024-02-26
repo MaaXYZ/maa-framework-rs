@@ -12,22 +12,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Download MaaFramework
-        id: download
-        uses: robinraju/release-downloader@v1.9
-        with:
-          repository: MaaXYZ/MaaFramework
-          latest: true
-          fileName: "MAA-linux-x86_64-*.zip"
-          extract: true
-      - name: Add PATH
-        run: |
-          echo ${{ github.workspace }}/MAA-linux-x86_64-${{ steps.download.outputs.tag_name }} >> $GITHUB_PATH
       - name: Setup Rust Cache
         uses: Swatinem/rust-cache@v2
       - name: Build Docs
         run: |
-          cargo doc --no-deps
+          cargo doc --no-deps --features bundled
           cp -r target/doc doc
       - name: Upload Docs
         uses: actions/upload-pages-artifact@v3
