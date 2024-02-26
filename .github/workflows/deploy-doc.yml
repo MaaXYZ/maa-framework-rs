@@ -19,8 +19,9 @@ jobs:
           cargo doc --no-deps --features download
           cp -r target/doc ./
       - name: Upload Docs
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: github-pages
           path: doc
 
   deploy:
