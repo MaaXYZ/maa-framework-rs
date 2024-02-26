@@ -50,6 +50,12 @@ macro_rules! string_view {
     }
 }
 
+#[allow(clippy::unwrap_used)]
+#[inline]
+pub(crate) fn to_cstring(s: &str) -> *const i8 {
+    std::ffi::CString::new(s).unwrap().into_raw()
+}
+
 pub(crate) unsafe extern "C" fn callback_handler<T: CallbackHandler>(
     msg: *const std::os::raw::c_char,
     details_json: *const std::os::raw::c_char,

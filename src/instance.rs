@@ -1,9 +1,9 @@
-use std::{collections::HashMap, ffi::c_void, fmt::Display, ops::Deref, ptr::null_mut};
+use std::{collections::HashMap, ffi::{c_void, CString}, fmt::Display, ops::Deref, ptr::null_mut};
 
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    controller::MaaControllerInstance, error, internal, maa_bool, resource::MaaResourceInstance,
+    controller::MaaControllerInstance, error, internal::{self, to_cstring}, maa_bool, resource::MaaResourceInstance,
     string_view, CallbackHandler, MaaResult, MaaStatus,
 };
 
@@ -127,7 +127,7 @@ impl<T> MaaInstance<T> {
         }
     }
 
-    pub fn bind_resource(&self, res: MaaResourceInstance<T>) -> MaaResult<()> {
+    pub fn bind_resource(&self, res: &MaaResourceInstance<T>) -> MaaResult<()> {
         let ret = unsafe { internal::MaaBindResource(self.handle, res.handle) };
 
         if maa_bool!(ret) {
@@ -137,7 +137,7 @@ impl<T> MaaInstance<T> {
         }
     }
 
-    pub fn bind_controller(&self, controller: MaaControllerInstance<T>) -> MaaResult<()> {
+    pub fn bind_controller(&self, controller: &MaaControllerInstance<T>) -> MaaResult<()> {
         let ret = unsafe { internal::MaaBindController(self.handle, controller.handle) };
 
         if maa_bool!(ret) {
@@ -156,9 +156,10 @@ impl<T> MaaInstance<T> {
     where
         P: TaskParam,
     {
-        string_view!(entry, entry);
-        string_view!(param.get_param(), param);
-        unsafe { internal::MaaPostTask(self.handle, entry, param) }
+        let entry = CString::new(entry).unwrap();
+        let param = param.get_param();
+        let param = CString::new(param).unwrap();
+        unsafe { internal::MaaPostTask(self.handle, entry.as_ptr(), param.as_ptr()) }
     }
 
     pub fn set_task_param(&self, task_id: MaaTaskId, param: &str) -> MaaResult<()> {
@@ -385,6 +386,7 @@ impl<T> MaaInstance<T> {
 impl<T> Drop for MaaInstance<T> {
     fn drop(&mut self) {
         unsafe {
+            
             internal::MaaDestroy(self.handle);
         }
     }
