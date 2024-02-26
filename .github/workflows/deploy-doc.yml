@@ -16,7 +16,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
       - name: Build Docs
         run: |
-          cargo doc --no-deps --features bundled
+          cargo doc --no-deps --features download
           cp -r target/doc doc
       - name: Upload Docs
         uses: actions/upload-pages-artifact@v3
