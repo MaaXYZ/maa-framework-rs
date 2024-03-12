@@ -105,6 +105,11 @@ impl<T> MaaResourceInstance<T> {
         maa_bool!(loaded)
     }
 
+    pub fn clear(&self) -> bool {
+        let cleared = unsafe { internal::MaaResourceClear(self.handle) };
+        maa_bool!(cleared)
+    }
+
     pub fn set_option(&self, option: MaaResOption) -> MaaResult<()> {
         let key = option.get_inner_key();
         let ret = unsafe {
