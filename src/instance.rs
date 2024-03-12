@@ -196,8 +196,8 @@ impl<T> MaaInstance<T> {
         MaaStatus::try_from(status)
     }
 
-    pub fn task_all_finished(&self) -> bool {
-        let ret = unsafe { internal::MaaTaskAllFinished(self.handle) };
+    pub fn running(&self) -> bool {
+        let ret = unsafe { internal::MaaRunning(self.handle) };
         maa_bool!(ret)
     }
 
