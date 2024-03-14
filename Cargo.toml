@@ -8,8 +8,6 @@ homepage = "https://github.com/MaaAssistantArknights/MaaFramework"
 repository = "https://github.com/MaaAssistantArknights/MaaFramework"
 readme = false
 
-exclude = ["/.github"]
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
