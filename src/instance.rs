@@ -9,8 +9,12 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    controller::MaaControllerInstance, error, internal, maa_bool, resource::MaaResourceInstance,
-    string_view, CallbackHandler, MaaResult, MaaStatus,
+    controller::MaaControllerInstance,
+    error,
+    internal::{self, to_cstring},
+    maa_bool,
+    resource::MaaResourceInstance,
+    CallbackHandler, MaaResult, MaaStatus,
 };
 
 #[cfg(feature = "custom_recognizer")]
@@ -174,7 +178,7 @@ impl<T> MaaInstance<T> {
     }
 
     pub fn set_task_param(&self, task_id: MaaTaskId, param: &str) -> MaaResult<()> {
-        string_view!(param, param);
+        let param = to_cstring(param);
         let ret = unsafe { internal::MaaSetTaskParam(self.handle, task_id, param) };
 
         if maa_bool!(ret) {
@@ -196,8 +200,14 @@ impl<T> MaaInstance<T> {
         MaaStatus::try_from(status)
     }
 
+    #[deprecated(note = "Use `running` instead")]
     pub fn task_all_finished(&self) -> bool {
         let ret = unsafe { internal::MaaTaskAllFinished(self.handle) };
+        maa_bool!(ret)
+    }
+
+    pub fn running(&self) -> bool {
+        let ret = unsafe { internal::MaaRunning(self.handle) };
         maa_bool!(ret)
     }
 
@@ -236,7 +246,7 @@ impl<T> MaaInstance<T> {
     where
         R: MaaCustomRecognizer,
     {
-        string_view!(name, name_str);
+        let name_str = to_cstring(name);
         let recognizer = Box::new(recognizer);
         let recognizer = Box::into_raw(recognizer) as *mut std::ffi::c_void;
 
@@ -270,7 +280,7 @@ impl<T> MaaInstance<T> {
 
     #[cfg(feature = "custom_recognizer")]
     pub fn unregister_custom_recognizer(&mut self, name: &str) -> MaaResult<()> {
-        string_view!(name, name_str);
+        let name_str = to_cstring(name);
 
         let (recognizer, recognizer_api) = self.registered_custom_recognizers.remove(name).unwrap();
 
@@ -321,7 +331,7 @@ impl<T> MaaInstance<T> {
     where
         A: MaaCustomAction,
     {
-        string_view!(name, name_str);
+        let name_str = to_cstring(name);
         let action = Box::new(action);
         let action = Box::into_raw(action) as *mut std::ffi::c_void;
 
@@ -351,7 +361,7 @@ impl<T> MaaInstance<T> {
 
     #[cfg(feature = "custom_action")]
     pub fn unregister_custom_action(&mut self, name: &str) -> MaaResult<()> {
-        string_view!(name, name_str);
+        let name_str = to_cstring(name);
 
         let (action, action_api) = self.registered_custom_actions.remove(name).unwrap();
 

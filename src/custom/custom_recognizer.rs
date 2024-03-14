@@ -1,6 +1,6 @@
 use crate::{
     buffer::{image_buffer::MaaImageBuffer, rect_buffer::MaaRectBuffer},
-    internal, string, string_view,
+    internal::{self, to_cstring}, string,
     sync_context::MaaSyncContext,
 };
 
@@ -44,7 +44,7 @@ where
         out_box,
     ) {
         Some(string) => {
-            string_view!(string, string);
+            let string = to_cstring(&string);
             internal::MaaSetString(out_string, string);
             internal::MaaBool::from(true)
         }

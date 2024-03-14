@@ -1,8 +1,8 @@
 use std::ffi::c_void;
 
 use crate::{
-    internal::{self, MaaBool},
-    string, string_view,
+    internal::{self, to_cstring, MaaBool},
+    string
 };
 
 #[allow(unused)]
@@ -77,7 +77,7 @@ where
     let controller = &mut *(controller as *mut C);
     let ret = match controller.request_uuid() {
         Some(uuid) => {
-            string_view!(uuid, uuid);
+            let uuid = to_cstring(&uuid);
             internal::MaaSetString(buffer, uuid);
             true
         }

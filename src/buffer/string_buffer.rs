@@ -1,4 +1,4 @@
-use crate::{error::Error, internal, maa_bool, string, string_view, MaaResult};
+use crate::{error::Error, internal::{self, to_cstring}, maa_bool, string, MaaResult};
 
 pub struct MaaStringBuffer {
     pub(crate) handle: internal::MaaStringBufferHandle,
@@ -34,7 +34,7 @@ impl MaaStringBuffer {
     }
 
     pub fn set_string(&self, content: &str) -> MaaResult<()> {
-        string_view!(content, content_str);
+        let content_str = to_cstring(content);
         let ret = unsafe { internal::MaaSetString(self.handle, content_str) };
 
         maa_bool!(ret, MaaSetStringError, content.to_owned())

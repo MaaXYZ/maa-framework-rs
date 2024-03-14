@@ -163,15 +163,15 @@ impl MaaMsg {
                 let details = serde_json::from_str(details)?;
                 MaaMsg::TaskStopped(details)
             }
-            "Task.FocusHit" => {
+            "Task.Focus.ReadyToRun" => {
                 let details = serde_json::from_str(details)?;
                 MaaMsg::TaskFocusHit(details)
             }
-            "Task.FocusRunout" => {
+            "Task.Focus.Runout" => {
                 let details = serde_json::from_str(details)?;
                 MaaMsg::TaskFocusRunout(details)
             }
-            "Task.FocusCompleted" => {
+            "Task.Focus.Completed" => {
                 let details = serde_json::from_str(details)?;
                 MaaMsg::TaskFocusCompleted(details)
             }
