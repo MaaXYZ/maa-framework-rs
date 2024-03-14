@@ -5,7 +5,11 @@
 
 use crate::{msg::MaaMsg, CallbackHandler};
 
+#[cfg(not(docsrs))]
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+
+#[cfg(docsrs)]
+include!("../build/pregenerated_bindings.rs");
 
 #[macro_export]
 macro_rules! maa_bool {
