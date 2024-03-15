@@ -3,40 +3,40 @@ use serde_json::Value;
 
 use crate::MaaResult;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MaaMsgResource {
     pub id: i32,
     pub path: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MaaMsgUUID {
     pub uuid: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MaaMsgResolution {
     pub width: i32,
     pub height: i32,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MaaMsgConnect {
     pub uuid: String,
     pub resolution: MaaMsgResolution,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MaaMsgConnectFailed {
     pub why: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MaaMsgAction {
     pub id: i32,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MaaMsgTask {
     pub id: i32,
     pub entry: String,
@@ -45,7 +45,7 @@ pub struct MaaMsgTask {
     pub hash: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MaaMsgTaskFocus {
     pub id: i32,
     pub entry: String,
@@ -58,7 +58,7 @@ pub struct MaaMsgTaskFocus {
     pub status: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MaaMsgTaskDebug {
     pub id: i32,
     pub entry: String,
@@ -112,7 +112,7 @@ pub enum MaaMsg {
     TaskDebugRunout(MaaMsgTaskDebug),
     TaskDebugCompleted(MaaMsgTaskDebug),
     TaskDebugListToRecognize,
-    TaskDebugHit
+    TaskDebugHit,
 }
 
 impl MaaMsg {
@@ -193,7 +193,7 @@ impl MaaMsg {
             "Task.Focus.Completed" => {
                 let details = serde_json::from_str(details)?;
                 MaaMsg::TaskFocusCompleted(details)
-            },
+            }
             "Task.Debug.ReadyToRun" => {
                 let details = serde_json::from_str(details)?;
                 MaaMsg::TaskDebugReadyToTun(details)
