@@ -1,8 +1,8 @@
 use std::ffi::c_void;
 
 use crate::{
-    internal::{self, to_cstring, MaaBool},
-    string
+    internal,
+    string,
 };
 
 #[allow(unused)]
@@ -59,39 +59,39 @@ pub trait MaaCustomController {
 
 pub(crate) unsafe extern "C" fn custom_controller_connect<C>(
     controller: internal::MaaTransparentArg,
-) -> MaaBool
+) -> internal::MaaBool
 where
     C: MaaCustomController,
 {
     let controller = &mut *(controller as *mut C);
-    MaaBool::from(controller.connect())
+    internal::MaaBool::from(controller.connect())
 }
 
 pub(crate) unsafe extern "C" fn custom_controller_request_uuid<C>(
     controller: internal::MaaTransparentArg,
     buffer: internal::MaaStringBufferHandle,
-) -> MaaBool
+) -> internal::MaaBool
 where
     C: MaaCustomController,
 {
     let controller = &mut *(controller as *mut C);
     let ret = match controller.request_uuid() {
         Some(uuid) => {
-            let uuid = to_cstring(&uuid);
+            let uuid = internal::to_cstring(&uuid);
             internal::MaaSetString(buffer, uuid);
             true
         }
         None => false,
     };
 
-    MaaBool::from(ret)
+    internal::MaaBool::from(ret)
 }
 
 pub(crate) unsafe extern "C" fn custom_controller_request_resolution<C>(
     controller: internal::MaaTransparentArg,
     width: *mut i32,
     height: *mut i32,
-) -> MaaBool
+) -> internal::MaaBool
 where
     C: MaaCustomController,
 {
@@ -105,37 +105,37 @@ where
         None => false,
     };
 
-    MaaBool::from(ret)
+    internal::MaaBool::from(ret)
 }
 
 pub(crate) unsafe extern "C" fn custom_controller_start_app<C>(
     intent: internal::MaaStringView,
     controller: internal::MaaTransparentArg,
-) -> MaaBool
+) -> internal::MaaBool
 where
     C: MaaCustomController,
 {
     let controller = &mut *(controller as *mut C);
     let intent = string!(intent);
-    MaaBool::from(controller.start_app(intent))
+    internal::MaaBool::from(controller.start_app(intent))
 }
 
 pub(crate) unsafe extern "C" fn custom_controller_stop_app<C>(
     intent: internal::MaaStringView,
     controller: internal::MaaTransparentArg,
-) -> MaaBool
+) -> internal::MaaBool
 where
     C: MaaCustomController,
 {
     let controller = &mut *(controller as *mut C);
     let intent = string!(intent);
-    MaaBool::from(controller.stop_app(intent))
+    internal::MaaBool::from(controller.stop_app(intent))
 }
 
 pub(crate) unsafe extern "C" fn custom_controller_screencap<C>(
     controller: internal::MaaTransparentArg,
     buffer: internal::MaaImageBufferHandle,
-) -> MaaBool
+) -> internal::MaaBool
 where
     C: MaaCustomController,
 {
@@ -148,19 +148,19 @@ where
         None => false,
     };
 
-    MaaBool::from(ret)
+    internal::MaaBool::from(ret)
 }
 
 pub(crate) unsafe extern "C" fn custom_controller_click<C>(
     x: i32,
     y: i32,
     controller: internal::MaaTransparentArg,
-) -> MaaBool
+) -> internal::MaaBool
 where
     C: MaaCustomController,
 {
     let controller = &mut *(controller as *mut C);
-    MaaBool::from(controller.click(x, y))
+    internal::MaaBool::from(controller.click(x, y))
 }
 
 pub(crate) unsafe extern "C" fn custom_controller_swipe<C>(
@@ -170,12 +170,12 @@ pub(crate) unsafe extern "C" fn custom_controller_swipe<C>(
     y2: i32,
     duration: i32,
     controller: internal::MaaTransparentArg,
-) -> MaaBool
+) -> internal::MaaBool
 where
     C: MaaCustomController,
 {
     let controller = &mut *(controller as *mut C);
-    MaaBool::from(controller.swipe(x1, y1, x2, y2, duration))
+    internal::MaaBool::from(controller.swipe(x1, y1, x2, y2, duration))
 }
 
 pub(crate) unsafe extern "C" fn custom_controller_touch_down<C>(
@@ -184,12 +184,12 @@ pub(crate) unsafe extern "C" fn custom_controller_touch_down<C>(
     y: i32,
     pressure: i32,
     controller: internal::MaaTransparentArg,
-) -> MaaBool
+) -> internal::MaaBool
 where
     C: MaaCustomController,
 {
     let controller = &mut *(controller as *mut C);
-    MaaBool::from(controller.touch_down(contact, x, y, pressure))
+    internal::MaaBool::from(controller.touch_down(contact, x, y, pressure))
 }
 
 pub(crate) unsafe extern "C" fn custom_controller_touch_move<C>(
@@ -198,44 +198,44 @@ pub(crate) unsafe extern "C" fn custom_controller_touch_move<C>(
     y: i32,
     pressure: i32,
     controller: internal::MaaTransparentArg,
-) -> MaaBool
+) -> internal::MaaBool
 where
     C: MaaCustomController,
 {
     let controller = &mut *(controller as *mut C);
-    MaaBool::from(controller.touch_move(contact, x, y, pressure))
+    internal::MaaBool::from(controller.touch_move(contact, x, y, pressure))
 }
 
 pub(crate) unsafe extern "C" fn custom_controller_touch_up<C>(
     contact: i32,
     controller: internal::MaaTransparentArg,
-) -> MaaBool
+) -> internal::MaaBool
 where
     C: MaaCustomController,
 {
     let controller = &mut *(controller as *mut C);
-    MaaBool::from(controller.touch_up(contact))
+    internal::MaaBool::from(controller.touch_up(contact))
 }
 
 pub(crate) unsafe extern "C" fn custom_controller_press_key<C>(
     key: i32,
     controller: internal::MaaTransparentArg,
-) -> MaaBool
+) -> internal::MaaBool
 where
     C: MaaCustomController,
 {
     let controller = &mut *(controller as *mut C);
-    MaaBool::from(controller.press_key(key))
+    internal::MaaBool::from(controller.press_key(key))
 }
 
 pub(crate) unsafe extern "C" fn custom_controller_input_text<C>(
     text: internal::MaaStringView,
     controller: internal::MaaTransparentArg,
-) -> MaaBool
+) -> internal::MaaBool
 where
     C: MaaCustomController,
 {
     let controller = &mut *(controller as *mut C);
     let text = string!(text);
-    MaaBool::from(controller.input_text(text))
+    internal::MaaBool::from(controller.input_text(text))
 }

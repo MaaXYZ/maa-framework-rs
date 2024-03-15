@@ -4,7 +4,8 @@ use crate::{
     },
     error::Error,
     instance::TaskParam,
-    internal::{self, to_cstring}, maa_bool, MaaResult,
+    internal,
+    maa_bool, MaaResult,
 };
 
 pub struct MaaSyncContext {
@@ -26,8 +27,8 @@ impl MaaSyncContext {
         T: TaskParam,
     {
         let param = param.get_param();
-        let name = to_cstring(task_name);
-        let param = to_cstring(&param);
+        let name = internal::to_cstring(task_name);
+        let param = internal::to_cstring(&param);
 
         let ret = unsafe { internal::MaaSyncContextRunTask(self.handle, name, param) };
 
@@ -54,8 +55,8 @@ impl MaaSyncContext {
 
         let task_param = task_param.get_param();
 
-        let name = to_cstring(task_name);
-        let task_param = to_cstring(&task_param);
+        let name = internal::to_cstring(task_name);
+        let task_param = internal::to_cstring(&task_param);
 
         let ret = unsafe {
             internal::MaaSyncContextRunRecognizer(
@@ -88,9 +89,9 @@ impl MaaSyncContext {
         T: TaskParam,
     {
         let param = task_param.get_param();
-        let name = to_cstring(task_name);
-        let param = to_cstring(&param);
-        let cur_rec_detail = to_cstring(cur_rec_detail);
+        let name = internal::to_cstring(task_name);
+        let param = internal::to_cstring(&param);
+        let cur_rec_detail = internal::to_cstring(cur_rec_detail);
 
         let ret = unsafe {
             internal::MaaSyncContextRunAction(
@@ -124,7 +125,7 @@ impl MaaSyncContext {
     }
 
     pub fn input_text(&self, text: &str) -> MaaResult<()> {
-        let text_str = to_cstring(text);
+        let text_str = internal::to_cstring(text);
         let ret = unsafe { internal::MaaSyncContextInputText(self.handle, text_str) };
 
         maa_bool!(ret, MaaSyncContextInputTextError, text.to_owned())
@@ -165,7 +166,7 @@ impl MaaSyncContext {
     pub fn get_task_result(&self, task_name: &str) -> MaaResult<String> {
         let result = MaaStringBuffer::new();
 
-        let task_name_str = to_cstring(task_name);
+        let task_name_str = internal::to_cstring(task_name);
 
         let ret = unsafe {
             internal::MaaSyncContextGetTaskResult(self.handle, task_name_str, result.handle)

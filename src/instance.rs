@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     controller::MaaControllerInstance,
     error,
-    internal::{self, to_cstring},
+    internal,
     maa_bool,
     resource::MaaResourceInstance,
     CallbackHandler, MaaResult, MaaStatus,
@@ -178,7 +178,7 @@ impl<T> MaaInstance<T> {
     }
 
     pub fn set_task_param(&self, task_id: MaaTaskId, param: &str) -> MaaResult<()> {
-        let param = to_cstring(param);
+        let param = internal::to_cstring(param);
         let ret = unsafe { internal::MaaSetTaskParam(self.handle, task_id, param) };
 
         if maa_bool!(ret) {
@@ -242,11 +242,12 @@ impl<T> MaaInstance<T> {
     }
 
     #[cfg(feature = "custom_recognizer")]
+    #[doc(cfg(feature = "custom_recognizer"))]
     pub fn register_custom_recognizer<R>(&mut self, name: &str, recognizer: R) -> MaaResult<()>
     where
         R: MaaCustomRecognizer,
     {
-        let name_str = to_cstring(name);
+        let name_str = internal::to_cstring(name);
         let recognizer = Box::new(recognizer);
         let recognizer = Box::into_raw(recognizer) as *mut std::ffi::c_void;
 
@@ -279,8 +280,9 @@ impl<T> MaaInstance<T> {
     }
 
     #[cfg(feature = "custom_recognizer")]
+    #[doc(cfg(feature = "custom_recognizer"))]
     pub fn unregister_custom_recognizer(&mut self, name: &str) -> MaaResult<()> {
-        let name_str = to_cstring(name);
+        let name_str = internal::to_cstring(name);
 
         let (recognizer, recognizer_api) = self.registered_custom_recognizers.remove(name).unwrap();
 
@@ -305,6 +307,7 @@ impl<T> MaaInstance<T> {
     }
 
     #[cfg(feature = "custom_recognizer")]
+    #[doc(cfg(feature = "custom_recognizer"))]
     pub fn clear_custom_recognizers(&mut self) -> MaaResult<()> {
         let ret = unsafe { internal::MaaClearCustomRecognizer(self.handle) };
 
@@ -327,11 +330,12 @@ impl<T> MaaInstance<T> {
     }
 
     #[cfg(feature = "custom_action")]
+    #[doc(cfg(feature = "custom_action"))]
     pub fn register_custom_action<A>(&mut self, name: &str, action: A) -> MaaResult<()>
     where
         A: MaaCustomAction,
     {
-        let name_str = to_cstring(name);
+        let name_str = internal::to_cstring(name);
         let action = Box::new(action);
         let action = Box::into_raw(action) as *mut std::ffi::c_void;
 
@@ -360,8 +364,9 @@ impl<T> MaaInstance<T> {
     }
 
     #[cfg(feature = "custom_action")]
+    #[doc(cfg(feature = "custom_action"))]
     pub fn unregister_custom_action(&mut self, name: &str) -> MaaResult<()> {
-        let name_str = to_cstring(name);
+        let name_str = internal::to_cstring(name);
 
         let (action, action_api) = self.registered_custom_actions.remove(name).unwrap();
 
@@ -384,6 +389,7 @@ impl<T> MaaInstance<T> {
     }
 
     #[cfg(feature = "custom_action")]
+    #[doc(cfg(feature = "custom_action"))]
     pub fn clear_custom_actions(&mut self) -> MaaResult<()> {
         let ret = unsafe { internal::MaaClearCustomAction(self.handle) };
 

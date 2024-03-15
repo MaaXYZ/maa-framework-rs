@@ -4,7 +4,6 @@ mod bundled;
 mod cmake_probe;
 
 fn main() {
-
     if std::env::var("DOCS_RS").is_ok() {
         // skip building on docs.rs
         return;

@@ -29,23 +29,28 @@
 //!
 //! The default features include all features so you might want to disable some of them if you don't need them.
 
+#![feature(doc_cfg)]
+
 use std::{ffi::c_void, fmt::Display, ptr::null_mut};
 
 use msg::MaaMsg;
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "internal")]
+#[doc(cfg(feature = "internal"))]
 pub mod internal;
 
 #[cfg(not(feature = "internal"))]
 mod internal;
 
 #[cfg(feature = "toolkit")]
+#[doc(cfg(feature = "toolkit"))]
 pub mod toolkit;
 
 pub mod custom;
 
 #[cfg(feature = "sync_context")]
+#[doc(cfg(feature = "sync_context"))]
 pub mod sync_context;
 
 pub mod buffer;

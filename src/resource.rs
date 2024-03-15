@@ -1,8 +1,9 @@
 use std::{fmt::Display, ops::Deref, ptr::null_mut};
 
 use crate::{
-    buffer::string_buffer::MaaStringBuffer, internal::{self, to_cstring}, maa_bool, CallbackHandler,
-    MaaResult, MaaStatus,
+    buffer::string_buffer::MaaStringBuffer,
+    internal,
+    maa_bool, CallbackHandler, MaaResult, MaaStatus,
 };
 
 pub use internal::MaaResId;
@@ -84,7 +85,7 @@ impl<T> MaaResourceInstance<T> {
     }
 
     pub fn post_path(&self, path: &str) -> MaaResId {
-        let path = to_cstring(path);
+        let path = internal::to_cstring(path);
         unsafe { internal::MaaResourcePostPath(self.handle, path) }
     }
 

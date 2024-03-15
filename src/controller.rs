@@ -4,15 +4,18 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::Error,
-    internal::{self, to_cstring},
+    internal,
     maa_bool, CallbackHandler, MaaResult, MaaStatus,
 };
 
 #[cfg(feature = "adb")]
+#[doc(cfg(feature = "adb"))]
 pub mod adb;
 #[cfg(feature = "dbg")]
+#[doc(cfg(feature = "dbg"))]
 pub mod dbg;
 #[cfg(feature = "win32")]
+#[doc(cfg(feature = "win32"))]
 pub mod win32;
 
 #[cfg(feature = "adb")]
@@ -56,6 +59,7 @@ impl<T> MaaControllerInstance<T> {
     /// # Notes
     /// This directly calls MaaAdbControllerCreateV2 since MaaAdbControllerCreate is deprecated
     #[cfg(feature = "adb")]
+    #[doc(cfg(feature = "adb"))]
     pub fn new_adb(
         adb_path: &str,
         address: &str,
@@ -67,10 +71,10 @@ impl<T> MaaControllerInstance<T> {
     where
         T: CallbackHandler,
     {
-        let adb_path = to_cstring(adb_path);
-        let address = to_cstring(address);
-        let config = to_cstring(config);
-        let agent_path = to_cstring(agent_path);
+        let adb_path = internal::to_cstring(adb_path);
+        let address = internal::to_cstring(address);
+        let config = internal::to_cstring(config);
+        let agent_path = internal::to_cstring(agent_path);
 
         let handle = unsafe {
             match handler {
@@ -107,6 +111,7 @@ impl<T> MaaControllerInstance<T> {
     }
 
     #[cfg(feature = "win32")]
+    #[doc(cfg(feature = "win32"))]
     pub fn new_win32(
         hwnd: MaaWin32Hwnd,
         controller_type: MaaWin32ControllerType,
@@ -144,6 +149,7 @@ impl<T> MaaControllerInstance<T> {
     }
 
     #[cfg(feature = "dbg")]
+    #[doc(cfg(feature = "dbg"))]
     pub fn new_dbg(
         read_path: &str,
         write_path: &str,
@@ -154,9 +160,9 @@ impl<T> MaaControllerInstance<T> {
     where
         T: CallbackHandler,
     {
-        let read_path = to_cstring(read_path);
-        let write_path = to_cstring(write_path);
-        let config = to_cstring(config);
+        let read_path = internal::to_cstring(read_path);
+        let write_path = internal::to_cstring(write_path);
+        let config = internal::to_cstring(config);
 
         let handle = unsafe {
             match handler {
@@ -191,6 +197,7 @@ impl<T> MaaControllerInstance<T> {
     }
 
     #[cfg(feature = "custom_controller")]
+    #[doc(cfg(feature = "custom_controller"))]
     pub fn new_custom<C>(controller: C, handler: Option<T>) -> Self
     where
         T: CallbackHandler,
@@ -312,7 +319,7 @@ impl<T> MaaControllerInstance<T> {
     }
 
     pub fn post_input_text(&self, text: &str) -> MaaCtrlId {
-        let text = to_cstring(text);
+        let text = internal::to_cstring(text);
         unsafe { internal::MaaControllerPostInputText(self.handle, text) }
     }
 

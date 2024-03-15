@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     error::Error,
     instance::MaaInstance,
-    internal::{self, to_cstring},
+    internal,
     maa_bool, string, MaaResult,
 };
 
@@ -32,8 +32,8 @@ impl MaaToolkit {
     }
 
     pub fn new_with_options<T: Serialize>(user_path: String, config: T) -> MaaResult<Self> {
-        let user_path = to_cstring(&user_path);
-        let config = to_cstring(&serde_json::to_string(&config).unwrap());
+        let user_path = internal::to_cstring(&user_path);
+        let config = internal::to_cstring(&serde_json::to_string(&config).unwrap());
 
         let toolkit_init_ret = unsafe { internal::MaaToolkitInitOptionConfig(user_path, config) };
 
@@ -50,6 +50,7 @@ impl MaaToolkit {
     ///
     /// Return an error if fails to convert MaaStringView to String
     #[cfg(feature = "adb")]
+    #[doc(cfg(feature = "adb"))]
     pub fn find_adb_device(&self) -> MaaResult<Vec<AdbDeviceInfo>> {
         let ret = unsafe { internal::MaaToolkitPostFindDevice() };
 
@@ -68,8 +69,9 @@ impl MaaToolkit {
     ///
     /// Return an error if fails to convert MaaStringView to String
     #[cfg(feature = "adb")]
+    #[doc(cfg(feature = "adb"))]
     pub fn find_adb_device_with_adb(&self, adb_path: &str) -> MaaResult<Vec<AdbDeviceInfo>> {
-        let adb_path = to_cstring(adb_path);
+        let adb_path = internal::to_cstring(adb_path);
         let ret = unsafe { internal::MaaToolkitPostFindDeviceWithAdb(adb_path) };
 
         if !maa_bool!(ret) {
@@ -82,6 +84,7 @@ impl MaaToolkit {
     }
 
     #[cfg(feature = "adb")]
+    #[doc(cfg(feature = "adb"))]
     fn get_adb_devices_info(&self, device_count: u64) -> MaaResult<Vec<AdbDeviceInfo>> {
         let mut devices = Vec::with_capacity(device_count as usize);
 
@@ -117,9 +120,9 @@ impl MaaToolkit {
         recognizer_exec_path: &str,
         recognizer_exec_param_json: &str,
     ) -> MaaResult<()> {
-        let recognizer_name = to_cstring(recognizer_name);
-        let recognizer_exec_path = to_cstring(recognizer_exec_path);
-        let recognizer_exec_param_json = to_cstring(recognizer_exec_param_json);
+        let recognizer_name = internal::to_cstring(recognizer_name);
+        let recognizer_exec_path = internal::to_cstring(recognizer_exec_path);
+        let recognizer_exec_param_json = internal::to_cstring(recognizer_exec_param_json);
         let ret = unsafe {
             internal::MaaToolkitRegisterCustomRecognizerExecutor(
                 *handle,
@@ -141,7 +144,7 @@ impl MaaToolkit {
         handle: MaaInstance<T>,
         recognizer_name: &str,
     ) -> MaaResult<()> {
-        let recognizer_name = to_cstring(recognizer_name);
+        let recognizer_name = internal::to_cstring(recognizer_name);
 
         let ret = unsafe {
             internal::MaaToolkitUnregisterCustomRecognizerExecutor(*handle, recognizer_name)
@@ -161,9 +164,9 @@ impl MaaToolkit {
         action_exec_path: &str,
         action_exec_param_json: &str,
     ) -> MaaResult<()> {
-        let action_name = to_cstring(action_name);
-        let action_exec_path = to_cstring(action_exec_path);
-        let action_exec_param_json = to_cstring(action_exec_param_json);
+        let action_name = internal::to_cstring(action_name);
+        let action_exec_path = internal::to_cstring(action_exec_path);
+        let action_exec_param_json = internal::to_cstring(action_exec_param_json);
 
         let ret = unsafe {
             internal::MaaToolkitRegisterCustomActionExecutor(
@@ -186,7 +189,7 @@ impl MaaToolkit {
         handle: MaaInstance<T>,
         action_name: &str,
     ) -> MaaResult<()> {
-        let action_name = to_cstring(action_name);
+        let action_name = internal::to_cstring(action_name);
 
         let ret =
             unsafe { internal::MaaToolkitUnregisterCustomActionExecutor(*handle, action_name) };
@@ -205,14 +208,15 @@ impl MaaToolkit {
     /// - `window_name`: The window name of the window
     /// - `find`: If true, find the window using system win32 api, otherwise search the window with text match
     #[cfg(feature = "win32")]
+    #[doc(cfg(feature = "win32"))]
     pub fn find_win32_window(
         &self,
         class_name: &str,
         window_name: &str,
         find: bool,
     ) -> Vec<MaaWin32Hwnd> {
-        let class_name = to_cstring(class_name);
-        let window_name = to_cstring(window_name);
+        let class_name = internal::to_cstring(class_name);
+        let window_name = internal::to_cstring(window_name);
 
         let hwnd_count = unsafe {
             if find {
@@ -233,18 +237,21 @@ impl MaaToolkit {
     }
 
     #[cfg(feature = "win32")]
+    #[doc(cfg(feature = "win32"))]
     pub fn get_cursor_window(&self) -> MaaWin32Hwnd {
         let hwnd = unsafe { internal::MaaToolkitGetCursorWindow() };
         MaaWin32Hwnd(hwnd)
     }
 
     #[cfg(feature = "win32")]
+    #[doc(cfg(feature = "win32"))]
     pub fn get_desktop_window(&self) -> MaaWin32Hwnd {
         let hwnd = unsafe { internal::MaaToolkitGetDesktopWindow() };
         MaaWin32Hwnd(hwnd)
     }
 
     #[cfg(feature = "win32")]
+    #[doc(cfg(feature = "win32"))]
     pub fn get_foreground_window(&self) -> MaaWin32Hwnd {
         let hwnd = unsafe { internal::MaaToolkitGetForegroundWindow() };
         MaaWin32Hwnd(hwnd)
