@@ -1,9 +1,8 @@
 use std::{fmt::Display, ops::Deref, ptr::null_mut};
 
 use crate::{
-    buffer::string_buffer::MaaStringBuffer,
-    internal,
-    maa_bool, CallbackHandler, MaaResult, MaaStatus,
+    buffer::string_buffer::MaaStringBuffer, internal, maa_bool, CallbackHandler, MaaResult,
+    MaaStatus,
 };
 
 pub use internal::MaaResId;
@@ -146,6 +145,16 @@ impl<T> MaaResourceInstance<T> {
             Ok(task_list)
         } else {
             Err(crate::error::Error::MaaResourceGetTaskListError)
+        }
+    }
+
+    pub fn clear(&self) -> MaaResult<()> {
+        let ret = unsafe { internal::MaaResourceClear(self.handle) };
+
+        if maa_bool!(ret) {
+            Ok(())
+        } else {
+            Err(crate::error::Error::MaaResourceClearError)
         }
     }
 }

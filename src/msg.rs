@@ -58,6 +58,19 @@ pub struct MaaMsgTaskFocus {
     pub status: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MaaMsgTaskDebug {
+    pub id: i32,
+    pub entry: String,
+    pub uuid: String,
+    pub hash: String,
+    pub name: String,
+    pub latest_hit: String,
+    pub recognition: Value,
+    pub run_times: i32,
+    pub status: String,
+}
+
 #[non_exhaustive]
 pub enum MaaMsg {
     Invalid,
@@ -94,6 +107,12 @@ pub enum MaaMsg {
     TaskFocusHit(MaaMsgTaskFocus),
     TaskFocusRunout(MaaMsgTaskFocus),
     TaskFocusCompleted(MaaMsgTaskFocus),
+
+    TaskDebugReadyToTun(MaaMsgTaskDebug),
+    TaskDebugRunout(MaaMsgTaskDebug),
+    TaskDebugCompleted(MaaMsgTaskDebug),
+    TaskDebugListToRecognize,
+    TaskDebugHit
 }
 
 impl MaaMsg {
@@ -174,7 +193,21 @@ impl MaaMsg {
             "Task.Focus.Completed" => {
                 let details = serde_json::from_str(details)?;
                 MaaMsg::TaskFocusCompleted(details)
+            },
+            "Task.Debug.ReadyToRun" => {
+                let details = serde_json::from_str(details)?;
+                MaaMsg::TaskDebugReadyToTun(details)
             }
+            "Task.Debug.Runout" => {
+                let details = serde_json::from_str(details)?;
+                MaaMsg::TaskDebugRunout(details)
+            }
+            "Task.Debug.Completed" => {
+                let details = serde_json::from_str(details)?;
+                MaaMsg::TaskDebugCompleted(details)
+            }
+            "Task.Debug.ListToRecognize" => MaaMsg::TaskDebugListToRecognize,
+            "Task.Debug.Hit" => MaaMsg::TaskDebugHit,
             _ => MaaMsg::Invalid,
         };
 

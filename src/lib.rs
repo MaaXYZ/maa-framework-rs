@@ -121,6 +121,7 @@ pub enum MaaGlobalOption {
     Recording(bool),
     StdoutLevel(MaaLoggingLevel),
     ShowHitDraw(bool),
+    DebugMessage(bool),
 }
 
 impl Display for MaaGlobalOption {
@@ -132,6 +133,7 @@ impl Display for MaaGlobalOption {
             MaaGlobalOption::Recording(recording) => write!(f, "Recording: {}", recording),
             MaaGlobalOption::StdoutLevel(level) => write!(f, "StdoutLevel: {:?}", level),
             MaaGlobalOption::ShowHitDraw(show) => write!(f, "ShowHitDraw: {}", show),
+            MaaGlobalOption::DebugMessage(debug) => write!(f, "DebugMessage: {}", debug),
         }
     }
 }
@@ -150,6 +152,9 @@ impl MaaGlobalOption {
             }
             MaaGlobalOption::ShowHitDraw(_) => {
                 internal::MaaGlobalOptionEnum_MaaGlobalOption_ShowHitDraw
+            }
+            MaaGlobalOption::DebugMessage(_) => {
+                internal::MaaGlobalOptionEnum_MaaGlobalOption_DebugMessage
             }
         }
     }
@@ -182,6 +187,11 @@ pub fn set_global_option(option: MaaGlobalOption) -> MaaResult<()> {
         MaaGlobalOption::ShowHitDraw(ref show) => {
             let val_size = std::mem::size_of::<bool>() as u64;
             let value = show as *const bool as *mut c_void;
+            unsafe { internal::MaaSetGlobalOption(key, value, val_size) }
+        }
+        MaaGlobalOption::DebugMessage(ref debug) => {
+            let val_size = std::mem::size_of::<bool>() as u64;
+            let value = debug as *const bool as *mut c_void;
             unsafe { internal::MaaSetGlobalOption(key, value, val_size) }
         }
         _ => unsafe { internal::MaaSetGlobalOption(key, null_mut(), 0) },

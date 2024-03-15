@@ -110,6 +110,9 @@ pub enum Error {
     #[error("MaaResource fails to get task list")]
     MaaResourceGetTaskListError,
 
+    #[error("MaaResource fails to clear")]
+    MaaResourceClearError,
+
     #[error("Maa fails to set string buffeer {0}")]
     MaaSetStringError(String),
 
