@@ -64,6 +64,7 @@ use error::Error;
 
 pub type MaaResult<T> = Result<T, error::Error>;
 
+#[derive(Debug, Serialize, Deserialize)]
 pub enum MaaStatus {
     Invalid,
     Pending,

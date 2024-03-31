@@ -72,6 +72,7 @@ pub struct MaaMsgTaskDebug {
 }
 
 #[non_exhaustive]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum MaaMsg {
     Invalid,
 

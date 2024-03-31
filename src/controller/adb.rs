@@ -1,26 +1,31 @@
+use std::default;
+
 use serde::{Deserialize, Serialize};
 
 use crate::{error, internal};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub enum MaaAdbControllerTouchType {
     Invalid,
     Adb,
     MiniTouch,
     MaaTouch,
+    #[default]
     AutoDetect,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub enum MaaAdbControllerKeyType {
     Invalid,
     Adb,
     MaaTouch,
+    #[default]
     AutoDetect,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub enum MaaAdbControlScreencapType {
+    #[default]
     FastestWayCompatible,
     RawByNetcat,
     RawWithGzip,
@@ -32,7 +37,7 @@ pub enum MaaAdbControlScreencapType {
     FastestWay,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct MaaAdbControllerType {
     pub touch_type: MaaAdbControllerTouchType,
     pub key_type: MaaAdbControllerKeyType,
