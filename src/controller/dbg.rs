@@ -4,6 +4,7 @@ use crate::{error, internal};
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone, Copy)]
 pub enum MaaDbgControllerType {
+    #[default]
     Invalid,
     CarouselImage,
     ReplayRecording,

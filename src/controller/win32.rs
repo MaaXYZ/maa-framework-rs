@@ -7,18 +7,21 @@ use crate::{error, internal};
 #[derive(Debug, Serialize, Deserialize, Default, Clone, Copy)]
 pub enum MaaWin32ControllerTouchType {
     Invalid,
+    #[default]
     SendMessage,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone, Copy)]
 pub enum MaaWin32ControllerKeyType {
     Invalid,
+    #[default]
     SendMessage,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone, Copy)]
 pub enum MaaWin32ControllerScreencapType {
     Invalid,
+    #[default]
     GDI,
     DXGIDesktopDup,
     DXGIFramePool,
