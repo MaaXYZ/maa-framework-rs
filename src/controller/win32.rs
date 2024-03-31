@@ -4,19 +4,19 @@ use serde::{Deserialize, Serialize};
 
 use crate::{error, internal};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone, Copy)]
 pub enum MaaWin32ControllerTouchType {
     Invalid,
     SendMessage,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone, Copy)]
 pub enum MaaWin32ControllerKeyType {
     Invalid,
     SendMessage,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone, Copy)]
 pub enum MaaWin32ControllerScreencapType {
     Invalid,
     GDI,
@@ -24,7 +24,7 @@ pub enum MaaWin32ControllerScreencapType {
     DXGIFramePool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone, Copy)]
 pub struct MaaWin32ControllerType {
     pub touch_type: MaaWin32ControllerTouchType,
     pub key_type: MaaWin32ControllerKeyType,

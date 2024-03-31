@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{error, internal};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone, Copy)]
 pub enum MaaDbgControllerType {
     Invalid,
     CarouselImage,

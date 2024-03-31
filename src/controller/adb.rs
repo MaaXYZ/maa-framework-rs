@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{error, internal};
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone, Copy)]
 pub enum MaaAdbControllerTouchType {
     Invalid,
     Adb,
@@ -14,7 +14,7 @@ pub enum MaaAdbControllerTouchType {
     AutoDetect,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone, Copy)]
 pub enum MaaAdbControllerKeyType {
     Invalid,
     Adb,
@@ -23,7 +23,7 @@ pub enum MaaAdbControllerKeyType {
     AutoDetect,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone, Copy)]
 pub enum MaaAdbControlScreencapType {
     #[default]
     FastestWayCompatible,
@@ -37,7 +37,7 @@ pub enum MaaAdbControlScreencapType {
     FastestWay,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone, Copy)]
 pub struct MaaAdbControllerType {
     pub touch_type: MaaAdbControllerTouchType,
     pub key_type: MaaAdbControllerKeyType,
