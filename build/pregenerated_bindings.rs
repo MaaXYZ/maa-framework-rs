@@ -981,13 +981,6 @@ extern "C" {
     ) -> MaaBool;
 }
 extern "C" {
-    pub fn MaaSyncContextGetTaskResult(
-        sync_context: MaaSyncContextHandle,
-        task_name: MaaStringView,
-        out_task_result: MaaStringBufferHandle,
-    ) -> MaaBool;
-}
-extern "C" {
     pub fn MaaCreateStringBuffer() -> MaaStringBufferHandle;
 }
 extern "C" {

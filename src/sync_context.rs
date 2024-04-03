@@ -162,20 +162,4 @@ impl MaaSyncContext {
             Err(Error::MaaSyncContextScreencapError)
         }
     }
-
-    pub fn get_task_result(&self, task_name: &str) -> MaaResult<String> {
-        let result = MaaStringBuffer::new();
-
-        let task_name_str = internal::to_cstring(task_name);
-
-        let ret = unsafe {
-            internal::MaaSyncContextGetTaskResult(self.handle, task_name_str, result.handle)
-        };
-
-        if maa_bool!(ret) {
-            Ok(result.string())
-        } else {
-            Err(Error::MaaSyncContextGetTaskResultError)
-        }
-    }
 }

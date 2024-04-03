@@ -101,9 +101,6 @@ pub enum Error {
     #[error("MaaSyncContext fails to screencap")]
     MaaSyncContextScreencapError,
 
-    #[error("MaaSyncContext fails to get task result")]
-    MaaSyncContextGetTaskResultError,
-
     #[error("MaaResource fails to get hash")]
     MaaResourceGetHashError,
 
