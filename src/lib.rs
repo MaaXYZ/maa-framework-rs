@@ -59,6 +59,7 @@ pub mod error;
 pub mod instance;
 pub mod msg;
 pub mod resource;
+pub mod diff_task;
 
 use error::Error;
 
