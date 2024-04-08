@@ -1,16 +1,18 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug};
 
 use derive_builder::Builder;
-use serde::Serialize;
+use serde::{Serialize,ser::SerializeSeq};
 use serde_json::Value;
+use serde_with::skip_serializing_none;
 
-use crate::instance::TaskParam;
-
-pub enum List<T> {
+#[derive(Serialize,Debug, Clone)]
+#[serde(untagged)]
+pub enum List<T:Debug + Clone + Serialize> {
     Single(T),
     Multiple(Vec<T>),
 }
 
+#[derive(Serialize,Debug, Clone)]
 pub enum Recognition {
     DirectHit,
     TemplateMatch,
@@ -22,6 +24,7 @@ pub enum Recognition {
     Custom,
 }
 
+#[derive(Serialize, Debug, Clone)]
 pub enum Action {
     DoNothing,
     Click,
@@ -32,6 +35,7 @@ pub enum Action {
     Custom,
 }
 
+#[derive(Serialize, Debug, Clone)]
 pub enum Order {
     Horizontal,
     Vertical,
@@ -40,6 +44,7 @@ pub enum Order {
     Area,
 }
 
+#[derive(Serialize, Debug, Clone)]
 pub enum Detector {
     SIFT,
     KAZE,
@@ -48,6 +53,7 @@ pub enum Detector {
     BRISK,
 }
 
+#[derive(Serialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum WaitFreezes {
     Time(u32),
@@ -60,6 +66,7 @@ pub enum WaitFreezes {
     },
 }
 
+#[derive(Debug, Clone)]
 pub enum Target {
     True,
     Task(String),
@@ -75,7 +82,7 @@ impl Serialize for Target {
             Target::True => serializer.serialize_bool(true),
             Target::Task(task) => serializer.serialize_str(task),
             Target::Area(area) => {
-                let seq = serializer.serialize_seq(Some(4))?;
+                let mut seq = serializer.serialize_seq(Some(4))?;
                 for e in area.iter() {
                     seq.serialize_element(e)?;
                 }
@@ -85,8 +92,8 @@ impl Serialize for Target {
     }
 }
 
+#[derive(Serialize, Default, Builder, Debug, Clone)]
 #[skip_serializing_none]
-#[derive(Serialize, Default, Builder, Debug, Clone, Copy)]
 pub struct DiffTask {
     pub recognition: Option<Recognition>,
     pub action: Option<Action>,
