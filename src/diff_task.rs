@@ -92,8 +92,8 @@ impl Serialize for Target {
     }
 }
 
-#[derive(Serialize, Default, Builder, Debug, Clone)]
 #[skip_serializing_none]
+#[derive(Serialize, Default, Builder, Debug, Clone)]
 #[builder(default)]
 pub struct DiffTask {
     pub recognition: Option<Recognition>,
