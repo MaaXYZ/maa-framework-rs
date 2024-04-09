@@ -1,18 +1,18 @@
 use std::{collections::HashMap, fmt::Debug};
 
 use derive_builder::Builder;
-use serde::{Serialize,ser::SerializeSeq};
+use serde::{ser::SerializeSeq, Serialize};
 use serde_json::Value;
 use serde_with::skip_serializing_none;
 
-#[derive(Serialize,Debug, Clone)]
+#[derive(Serialize, Debug, Clone)]
 #[serde(untagged)]
-pub enum List<T:Debug + Clone + Serialize> {
+pub enum List<T: Debug + Clone + Serialize> {
     Single(T),
     Multiple(Vec<T>),
 }
 
-#[derive(Serialize,Debug, Clone)]
+#[derive(Serialize, Debug, Clone)]
 pub enum Recognition {
     DirectHit,
     TemplateMatch,
@@ -94,6 +94,7 @@ impl Serialize for Target {
 
 #[derive(Serialize, Default, Builder, Debug, Clone)]
 #[skip_serializing_none]
+#[builder(default)]
 pub struct DiffTask {
     pub recognition: Option<Recognition>,
     pub action: Option<Action>,
