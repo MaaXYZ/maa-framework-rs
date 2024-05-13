@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Debug};
+use std::fmt::Debug;
 
 use derive_builder::Builder;
 use serde::{ser::SerializeSeq, Serialize};
@@ -92,6 +92,13 @@ impl Serialize for Target {
     }
 }
 
+#[derive(Serialize, Debug, Clone)]
+#[serde(untagged)]
+pub enum Variant<T, S> {
+    Left(T),
+    Right(S),
+}
+
 #[skip_serializing_none]
 #[derive(Serialize, Default, Builder, Debug, Clone)]
 #[builder(default)]
@@ -124,12 +131,12 @@ pub struct DiffTask {
     pub lower: Option<List<Vec<u32>>>,
     pub upper: Option<List<Vec<u32>>>,
     pub connected: Option<bool>,
-    pub text: Option<List<String>>,
+    pub expected: Option<List<Variant<String, u32>>>,
+    pub input_text: Option<String>,
     pub only_rec: Option<bool>,
     pub model: Option<String>,
     pub cls_size: Option<u32>,
     pub labels: Option<Vec<String>>,
-    pub expected: Option<List<u32>>,
     pub custom_recognition: Option<String>,
     pub custom_recognition_param: Option<Value>,
     pub target: Option<Target>,

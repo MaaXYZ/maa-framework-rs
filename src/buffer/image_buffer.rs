@@ -1,6 +1,6 @@
 use std::ffi::c_void;
 
-use crate::internal;
+use crate::{internal, maa_bool, Error, MaaResult};
 
 pub struct MaaImageBuffer {
     pub(crate) handle: internal::MaaImageBufferHandle,
@@ -27,6 +27,17 @@ impl MaaImageBuffer {
             handle,
             destroy_at_drop: true,
         }
+    }
+
+    pub fn empty(&self) -> bool {
+        let empty = unsafe { internal::MaaIsImageEmpty(self.handle) };
+
+        maa_bool!(empty)
+    }
+
+    pub fn clear(&self) -> MaaResult<()> {
+        let ret = unsafe { internal::MaaClearImage(self.handle) };
+        maa_bool!(ret, BufferError)
     }
 
     pub fn get_raw(&self) -> *mut c_void {

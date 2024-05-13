@@ -5,7 +5,7 @@ use crate::{
     controller::MaaControllerOption,
     instance::{MaaInstOption, MaaTaskId},
     resource::MaaResOption,
-    MaaGlobalOption,
+    utility::MaaGlobalOption,
 };
 
 #[derive(Error, Debug, Serialize, Deserialize)]
@@ -101,6 +101,9 @@ pub enum Error {
     #[error("MaaSyncContext fails to screencap")]
     MaaSyncContextScreencapError,
 
+    #[error("MaaSyncContext fails to get cached image")]
+    MaaSyncContextCachedImageError,
+
     #[error("MaaResource fails to get hash")]
     MaaResourceGetHashError,
 
@@ -121,6 +124,9 @@ pub enum Error {
 
     #[error("MaaToolkit fails to find device")]
     MaaToolkitPostFindDeviceError,
+
+    #[error("Buffer operation failed.")]
+    BufferError,
 
     #[error("(De)serialize error: {0}")]
     SerdeError(String),

@@ -9,6 +9,7 @@ pub enum MaaWin32ControllerTouchType {
     Invalid,
     #[default]
     SendMessage,
+    Seize,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone, Copy)]
@@ -16,6 +17,7 @@ pub enum MaaWin32ControllerKeyType {
     Invalid,
     #[default]
     SendMessage,
+    Seize,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone, Copy)]
@@ -91,6 +93,9 @@ impl From<MaaWin32ControllerType> for internal::MaaWin32ControllerTypeEnum {
             MaaWin32ControllerTouchType::SendMessage => {
                 internal::MaaWin32ControllerTypeEnum_MaaWin32ControllerType_Touch_SendMessage
             }
+            MaaWin32ControllerTouchType::Seize => {
+                internal::MaaWin32ControllerTypeEnum_MaaWin32ControllerType_Touch_Seize
+            }
         };
 
         let key_type = match value.key_type {
@@ -99,6 +104,9 @@ impl From<MaaWin32ControllerType> for internal::MaaWin32ControllerTypeEnum {
             }
             MaaWin32ControllerKeyType::SendMessage => {
                 internal::MaaWin32ControllerTypeEnum_MaaWin32ControllerType_Key_SendMessage
+            }
+            MaaWin32ControllerKeyType::Seize => {
+                internal::MaaWin32ControllerTypeEnum_MaaWin32ControllerType_Key_Seize
             }
         };
 

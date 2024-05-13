@@ -3,7 +3,7 @@ use std::{
     path::PathBuf,
 };
 
-const MAA_FRAMEWORK_VERSION: &str = "v1.7.0-alpha.3";
+const MAA_FRAMEWORK_VERSION: &str = "v1.7.0";
 
 pub fn get_bundled_dir(include_dir: &mut Vec<PathBuf>, libs: &mut Vec<PathBuf>) -> Result<(), ()> {
     let (include_path, lib_path) = download_maa_framework().unwrap();

@@ -1,11 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    error::Error,
-    instance::MaaInstance,
-    internal,
-    maa_bool, string, MaaResult,
-};
+use crate::{error::Error, instance::MaaInstance, internal, maa_bool, string, MaaResult};
 
 #[cfg(feature = "win32")]
 use crate::controller::win32::MaaWin32Hwnd;
@@ -21,6 +16,7 @@ impl MaaToolkit {
     /// # Errors
     ///
     /// Returns an error if the toolkit initialization fails
+    #[deprecated(since = "0.4.0", note = "Use `MaaToolkit::new_with_options` instead")]
     pub fn new() -> MaaResult<Self> {
         let toolkit_init_ret = unsafe { internal::MaaToolkitInit() };
 
@@ -118,17 +114,27 @@ impl MaaToolkit {
         handle: MaaInstance<T>,
         recognizer_name: &str,
         recognizer_exec_path: &str,
-        recognizer_exec_param_json: &str,
+        recognizer_exec_params: Vec<String>,
     ) -> MaaResult<()> {
         let recognizer_name = internal::to_cstring(recognizer_name);
         let recognizer_exec_path = internal::to_cstring(recognizer_exec_path);
-        let recognizer_exec_param_json = internal::to_cstring(recognizer_exec_param_json);
+
+        let param_size = recognizer_exec_params.len() as u64;
+        let mut params: Vec<_> = recognizer_exec_params
+            .into_iter()
+            .map(|s| internal::to_cstring(&s))
+            .collect();
+        params.shrink_to_fit();
+        let params_ptr = params.as_ptr();
+        std::mem::forget(params);
+
         let ret = unsafe {
             internal::MaaToolkitRegisterCustomRecognizerExecutor(
                 *handle,
                 recognizer_name,
                 recognizer_exec_path,
-                recognizer_exec_param_json,
+                params_ptr,
+                param_size,
             )
         };
 
@@ -162,18 +168,27 @@ impl MaaToolkit {
         handle: MaaInstance<T>,
         action_name: &str,
         action_exec_path: &str,
-        action_exec_param_json: &str,
+        action_exec_params: Vec<String>,
     ) -> MaaResult<()> {
         let action_name = internal::to_cstring(action_name);
         let action_exec_path = internal::to_cstring(action_exec_path);
-        let action_exec_param_json = internal::to_cstring(action_exec_param_json);
+
+        let param_size = action_exec_params.len() as u64;
+        let mut params: Vec<_> = action_exec_params
+            .into_iter()
+            .map(|s| internal::to_cstring(&s))
+            .collect();
+        params.shrink_to_fit();
+        let params_ptr = params.as_ptr();
+        std::mem::forget(params);
 
         let ret = unsafe {
             internal::MaaToolkitRegisterCustomActionExecutor(
                 *handle,
                 action_name,
                 action_exec_path,
-                action_exec_param_json,
+                params_ptr,
+                param_size,
             )
         };
 
@@ -256,11 +271,19 @@ impl MaaToolkit {
         let hwnd = unsafe { internal::MaaToolkitGetForegroundWindow() };
         MaaWin32Hwnd(hwnd)
     }
-}
 
-impl Drop for MaaToolkit {
-    fn drop(&mut self) {
-        unsafe { internal::MaaToolkitUninit() };
+    #[cfg(feature = "win32")]
+    #[doc(cfg(feature = "win32"))]
+    pub fn list_windows(&self) -> Vec<MaaWin32Hwnd> {
+        let hwnd_count = unsafe { internal::MaaToolkitListWindows() };
+        let mut hwnds = Vec::with_capacity(hwnd_count as usize);
+
+        for i in 0..hwnd_count {
+            let hwnd = unsafe { internal::MaaToolkitGetWindow(i) };
+            hwnds.push(MaaWin32Hwnd(hwnd));
+        }
+
+        hwnds
     }
 }
 
@@ -275,16 +298,4 @@ pub struct AdbDeviceInfo {
     pub adb_serial: String,
     pub adb_controller_type: MaaAdbControllerType,
     pub adb_config: String,
-}
-
-#[cfg(test)]
-mod test {
-    use super::MaaToolkit;
-
-    #[test]
-    fn test_init() {
-        let toolkit = MaaToolkit::new();
-
-        assert!(toolkit.is_ok());
-    }
 }

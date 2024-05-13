@@ -33,6 +33,7 @@ pub enum MaaAdbControlScreencapType {
     MinicapStream,
     FastestLosslessWay,
     FastestWay,
+    EmulatorExtras,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone, Copy)]
@@ -146,7 +147,8 @@ impl From<MaaAdbControllerType> for internal::MaaAdbControllerTypeEnum {
             MaaAdbControlScreencapType::MinicapDirect => internal::MaaAdbControllerTypeEnum_MaaAdbControllerType_Screencap_MinicapDirect,
             MaaAdbControlScreencapType::MinicapStream => internal::MaaAdbControllerTypeEnum_MaaAdbControllerType_Screencap_MinicapStream,
             MaaAdbControlScreencapType::FastestLosslessWay => internal::MaaAdbControllerTypeEnum_MaaAdbControllerType_Screencap_FastestLosslessWay,
-            MaaAdbControlScreencapType::FastestWay => internal::MaaAdbControllerTypeEnum_MaaAdbControllerType_Screencap_FastestWay
+            MaaAdbControlScreencapType::FastestWay => internal::MaaAdbControllerTypeEnum_MaaAdbControllerType_Screencap_FastestWay,
+            MaaAdbControlScreencapType::EmulatorExtras => internal::MaaAdbControllerTypeEnum_MaaAdbControllerType_Screencap_EmulatorExtras
         };
 
         touch_type | key_type | screencap_type

@@ -4,8 +4,7 @@ use crate::{
     },
     error::Error,
     instance::TaskParam,
-    internal,
-    maa_bool, MaaResult,
+    internal, maa_bool, MaaResult,
 };
 
 pub struct MaaSyncContext {
@@ -59,7 +58,7 @@ impl MaaSyncContext {
         let task_param = internal::to_cstring(&task_param);
 
         let ret = unsafe {
-            internal::MaaSyncContextRunRecognizer(
+            internal::MaaSyncContextRunRecognition(
                 self.handle,
                 image.handle,
                 name,
@@ -160,6 +159,18 @@ impl MaaSyncContext {
             Ok(buffer)
         } else {
             Err(Error::MaaSyncContextScreencapError)
+        }
+    }
+
+    pub fn cached_image(&self) -> MaaResult<MaaImageBuffer> {
+        let buffer = MaaImageBuffer::new();
+
+        let ret = unsafe { internal::MaaSyncContextCachedImage(self.handle, buffer.handle) };
+
+        if maa_bool!(ret) {
+            Ok(buffer)
+        } else {
+            Err(Error::MaaSyncContextCachedImageError)
         }
     }
 }
