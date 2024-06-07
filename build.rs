@@ -14,7 +14,7 @@ fn main() {
     let mut include_dir = vec![];
     let mut lib_dir = vec![];
 
-    #[cfg(not(feature = "bundled"))]
+    #[cfg(not(feature = "download"))]
     if cmake_probe::cmake_probe(&mut include_dir, &mut lib_dir).is_err() {
         panic!("Unable to find MaaFramework libraries");
     }

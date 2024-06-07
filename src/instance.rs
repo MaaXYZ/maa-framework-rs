@@ -8,24 +8,22 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
+pub use internal::MaaTaskId;
+
 use crate::{
+    CallbackHandler,
     controller::MaaControllerInstance,
     error,
     internal,
     maa_bool,
-    resource::MaaResourceInstance,
-    CallbackHandler, MaaResult, MaaStatus,
+    MaaResult, MaaStatus, resource::MaaResourceInstance,
 };
-
-#[cfg(feature = "custom_recognizer")]
-use crate::custom::custom_recognizer::{custom_recognier_analyze, MaaCustomRecognizer};
-
 #[cfg(feature = "custom_action")]
 use crate::custom::custom_action::{
     maa_custom_action_run, maa_custom_action_stop, MaaCustomAction,
 };
-
-pub use internal::MaaTaskId;
+#[cfg(feature = "custom_recognizer")]
+use crate::custom::custom_recognizer::{custom_recognier_analyze, MaaCustomRecognizer};
 
 pub trait TaskParam: Serialize {
     fn get_param(&self) -> String {
@@ -175,6 +173,18 @@ impl<T> MaaInstance<T> {
         let param = param.get_param();
         let param = CString::new(param).unwrap();
         unsafe { internal::MaaPostTask(self.handle, entry.as_ptr(), param.as_ptr()) }
+    }
+
+    pub fn post_recognition(&self, entry: &str, param: &str) -> MaaTaskId {
+        let entry = CString::new(entry).unwrap();
+        let param = CString::new(param).unwrap();
+        unsafe { internal::MaaPostRecognition(self.handle, entry.as_ptr(), param.as_ptr()) }
+    }
+
+    pub fn post_action(&self, entry: &str, param: &str) -> MaaTaskId {
+        let entry = CString::new(entry).unwrap();
+        let param = CString::new(param).unwrap();
+        unsafe { internal::MaaPostAction(self.handle, entry.as_ptr(), param.as_ptr()) }
     }
 
     pub fn set_task_param(&self, task_id: MaaTaskId, param: &str) -> MaaResult<()> {

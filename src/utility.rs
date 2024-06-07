@@ -7,9 +7,10 @@ use crate::{
         image_list_buffer::MaaImageListBuffer, rect_buffer::MaaRectBuffer,
         string_buffer::MaaStringBuffer,
     },
-    internal::{self, MaaQueryRecognitionDetail},
-    maa_bool, Error, MaaResult,
+    Error,
+    internal, maa_bool, MaaResult,
 };
+use crate::buffer::image_buffer::MaaImageBuffer;
 
 #[repr(C)]
 #[derive(Debug, Serialize, Deserialize)]
@@ -111,46 +112,82 @@ pub fn set_global_option(option: MaaGlobalOption) -> MaaResult<()> {
     maa_bool!(ret, MaaSetGlobalOptionError, option)
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct RunningDetail {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NodeDetail {
+    pub name: String,
     pub reco_id: i64,
     pub successful: bool,
 }
 
-pub fn query_running_detail(run_id: i64) -> RunningDetail {
+pub fn query_node_detail(node_id: i64) -> NodeDetail {
     let mut reco_id: i64 = 0;
     let mut successful: u8 = 0;
 
+    let name = MaaStringBuffer::new();
+
     unsafe {
-        internal::MaaQueryRunningDetail(run_id, &mut reco_id, &mut successful);
+        internal::MaaQueryNodeDetail(node_id, name.handle, &mut reco_id, &mut successful);
     }
 
     let successful = maa_bool!(successful);
-    RunningDetail {
+    NodeDetail {
+        name: name.string(),
         reco_id,
         successful,
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TaskDetail {
+    pub entry: String,
+    pub node_id_list: Vec<i64>,
+}
+
+pub fn query_task_detail(task_id: i64) -> TaskDetail {
+    // first get size
+    let mut size: u64 = 0;
+    unsafe {
+        internal::MaaQueryTaskDetail(task_id, null_mut(), null_mut(), &mut size);
+    }
+
+    let entry = MaaStringBuffer::new();
+    let mut node_id_list = vec![0; size as usize];
+
+    unsafe {
+        internal::MaaQueryTaskDetail(task_id, entry.handle, node_id_list.as_mut_ptr(), &mut size);
+    }
+
+    TaskDetail {
+        entry: entry.string(),
+        node_id_list,
+    }
+}
+
 pub struct RecognitionDetail {
+    pub name: String,
     pub hit: bool,
     pub hit_box: MaaRectBuffer,
-    pub detail_json: MaaStringBuffer,
+    pub detail_json: String,
+    pub raw: MaaImageBuffer,
     pub draws: MaaImageListBuffer,
 }
 
 pub fn query_recognition_detail(reco_id: i64) -> RecognitionDetail {
+    let name = MaaStringBuffer::new();
     let mut hit: u8 = 0;
     let hit_box: MaaRectBuffer = Default::default();
     let detail_json: MaaStringBuffer = Default::default();
+    let raw = MaaImageBuffer::new();
     let draws: MaaImageListBuffer = Default::default();
 
     unsafe {
-        MaaQueryRecognitionDetail(
+        internal::MaaQueryRecognitionDetail(
             reco_id,
+            name.handle,
             &mut hit,
             hit_box.handle,
             detail_json.handle,
+            raw.handle,
             draws.handle,
         );
     }
@@ -158,9 +195,11 @@ pub fn query_recognition_detail(reco_id: i64) -> RecognitionDetail {
     let hit = maa_bool!(hit);
 
     RecognitionDetail {
+        name: name.string(),
         hit,
         hit_box,
-        detail_json,
+        detail_json: detail_json.string(),
+        raw,
         draws,
     }
 }
