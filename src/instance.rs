@@ -7,6 +7,7 @@ use std::{
 };
 
 use serde::{Deserialize, Serialize};
+use tokio::task::JoinError;
 
 pub use internal::MaaTaskId;
 
@@ -58,6 +59,33 @@ impl MaaInstOption {
     }
 }
 
+pub struct MaaTaskResult<'a, T> {
+    pub task_id: MaaTaskId,
+    pub instance: &'a MaaInstance<T>,
+}
+
+impl<'a, T> MaaTaskResult<'a, T> {
+    pub fn status(&self) -> MaaResult<MaaStatus> {
+        self.instance.task_status(self.task_id)
+    }
+
+    pub fn wait(&self) -> MaaResult<MaaStatus> {
+        self.instance.wait_task(self.task_id)
+    }
+
+    #[cfg(feature = "tokio")]
+    #[doc(cfg(feature = "tokio"))]
+    pub async fn wait_async(&self) -> Result<MaaResult<MaaStatus>, JoinError> {
+        tokio::spawn(async move {
+            self.instance.wait_task(self.task_id)
+        }).await
+    }
+
+    pub fn set_task_param(&self, param: &str) -> MaaResult<()> {
+        self.instance.set_task_param(self.task_id, param)
+    }
+}
+
 /// The MaaInstance struct is the main entry point for the Maa library.
 ///
 /// It is used to create and manage the Maa instance for running tasks.
@@ -69,12 +97,12 @@ impl MaaInstOption {
 ///
 /// let instance = MaaInstance::new(None);
 /// // let param = serde_json::json!({"param": "value"});
-/// // instance.post_task("task", param);
+/// // instance.post_task("task", param).await;
 /// ```
 ///
 /// # Note
 ///
-/// [MaaInstance],[MaaResourceInstance] and [MaaControllerInstance] use the same mechanism to manage the lifetime of the underlying C++ object.
+/// [MaaInstance], [MaaResourceInstance] and [MaaControllerInstance] use the same mechanism to manage the lifetime of the underlying C++ object.
 /// That is, if the object is created from the Rust code (like `MaaInstance::new`), the object will be destroyed when it goes out of scope. In this case, it is your responsibility to ensure that the object is not used after it has been destroyed.
 /// If the object is created from the C++ code, then you will not have to worry about the lifetime of the object.
 #[derive(Debug)]
@@ -109,7 +137,7 @@ impl<T> MaaInstance<T> {
         let handle = unsafe {
             match handler {
                 Some(handler) => {
-                    let callback_arg = Box::into_raw(Box::new(handler)) as *mut std::ffi::c_void;
+                    let callback_arg = Box::into_raw(Box::new(handler)) as *mut c_void;
                     internal::MaaCreate(Some(internal::callback_handler::<T>), callback_arg)
                 }
                 None => internal::MaaCreate(None, null_mut()),
@@ -165,29 +193,41 @@ impl<T> MaaInstance<T> {
         maa_bool!(ret)
     }
 
-    pub fn post_task<P>(&self, entry: &str, param: P) -> MaaTaskId
+    pub fn post_task<P>(&self, entry: &str, param: P) -> MaaTaskResult<T>
     where
         P: TaskParam,
     {
         let entry = CString::new(entry).unwrap();
         let param = param.get_param();
         let param = CString::new(param).unwrap();
-        unsafe { internal::MaaPostTask(self.handle, entry.as_ptr(), param.as_ptr()) }
+        let task_id = unsafe { internal::MaaPostTask(self.handle, entry.as_ptr(), param.as_ptr()) };
+        MaaTaskResult {
+            task_id,
+            instance: self,
+        }
     }
 
-    pub fn post_recognition(&self, entry: &str, param: &str) -> MaaTaskId {
+    pub fn post_recognition(&self, entry: &str, param: &str) -> MaaTaskResult<T> {
         let entry = CString::new(entry).unwrap();
         let param = CString::new(param).unwrap();
-        unsafe { internal::MaaPostRecognition(self.handle, entry.as_ptr(), param.as_ptr()) }
+        let task_id = unsafe { internal::MaaPostRecognition(self.handle, entry.as_ptr(), param.as_ptr()) };
+        MaaTaskResult {
+            task_id,
+            instance: self,
+        }
     }
 
-    pub fn post_action(&self, entry: &str, param: &str) -> MaaTaskId {
+    pub fn post_action(&self, entry: &str, param: &str) -> MaaTaskResult<T> {
         let entry = CString::new(entry).unwrap();
         let param = CString::new(param).unwrap();
-        unsafe { internal::MaaPostAction(self.handle, entry.as_ptr(), param.as_ptr()) }
+        let task_id = unsafe { internal::MaaPostAction(self.handle, entry.as_ptr(), param.as_ptr()) };
+        MaaTaskResult {
+            task_id,
+            instance: self,
+        }
     }
 
-    pub fn set_task_param(&self, task_id: MaaTaskId, param: &str) -> MaaResult<()> {
+    fn set_task_param(&self, task_id: MaaTaskId, param: &str) -> MaaResult<()> {
         let param = internal::to_cstring(param);
         let ret = unsafe { internal::MaaSetTaskParam(self.handle, task_id, param) };
 
@@ -198,13 +238,13 @@ impl<T> MaaInstance<T> {
         }
     }
 
-    pub fn task_status(&self, task_id: MaaTaskId) -> MaaResult<MaaStatus> {
+    fn task_status(&self, task_id: MaaTaskId) -> MaaResult<MaaStatus> {
         let status = unsafe { internal::MaaTaskStatus(self.handle, task_id) };
 
         MaaStatus::try_from(status)
     }
 
-    pub fn wait_task(&self, task_id: MaaTaskId) -> MaaResult<MaaStatus> {
+    fn wait_task(&self, task_id: MaaTaskId) -> MaaResult<MaaStatus> {
         let status = unsafe { internal::MaaWaitTask(self.handle, task_id) };
 
         MaaStatus::try_from(status)
@@ -259,14 +299,14 @@ impl<T> MaaInstance<T> {
     {
         let name_str = internal::to_cstring(name);
         let recognizer = Box::new(recognizer);
-        let recognizer = Box::into_raw(recognizer) as *mut std::ffi::c_void;
+        let recognizer = Box::into_raw(recognizer) as *mut c_void;
 
         let recognizer_api = internal::MaaCustomRecognizerAPI {
             analyze: Some(custom_recognier_analyze::<R>),
         };
 
         let recognizer_api = Box::new(recognizer_api);
-        let recognizer_api = Box::into_raw(recognizer_api) as *mut std::ffi::c_void;
+        let recognizer_api = Box::into_raw(recognizer_api) as *mut c_void;
 
         self.registered_custom_recognizers
             .insert(name.to_owned(), (recognizer, recognizer_api));
@@ -347,7 +387,7 @@ impl<T> MaaInstance<T> {
     {
         let name_str = internal::to_cstring(name);
         let action = Box::new(action);
-        let action = Box::into_raw(action) as *mut std::ffi::c_void;
+        let action = Box::into_raw(action) as *mut c_void;
 
         let action_api = internal::MaaCustomActionAPI {
             run: Some(maa_custom_action_run::<A>),
@@ -355,7 +395,7 @@ impl<T> MaaInstance<T> {
         };
 
         let action_api = Box::new(action_api);
-        let action_api = Box::into_raw(action_api) as *mut std::ffi::c_void;
+        let action_api = Box::into_raw(action_api) as *mut c_void;
 
         self.registered_custom_actions
             .insert(name.to_owned(), (action, action_api));
