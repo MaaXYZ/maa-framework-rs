@@ -7,6 +7,7 @@ use std::{
 };
 
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "tokio")]
 use tokio::task::JoinError;
 
 pub use internal::MaaTaskId;
