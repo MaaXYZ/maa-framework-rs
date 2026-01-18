@@ -27,64 +27,64 @@
 <br />
 
 <p align="center">
-  English | <a href="README_zh.md">简体中文</a>
+  <a href="README.md">English</a> | 简体中文
 </p>
 
-Rust bindings for [MaaFramework](https://github.com/MaaAssistantArknights/MaaFramework), a next-generation automation framework based on image recognition.
+[MaaFramework](https://github.com/MaaAssistantArknights/MaaFramework) 的 Rust 绑定，基于图像识别的新一代自动化框架。
 
-## ✨ Features
+## ✨ 特性
 
-- **Full API Coverage** - Complete bindings for MaaFramework APIs
-- **Safe Rust** - Memory-safe wrappers with proper lifetime management
-- **DLL Auto-Copy** - Runtime libraries are copied to `target/` automatically
+- **完整 API 覆盖** - MaaFramework API 完整绑定
+- **安全 Rust** - 内存安全的封装和生命周期管理
+- **DLL 自动复制** - 运行时库自动复制到 `target/`
 
-## 📦 Installation
+## 📦 安装
 
-### 1. Add Dependency
+### 1. 添加依赖
 
 ```toml
 [dependencies]
 maa-framework = "0.6"
 ```
 
-### 2. Download SDK
+### 2. 下载 SDK
 
-Download from [MaaFramework Releases](https://github.com/MaaXYZ/MaaFramework/releases/latest):
+从 [MaaFramework Releases](https://github.com/MaaXYZ/MaaFramework/releases/latest) 下载：
 
-| Platform | Architecture | Download |
-| -------- | ------------ | -------- |
-| Windows  | x86_64       | `MAA-win-x86_64-*.zip` |
-| Windows  | aarch64      | `MAA-win-aarch64-*.zip` |
-| Linux    | x86_64       | `MAA-linux-x86_64-*.zip` |
-| Linux    | aarch64      | `MAA-linux-aarch64-*.zip` |
-| macOS    | x86_64       | `MAA-macos-x86_64-*.zip` |
-| macOS    | aarch64      | `MAA-macos-aarch64-*.zip` |
+| 平台 | 架构 | 下载 |
+| ---- | ---- | ---- |
+| Windows | x86_64 | `MAA-win-x86_64-*.zip` |
+| Windows | aarch64 | `MAA-win-aarch64-*.zip` |
+| Linux | x86_64 | `MAA-linux-x86_64-*.zip` |
+| Linux | aarch64 | `MAA-linux-aarch64-*.zip` |
+| macOS | x86_64 | `MAA-macos-x86_64-*.zip` |
+| macOS | aarch64 | `MAA-macos-aarch64-*.zip` |
 
-### 3. Extract to Project
+### 3. 解压到项目
 
 ```
 my-project/
 ├── Cargo.toml
 ├── src/
 │   └── main.rs
-└── MAA-win-x86_64-v5.4.1/    # Extracted SDK
+└── MAA-win-x86_64-v5.4.1/    # 解压的 SDK
     ├── bin/
     ├── lib/
     └── include/
 ```
 
-Or set `MAA_SDK_PATH` environment variable.
+或设置 `MAA_SDK_PATH` 环境变量。
 
-### 4. Build & Run
+### 4. 构建运行
 
 ```bash
 cargo build
 cargo run
 ```
 
-> DLLs are automatically copied to `target/debug/` or `target/release/`.
+> DLL 会自动复制到 `target/debug/` 或 `target/release/`。
 
-## 🚀 Quick Start
+## 🚀 快速开始
 
 ```rust
 use maa_framework::toolkit::Toolkit;
@@ -97,7 +97,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let devices = Toolkit::find_adb_devices()?;
     if devices.is_empty() {
-        eprintln!("No ADB device found");
+        eprintln!("未找到 ADB 设备");
         return Ok(());
     }
 
@@ -118,12 +118,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     tasker.bind_resource(&resource)?;
 
     if !tasker.inited() {
-        eprintln!("Failed to initialize MAA");
+        eprintln!("MAA 初始化失败");
         return Ok(());
     }
 
     tasker.post_task("Startup", "{}")?;
-    println!("Task started!");
+    println!("任务已启动!");
 
     Ok(())
 }
@@ -131,19 +131,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## 🔧 Features
 
-| Feature | Description | Default |
-|---------|-------------|---------|
-| `toolkit` | Device discovery utilities | ✅ |
-| `adb` | ADB controller support | ✅ |
-| `win32` | Win32 controller (Windows) | ✅ |
-| `custom` | Custom recognizer/action | ✅ |
-| `image` | `image` crate integration | ❌ |
+| Feature | 描述 | 默认 |
+|---------|------|------|
+| `toolkit` | 设备发现工具 | ✅ |
+| `adb` | ADB 控制器支持 | ✅ |
+| `win32` | Win32 控制器 (Windows) | ✅ |
+| `custom` | 自定义识别器/动作 | ✅ |
+| `image` | `image` crate 集成 | ❌ |
 
-## 📚 Documentation
+## 📚 文档
 
-- [API Documentation](https://docs.rs/maa-framework)
-- [MaaFramework Docs](https://github.com/MaaXYZ/MaaFramework/tree/main/docs)
+- [API 文档](https://docs.rs/maa-framework)
+- [MaaFramework 文档](https://github.com/MaaXYZ/MaaFramework/tree/main/docs)
 
 ## 📄 License
 
-LGPL-3.0 - see [LICENSE](LICENSE.md)
+LGPL-3.0 - 见 [LICENSE](LICENSE.md)

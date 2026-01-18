@@ -1,301 +1,166 @@
-use serde::{Deserialize, Serialize};
+use crate::{common, sys, MaaError, MaaResult};
+use std::ffi::{CStr, CString};
+use std::path::PathBuf;
 
-use crate::{error::Error, instance::MaaInstance, internal, maa_bool, string, MaaResult};
+#[derive(Debug, Clone)]
+pub struct AdbDevice {
+    pub name: String,
+    pub adb_path: PathBuf,
+    pub address: String,
+    pub screencap_methods: u64,
+    pub input_methods: u64,
+    pub config: serde_json::Value,
+}
 
-#[cfg(feature = "win32")]
-use crate::controller::win32::MaaWin32Hwnd;
+#[derive(Debug, Clone)]
+pub struct DesktopWindow {
+    pub hwnd: *mut std::ffi::c_void,
+    pub class_name: String,
+    pub window_name: String,
+}
 
-#[cfg(feature = "adb")]
-use crate::controller::adb::MaaAdbControllerType;
+pub struct Toolkit;
 
-pub struct MaaToolkit;
+impl Toolkit {
+    pub fn init_option(user_path: &str, default_config: &str) -> MaaResult<()> {
+        let c_path = CString::new(user_path)?;
+        let c_config = CString::new(default_config)?;
+        let ret = unsafe { sys::MaaToolkitConfigInitOption(c_path.as_ptr(), c_config.as_ptr()) };
+        common::check_bool(ret)
+    }
 
-impl MaaToolkit {
-    /// Initialize the MaaToolkit
+    /// Find connected ADB devices.
     ///
-    /// # Errors
+    /// Scans for all known Android emulators and connected ADB devices.
     ///
-    /// Returns an error if the toolkit initialization fails
-    #[deprecated(since = "0.4.0", note = "Use `MaaToolkit::new_with_options` instead")]
-    pub fn new() -> MaaResult<Self> {
-        let toolkit_init_ret = unsafe { internal::MaaToolkitInit() };
-
-        if !maa_bool!(toolkit_init_ret) {
-            return Err(Error::MaaToolkitInitError);
-        }
-
-        Ok(Self)
+    /// # Returns
+    /// List of discovered ADB devices with their configurations.
+    pub fn find_adb_devices() -> MaaResult<Vec<AdbDevice>> {
+        Self::find_adb_devices_impl(None)
     }
 
-    pub fn new_with_options<T: Serialize>(user_path: String, config: T) -> MaaResult<Self> {
-        let user_path = internal::to_cstring(&user_path);
-        let config = internal::to_cstring(&serde_json::to_string(&config).unwrap());
-
-        let toolkit_init_ret = unsafe { internal::MaaToolkitInitOptionConfig(user_path, config) };
-
-        if !maa_bool!(toolkit_init_ret) {
-            return Err(Error::MaaToolkitInitError);
-        }
-
-        Ok(Self)
-    }
-
-    /// Find all the devices
+    /// Find connected ADB devices using a specific ADB binary.
     ///
-    /// # Errors
+    /// # Arguments
+    /// * `adb_path` - Path to the ADB binary to use for discovery
     ///
-    /// Return an error if fails to convert MaaStringView to String
-    #[cfg(feature = "adb")]
-    #[doc(cfg(feature = "adb"))]
-    pub fn find_adb_device(&self) -> MaaResult<Vec<AdbDeviceInfo>> {
-        let ret = unsafe { internal::MaaToolkitPostFindDevice() };
-
-        if !maa_bool!(ret) {
-            return Err(Error::MaaToolkitPostFindDeviceError);
-        }
-
-        let device_count = unsafe { internal::MaaToolkitWaitForFindDeviceToComplete() };
-
-        self.get_adb_devices_info(device_count)
+    /// # Returns
+    /// List of discovered ADB devices with their configurations.
+    pub fn find_adb_devices_with_adb(adb_path: &str) -> MaaResult<Vec<AdbDevice>> {
+        Self::find_adb_devices_impl(Some(adb_path))
     }
 
-    /// Find all the devices with a given adb path
-    ///
-    /// # Errors
-    ///
-    /// Return an error if fails to convert MaaStringView to String
-    #[cfg(feature = "adb")]
-    #[doc(cfg(feature = "adb"))]
-    pub fn find_adb_device_with_adb(&self, adb_path: &str) -> MaaResult<Vec<AdbDeviceInfo>> {
-        let adb_path = internal::to_cstring(adb_path);
-        let ret = unsafe { internal::MaaToolkitPostFindDeviceWithAdb(adb_path) };
-
-        if !maa_bool!(ret) {
-            return Err(Error::MaaToolkitPostFindDeviceError);
+    fn find_adb_devices_impl(specified_adb: Option<&str>) -> MaaResult<Vec<AdbDevice>> {
+        let list = unsafe { sys::MaaToolkitAdbDeviceListCreate() };
+        if list.is_null() {
+            return Err(MaaError::NullPointer);
         }
 
-        let device_count = unsafe { internal::MaaToolkitWaitForFindDeviceToComplete() };
+        let _guard = AdbDeviceListGuard(list);
 
-        self.get_adb_devices_info(device_count)
-    }
-
-    #[cfg(feature = "adb")]
-    #[doc(cfg(feature = "adb"))]
-    fn get_adb_devices_info(&self, device_count: u64) -> MaaResult<Vec<AdbDeviceInfo>> {
-        let mut devices = Vec::with_capacity(device_count as usize);
-
-        for i in 0..device_count {
-            let name = unsafe { internal::MaaToolkitGetDeviceName(i) };
-            let adb_path = unsafe { internal::MaaToolkitGetDeviceAdbPath(i) };
-            let adb_serial = unsafe { internal::MaaToolkitGetDeviceAdbSerial(i) };
-            let adb_controller_type = unsafe { internal::MaaToolkitGetDeviceAdbControllerType(i) };
-            let adb_config = unsafe { internal::MaaToolkitGetDeviceAdbConfig(i) };
-
-            let name = string!(name);
-            let adb_path = string!(adb_path);
-            let adb_serial = string!(adb_serial);
-            let adb_config = string!(adb_config);
-            let adb_controller_type = MaaAdbControllerType::try_from(adb_controller_type)?;
-
-            devices.push(AdbDeviceInfo {
-                name,
-                adb_path,
-                adb_serial,
-                adb_controller_type,
-                adb_config,
-            });
-        }
-
-        Ok(devices)
-    }
-
-    pub fn register_custom_recognizer_executor<T>(
-        &self,
-        handle: MaaInstance<T>,
-        recognizer_name: &str,
-        recognizer_exec_path: &str,
-        recognizer_exec_params: Vec<String>,
-    ) -> MaaResult<()> {
-        let recognizer_name = internal::to_cstring(recognizer_name);
-        let recognizer_exec_path = internal::to_cstring(recognizer_exec_path);
-
-        let param_size = recognizer_exec_params.len() as u64;
-        let mut params: Vec<_> = recognizer_exec_params
-            .into_iter()
-            .map(|s| internal::to_cstring(&s))
-            .collect();
-        params.shrink_to_fit();
-        let params_ptr = params.as_ptr();
-        std::mem::forget(params);
-
-        let ret = unsafe {
-            internal::MaaToolkitRegisterCustomRecognizerExecutor(
-                *handle,
-                recognizer_name,
-                recognizer_exec_path,
-                params_ptr,
-                param_size,
-            )
-        };
-
-        if !maa_bool!(ret) {
-            return Err(Error::MaaToolkitRegisterCustomRecognizerExecutorError);
-        }
-
-        Ok(())
-    }
-
-    pub fn unregister_custom_recognizer_executor<T>(
-        &self,
-        handle: MaaInstance<T>,
-        recognizer_name: &str,
-    ) -> MaaResult<()> {
-        let recognizer_name = internal::to_cstring(recognizer_name);
-
-        let ret = unsafe {
-            internal::MaaToolkitUnregisterCustomRecognizerExecutor(*handle, recognizer_name)
-        };
-
-        if !maa_bool!(ret) {
-            return Err(Error::MaaToolkitUnregisterCustomRecognizerExecutorError);
-        }
-
-        Ok(())
-    }
-
-    pub fn register_custom_action_executor<T>(
-        &self,
-        handle: MaaInstance<T>,
-        action_name: &str,
-        action_exec_path: &str,
-        action_exec_params: Vec<String>,
-    ) -> MaaResult<()> {
-        let action_name = internal::to_cstring(action_name);
-        let action_exec_path = internal::to_cstring(action_exec_path);
-
-        let param_size = action_exec_params.len() as u64;
-        let mut params: Vec<_> = action_exec_params
-            .into_iter()
-            .map(|s| internal::to_cstring(&s))
-            .collect();
-        params.shrink_to_fit();
-        let params_ptr = params.as_ptr();
-        std::mem::forget(params);
-
-        let ret = unsafe {
-            internal::MaaToolkitRegisterCustomActionExecutor(
-                *handle,
-                action_name,
-                action_exec_path,
-                params_ptr,
-                param_size,
-            )
-        };
-
-        if !maa_bool!(ret) {
-            return Err(Error::MaaToolkitRegisterCustomRecognizerExecutorError);
-        }
-
-        Ok(())
-    }
-
-    pub fn unregister_custom_action_executor<T>(
-        &self,
-        handle: MaaInstance<T>,
-        action_name: &str,
-    ) -> MaaResult<()> {
-        let action_name = internal::to_cstring(action_name);
-
-        let ret =
-            unsafe { internal::MaaToolkitUnregisterCustomActionExecutor(*handle, action_name) };
-
-        if !maa_bool!(ret) {
-            return Err(Error::MaaToolkitUnregisterCustomRecognizerExecutorError);
-        }
-
-        Ok(())
-    }
-
-    /// Find all the windows with a given class name and window name
-    ///
-    /// # Parameters
-    /// - `class_name`: The class name of the window
-    /// - `window_name`: The window name of the window
-    /// - `find`: If true, find the window using system win32 api, otherwise search the window with text match
-    #[cfg(feature = "win32")]
-    #[doc(cfg(feature = "win32"))]
-    pub fn find_win32_window(
-        &self,
-        class_name: &str,
-        window_name: &str,
-        find: bool,
-    ) -> Vec<MaaWin32Hwnd> {
-        let class_name = internal::to_cstring(class_name);
-        let window_name = internal::to_cstring(window_name);
-
-        let hwnd_count = unsafe {
-            if find {
-                internal::MaaToolkitFindWindow(class_name, window_name)
+        unsafe {
+            let ret = if let Some(adb_path) = specified_adb {
+                let c_path = CString::new(adb_path)?;
+                sys::MaaToolkitAdbDeviceFindSpecified(c_path.as_ptr(), list)
             } else {
-                internal::MaaToolkitSearchWindow(class_name, window_name)
+                sys::MaaToolkitAdbDeviceFind(list)
+            };
+            common::check_bool(ret)?;
+
+            let count = sys::MaaToolkitAdbDeviceListSize(list);
+            let mut devices = Vec::with_capacity(count as usize);
+
+            for i in 0..count {
+                let device_ptr = sys::MaaToolkitAdbDeviceListAt(list, i);
+                if device_ptr.is_null() {
+                    continue;
+                }
+
+                let name = CStr::from_ptr(sys::MaaToolkitAdbDeviceGetName(device_ptr))
+                    .to_string_lossy()
+                    .into_owned();
+
+                let adb_path_str = CStr::from_ptr(sys::MaaToolkitAdbDeviceGetAdbPath(device_ptr))
+                    .to_string_lossy()
+                    .into_owned();
+
+                let address = CStr::from_ptr(sys::MaaToolkitAdbDeviceGetAddress(device_ptr))
+                    .to_string_lossy()
+                    .into_owned();
+
+                let screencap_methods = sys::MaaToolkitAdbDeviceGetScreencapMethods(device_ptr);
+                let input_methods = sys::MaaToolkitAdbDeviceGetInputMethods(device_ptr);
+
+                let config_str =
+                    CStr::from_ptr(sys::MaaToolkitAdbDeviceGetConfig(device_ptr)).to_string_lossy();
+                let config = serde_json::from_str(&config_str).unwrap_or(serde_json::Value::Null);
+
+                devices.push(AdbDevice {
+                    name,
+                    adb_path: PathBuf::from(adb_path_str),
+                    address,
+                    screencap_methods,
+                    input_methods,
+                    config,
+                });
             }
-        };
+            Ok(devices)
+        }
+    }
 
-        let mut hwnds = Vec::with_capacity(hwnd_count as usize);
-
-        for i in 0..hwnd_count {
-            let hwnd = unsafe { internal::MaaToolkitGetWindow(i) };
-            hwnds.push(MaaWin32Hwnd(hwnd));
+    pub fn find_desktop_windows() -> MaaResult<Vec<DesktopWindow>> {
+        let list = unsafe { sys::MaaToolkitDesktopWindowListCreate() };
+        if list.is_null() {
+            return Err(MaaError::NullPointer);
         }
 
-        hwnds
-    }
+        let _guard = DesktopWindowListGuard(list);
 
-    #[cfg(feature = "win32")]
-    #[doc(cfg(feature = "win32"))]
-    pub fn get_cursor_window(&self) -> MaaWin32Hwnd {
-        let hwnd = unsafe { internal::MaaToolkitGetCursorWindow() };
-        MaaWin32Hwnd(hwnd)
-    }
+        unsafe {
+            let ret = sys::MaaToolkitDesktopWindowFindAll(list);
+            common::check_bool(ret)?;
 
-    #[cfg(feature = "win32")]
-    #[doc(cfg(feature = "win32"))]
-    pub fn get_desktop_window(&self) -> MaaWin32Hwnd {
-        let hwnd = unsafe { internal::MaaToolkitGetDesktopWindow() };
-        MaaWin32Hwnd(hwnd)
-    }
+            let count = sys::MaaToolkitDesktopWindowListSize(list);
+            let mut windows = Vec::with_capacity(count as usize);
 
-    #[cfg(feature = "win32")]
-    #[doc(cfg(feature = "win32"))]
-    pub fn get_foreground_window(&self) -> MaaWin32Hwnd {
-        let hwnd = unsafe { internal::MaaToolkitGetForegroundWindow() };
-        MaaWin32Hwnd(hwnd)
-    }
+            for i in 0..count {
+                let win_ptr = sys::MaaToolkitDesktopWindowListAt(list, i);
+                if win_ptr.is_null() {
+                    continue;
+                }
 
-    #[cfg(feature = "win32")]
-    #[doc(cfg(feature = "win32"))]
-    pub fn list_windows(&self) -> Vec<MaaWin32Hwnd> {
-        let hwnd_count = unsafe { internal::MaaToolkitListWindows() };
-        let mut hwnds = Vec::with_capacity(hwnd_count as usize);
+                let hwnd = sys::MaaToolkitDesktopWindowGetHandle(win_ptr);
 
-        for i in 0..hwnd_count {
-            let hwnd = unsafe { internal::MaaToolkitGetWindow(i) };
-            hwnds.push(MaaWin32Hwnd(hwnd));
+                let class_name = CStr::from_ptr(sys::MaaToolkitDesktopWindowGetClassName(win_ptr))
+                    .to_string_lossy()
+                    .into_owned();
+
+                let window_name =
+                    CStr::from_ptr(sys::MaaToolkitDesktopWindowGetWindowName(win_ptr))
+                        .to_string_lossy()
+                        .into_owned();
+
+                windows.push(DesktopWindow {
+                    hwnd,
+                    class_name,
+                    window_name,
+                });
+            }
+            Ok(windows)
         }
-
-        hwnds
     }
 }
 
-unsafe impl Send for MaaToolkit {}
-unsafe impl Sync for MaaToolkit {}
+struct AdbDeviceListGuard(*mut sys::MaaToolkitAdbDeviceList);
+impl Drop for AdbDeviceListGuard {
+    fn drop(&mut self) {
+        unsafe { sys::MaaToolkitAdbDeviceListDestroy(self.0) }
+    }
+}
 
-#[derive(Serialize, Deserialize)]
-#[cfg(feature = "adb")]
-pub struct AdbDeviceInfo {
-    pub name: String,
-    pub adb_path: String,
-    pub adb_serial: String,
-    pub adb_controller_type: MaaAdbControllerType,
-    pub adb_config: String,
+struct DesktopWindowListGuard(*mut sys::MaaToolkitDesktopWindowList);
+impl Drop for DesktopWindowListGuard {
+    fn drop(&mut self) {
+        unsafe { sys::MaaToolkitDesktopWindowListDestroy(self.0) }
+    }
 }

@@ -1,139 +1,56 @@
-use serde::{Deserialize, Serialize};
+use std::ffi::NulError;
+use std::str::Utf8Error;
 use thiserror::Error;
 
-use crate::{
-    controller::MaaControllerOption,
-    instance::{MaaInstOption, MaaTaskId},
-    resource::MaaResOption,
-    utility::MaaGlobalOption,
-};
+#[derive(Error, Debug)]
+pub enum MaaError {
+    #[error("Null pointer exception")]
+    NullPointer,
 
-#[derive(Error, Debug, Serialize, Deserialize)]
-#[non_exhaustive]
-pub enum Error {
-    #[error("Maa fails to set global option {0}")]
-    MaaSetGlobalOptionError(MaaGlobalOption),
+    #[error("Invalid arguments: {0}")]
+    InvalidArgument(String),
 
-    #[error("MaaToolkit failed to init")]
-    MaaToolkitInitError,
+    #[error("Invalid value: {0}")]
+    InvalidValue(i64),
 
-    #[error("MaaStatus conversion error: {0}")]
-    MaaStatusConversionError(i32),
+    #[error("MaaFramework internal error: status {0}")]
+    FrameworkError(i32),
 
-    #[error("MaaAdbControllerType conversion error: {0}")]
-    MaaAdbControllerTypeConversionError(i32),
+    #[error("String conversion error: {0}")]
+    Utf8Error(#[from] Utf8Error),
 
-    #[error("MaaWin32ControllerType conversion error: {0}")]
-    MaaWin32ControllerTypeConversionError(i32),
+    #[error("CString creation error: {0}")]
+    NulError(#[from] NulError),
 
-    #[error("MaaDbgControllerType conversion error: {0}")]
-    MaaDbgControllerTypeConversionError(i32),
+    #[error("Timeout")]
+    Timeout,
 
-    #[error("MaaController fails to set option {0}")]
-    MaaControllerSetOptionError(MaaControllerOption),
+    #[error("Device connection failed")]
+    DeviceConnectionFailed,
 
-    #[error("MaaResource fails to set option {0}")]
-    MaaResourceSetOptionError(MaaResOption),
+    #[error("Invalid configuration: {0}")]
+    InvalidConfig(String),
 
-    #[error("MaaInstance fails to set option {0}")]
-    MaaInstanceSetOptionError(MaaInstOption),
+    #[error("Resource not loaded")]
+    ResourceNotLoaded,
 
-    #[error("MaaInstance fails to bind resource")]
-    MaaInstanceBindResourceError,
+    #[error("Context not initialized")]
+    ContextNotInitialized,
 
-    #[error("MaaInstance fails to bind controller")]
-    MaaInstanceBindControllerError,
+    #[error("Task failed")]
+    TaskFailed,
 
-    #[error("MaaInstance fails to set task param {0}")]
-    MaaInstanceSetTaskParamError(MaaTaskId),
+    #[error("JSON error: {0}")]
+    JsonError(#[from] serde_json::Error),
 
-    #[error("MaaInstance fails to stop")]
-    MaaInstanceStopError,
-
-    #[error("MaaInstance fails to register custom recognizer {0}")]
-    MaaInstanceRegisterCustomRecognizerError(String),
-
-    #[error("MaaInstance fails to unregister custom recognizer {0}")]
-    MaaInstanceUnregisterCustomRecognizerError(String),
-
-    #[error("MaaInstance fails to clear custom recognizer")]
-    MaaInstanceClearCustomRecognizerError,
-
-    #[error("MaaInstance fails to register custom action {0}")]
-    MaaInstanceRegisterCustomActionError(String),
-
-    #[error("MaaInstance fails to unregister custom action {0}")]
-    MaaInstanceUnregisterCustomActionError(String),
-
-    #[error("MaaInstance fails to clear custom action")]
-    MaaInstanceClearCustomActionError,
-
-    #[error("MaaSyncContext fails to run task: {0}")]
-    MaaSyncContextRunTaskError(String),
-
-    #[error("MaaSyncContext fails to run recognizer: {0}")]
-    MaaSyncContextRunRecognizerError(String),
-
-    #[error("MaaSyncContext fails to run action: {0}")]
-    MaaSyncContextRunActionError(String),
-
-    #[error("MaaSyncContext fails to click")]
-    MaaSyncContextClickError,
-
-    #[error("MaaSyncContext fails to swipe")]
-    MaaSyncContextSwipeError,
-
-    #[error("MaaSyncContext fails to press key {0}")]
-    MaaSyncContextPressKeyError(i32),
-
-    #[error("MaaSyncContext fails to input text {0}")]
-    MaaSyncContextInputTextError(String),
-
-    #[error("MaaSyncContext fails to touch down")]
-    MaaSyncContextTouchDownError,
-
-    #[error("MaaSyncContext fails to touch move")]
-    MaaSyncContextTouchMoveError,
-
-    #[error("MaaSyncContext fails to touch up")]
-    MaaSyncContextTouchUpError,
-
-    #[error("MaaSyncContext fails to screencap")]
-    MaaSyncContextScreencapError,
-
-    #[error("MaaSyncContext fails to get cached image")]
-    MaaSyncContextCachedImageError,
-
-    #[error("MaaResource fails to get hash")]
-    MaaResourceGetHashError,
-
-    #[error("MaaResource fails to get task list")]
-    MaaResourceGetTaskListError,
-
-    #[error("MaaResource fails to clear")]
-    MaaResourceClearError,
-
-    #[error("Maa fails to set string buffeer {0}")]
-    MaaSetStringError(String),
-
-    #[error("MaaToolkit fails to register custom recognizer executor")]
-    MaaToolkitRegisterCustomRecognizerExecutorError,
-
-    #[error("MaaToolkit fails to unregister custom recognizer executor")]
-    MaaToolkitUnregisterCustomRecognizerExecutorError,
-
-    #[error("MaaToolkit fails to find device")]
-    MaaToolkitPostFindDeviceError,
-
-    #[error("Buffer operation failed.")]
-    BufferError,
-
-    #[error("(De)serialize error: {0}")]
-    SerdeError(String),
+    #[error("Image conversion error")]
+    ImageConversionError,
 }
 
-impl From<serde_json::Error> for Error {
-    fn from(e: serde_json::Error) -> Self {
-        Error::SerdeError(e.to_string())
+pub type MaaResult<T> = Result<T, MaaError>;
+
+impl From<i32> for MaaError {
+    fn from(status: i32) -> Self {
+        MaaError::FrameworkError(status)
     }
 }
