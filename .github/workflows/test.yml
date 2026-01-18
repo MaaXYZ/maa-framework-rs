@@ -1,0 +1,326 @@
+name: test
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - ".github/workflows/test-rust.yml"
+      - "src/**"
+      - "Cargo.toml"
+      - "build.rs"
+      - "tests/**"
+      - "examples/**"
+  pull_request:
+    branches:
+      - "**"
+    paths:
+      - ".github/workflows/test-rust.yml"
+      - "src/**"
+      - "Cargo.toml"
+      - "build.rs"
+      - "tests/**"
+      - "examples/**"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.head_ref || github.ref_name }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x86_64]
+      fail-fast: false
+
+    steps:
+      - name: Windows runner hack
+        shell: cmd
+        run: |
+            dir d:\a
+            cd ..
+            mkdir C:\MaaFramework
+            rmdir MaaFramework
+            mklink /j MaaFramework C:\MaaFramework
+            dism /Online /Disable-Feature /FeatureName:Windows-Defender /Remove /NoRestart /Quiet
+            cd .
+      - name: Windows runner hack (2)
+        uses: al-cheb/configure-pagefile-action@v1.4
+        with:
+            minimum-size: 16GB
+            maximum-size: 16GB
+            disk-root: "D:"
+
+      - name: Checkout self
+        uses: actions/checkout@v4
+        with:
+            path: maa-framework-rs
+
+      - name: Checkout MaaFramework
+        run: |
+          git clone --recursive https://github.com/MaaXYZ/MaaFramework.git MaaFramework
+
+      - name: Setup Windows 10 SDK
+        uses: GuillaumeFalourd/setup-windows10-sdk-action@v2.2
+        with:
+            sdk-version: 26100
+
+      - name: Setup Python
+        uses: actions/setup-python@v5.2.0
+        with:
+            python-version: "3.9"
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+            toolchain: stable
+            target: x86_64-pc-windows-msvc
+
+      - name: Install LLVM
+        run: choco install llvm -y
+
+      - name: Bootstrap MaaDeps
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            cd MaaFramework
+            python tools/maadeps-download.py ${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}-windows
+
+      - name: Build MAA
+        run: |
+            cd MaaFramework
+            cmake --preset "${{ matrix.arch == 'x86_64' && 'MSVC 2022' || 'MSVC 2022 ARM' }}" -DMAADEPS_TRIPLET="maa-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}-windows" -DCMAKE_SYSTEM_VERSION="10.0.26100.0" -DMAA_HASH_VERSION="CI-Build" -DWITH_NODEJS_BINDING=OFF -DWITH_QUICKJS_BINDING=OFF -DBUILD_PICLI=OFF -DWITH_DBG_CONTROLLER=ON -DBUILD_PIPELINE_TESTING=ON -DBUILD_DLOPEN_TESTING=ON
+            cmake --build build --preset "${{ matrix.arch == 'x86_64' && 'MSVC 2022' || 'MSVC 2022 ARM' }} - Debug" -j 16
+
+      - name: Install MAA
+        shell: bash
+        run: |
+            cd MaaFramework
+            cmake --install build --prefix ../install --config Debug
+
+      - name: Download Plugin
+        id: download_plugin
+        uses: robinraju/release-downloader@v1
+        continue-on-error: true
+        with:
+            repository: MaaXYZ/MaaPluginDemo
+            latest: true
+            fileName: "*win-${{ matrix.arch }}*"
+            out-file-path: "download_plugins"
+            extract: true
+            token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Plugin
+        shell: bash
+        if: steps.download_plugin.outcome == 'success'
+        run: |
+            cp -r download_plugins/bin install/bin/plugins
+
+      - name: Run Rust testing
+        shell: bash
+        run: |
+            # Move out of maa-framework-rs because we checked it out via path: maa-framework-rs
+            # Actually, to run cargo test, we need to be IN maa-framework-rs
+            # But earlier I said "Checkout self path: maa-framework-rs".
+            # The structure is:
+            # D:\a\maa-framework-rs\maa-framework-rs (repo content)
+            # D:\a\maa-framework-rs\MaaFramework    (core content)
+            # D:\a\maa-framework-rs\install         (installed libs)
+            # D:\a\maa-framework-rs\download_plugins
+            
+            # Setup paths for tests
+            export PATH=$PATH:$(pwd)/install/bin
+            export MAA_TEST_RESOURCES_DIR=$(pwd)/MaaFramework/test/TestingDataSet/PipelineSmoking
+            
+            # Debug: show structure
+            ls -R install || true
+            
+            cd maa-framework-rs
+            cargo test --verbose
+
+  ubuntu:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x86_64]
+      fail-fast: false
+
+    steps:
+      - name: Install dep
+        run: |
+            sudo apt-get update -y
+            sudo apt-get install -y ninja-build cmake ccache libclang-dev
+
+      - name: Checkout self
+        uses: actions/checkout@v4
+        with:
+            path: maa-framework-rs
+
+      - name: Checkout MaaFramework
+        run: |
+          git clone --recursive https://github.com/MaaXYZ/MaaFramework.git MaaFramework
+
+      - name: Setup ccache
+        uses: Chocobo1/setup-ccache-action@v1
+        with:
+            remove_stale_cache: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v5.2.0
+        with:
+            python-version: "3.9"
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+            toolchain: stable
+
+      - name: Bootstrap MaaDeps
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            cd MaaFramework
+            python3 tools/maadeps-download.py ${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}-linux
+
+      - name: Build MAA
+        run: |
+            cd MaaFramework
+            cmake --preset 'NinjaMulti Linux ${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}' \
+              -DMAADEPS_TRIPLET='maa-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}-linux' \
+              -DMAA_HASH_VERSION="CI-Build" \
+              -DWITH_NODEJS_BINDING=OFF -DWITH_QUICKJS_BINDING=OFF \
+              -DBUILD_PICLI=OFF \
+              -DWITH_DBG_CONTROLLER=ON -DBUILD_PIPELINE_TESTING=ON \
+              -DBUILD_DLOPEN_TESTING=ON
+            cmake --build build --preset 'NinjaMulti Linux ${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }} - Debug' -j 16
+
+      - name: Install MAA
+        shell: bash
+        run: |
+            cd MaaFramework
+            cmake --install build --prefix ../install --config Debug
+
+      - name: Download Plugin
+        id: download_plugin
+        uses: robinraju/release-downloader@v1
+        continue-on-error: true
+        with:
+            repository: MaaXYZ/MaaPluginDemo
+            latest: true
+            fileName: "*linux-${{ matrix.arch }}*"
+            out-file-path: "download_plugins"
+            extract: true
+            token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Plugin
+        shell: bash
+        if: steps.download_plugin.outcome == 'success'
+        run: |
+            cp -r download_plugins/bin install/bin/plugins
+
+      - name: Run Rust testing
+        shell: bash
+        run: |
+            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/install/lib:$(pwd)/install/bin
+            export MAA_TEST_RESOURCES_DIR=$(pwd)/MaaFramework/test/TestingDataSet/PipelineSmoking
+            
+            cd maa-framework-rs
+            cargo test --verbose
+
+  macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [aarch64]
+      fail-fast: false
+
+    steps:
+      - name: Checkout self
+        uses: actions/checkout@v4
+        with:
+            path: maa-framework-rs
+
+      - name: Checkout MaaFramework
+        run: |
+          git clone --recursive https://github.com/MaaXYZ/MaaFramework.git MaaFramework
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+            xcode-version: 16.2
+
+      - name: Install dep
+        run: |
+            brew install ninja ccache llvm
+            echo "LIBCLANG_PATH=$(brew --prefix llvm)/lib" >> $GITHUB_ENV
+
+      - name: Setup ccache
+        uses: Chocobo1/setup-ccache-action@v1
+        with:
+            remove_stale_cache: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v5.2.0
+        with:
+            python-version: "3.9"
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+            toolchain: stable
+            target: aarch64-apple-darwin
+
+      - name: Bootstrap MaaDeps
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            cd MaaFramework
+            python3 tools/maadeps-download.py ${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}-osx
+
+      - name: Build MAA
+        run: |
+            cd MaaFramework
+            cmake --preset 'NinjaMulti' \
+              -DMAADEPS_TRIPLET='maa-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}-osx' \
+              -DMAA_HASH_VERSION="CI-Build" \
+              -DCMAKE_OSX_SYSROOT=macosx \
+              -DWITH_NODEJS_BINDING=OFF -DWITH_QUICKJS_BINDING=OFF \
+              -DBUILD_PICLI=OFF \
+              -DWITH_DBG_CONTROLLER=ON -DBUILD_PIPELINE_TESTING=ON \
+              -DBUILD_DLOPEN_TESTING=ON \
+              -DCMAKE_OSX_ARCHITECTURES='${{ matrix.arch == 'x86_64' && 'x86_64' || 'arm64' }}'
+            cmake --build build --preset 'NinjaMulti - Debug' -j 16
+
+      - name: Install MAA
+        shell: bash
+        run: |
+            cd MaaFramework
+            cmake --install build --prefix ../install --config Debug
+
+      - name: Download Plugin
+        id: download_plugin
+        uses: robinraju/release-downloader@v1
+        continue-on-error: true
+        with:
+            repository: MaaXYZ/MaaPluginDemo
+            latest: true
+            fileName: "*macos-${{ matrix.arch }}*"
+            out-file-path: "download_plugins"
+            extract: true
+            token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Plugin
+        shell: bash
+        if: steps.download_plugin.outcome == 'success'
+        run: |
+            cp -r download_plugins/bin install/bin/plugins
+
+      - name: Run Rust testing
+        shell: bash
+        run: |
+            export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$(pwd)/install/lib:$(pwd)/install/bin
+            export MAA_TEST_RESOURCES_DIR=$(pwd)/MaaFramework/test/TestingDataSet/PipelineSmoking
+            
+            cd maa-framework-rs
+            cargo test --verbose
