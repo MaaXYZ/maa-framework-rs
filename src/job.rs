@@ -1,5 +1,7 @@
 //! Asynchronous job management for tracking operation status and results.
 
+use std::ops::Deref;
+
 use crate::{
     common::{MaaId, MaaStatus},
     sys, MaaResult,
@@ -136,6 +138,14 @@ pub struct JobWithResult<T> {
     get_fn: Box<dyn Fn(MaaId) -> MaaResult<Option<T>> + Send + Sync>,
 }
 
+impl<T> Deref for JobWithResult<T> {
+    type Target = Job;
+
+    fn deref(&self) -> &Self::Target {
+        &self.job
+    }
+}
+
 impl<T> JobWithResult<T> {
     /// Create a new JobWithResult with custom status/wait/get functions.
     pub fn new(
@@ -148,38 +158,6 @@ impl<T> JobWithResult<T> {
             job: Job::new(id, status_fn, wait_fn),
             get_fn: Box::new(get_fn),
         }
-    }
-
-    pub fn id(&self) -> MaaId {
-        self.job.id
-    }
-
-    pub fn wait(&self) -> MaaStatus {
-        self.job.wait()
-    }
-
-    pub fn status(&self) -> MaaStatus {
-        self.job.status()
-    }
-
-    pub fn succeeded(&self) -> bool {
-        self.job.succeeded()
-    }
-
-    pub fn failed(&self) -> bool {
-        self.job.failed()
-    }
-
-    pub fn running(&self) -> bool {
-        self.job.running()
-    }
-
-    pub fn pending(&self) -> bool {
-        self.job.pending()
-    }
-
-    pub fn done(&self) -> bool {
-        self.job.done()
     }
 
     /// Get the operation result.
