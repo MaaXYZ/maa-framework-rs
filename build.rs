@@ -21,7 +21,14 @@ fn cmake_probe(include_dir: &mut Vec<PathBuf>, libs: &mut Vec<PathBuf>) -> Resul
             include_dir.push(PathBuf::from(path));
         } else if line.starts_with("MaaFrameworkLibraries") {
             let path = line.split('=').nth(1).ok_or(())?;
-            libs.push(PathBuf::from(path).parent().unwrap().to_path_buf());
+            let p = PathBuf::from(path);
+            if let Some(parent) = p.parent() {
+                if parent.as_os_str().is_empty() {
+                    libs.push(PathBuf::from("."));
+                } else {
+                    libs.push(parent.to_path_buf());
+                }
+            }
         }
     }
 
@@ -100,12 +107,7 @@ fn main() {
         }
     }
 
-    // Priority 5: CMake find_package
-    if include_dir.is_empty() {
-        let _ = cmake_probe(&mut include_dir, &mut lib_dir);
-    }
-
-    // Priority 6: In-tree build (MaaFramework/source/binding/Rust)
+    // Priority 5: In-tree build (MaaFramework/source/binding/Rust)
     if include_dir.is_empty() {
         for parent in ["../install", "../../install", "../../../install"] {
             let install = manifest_dir.join(parent);
@@ -118,6 +120,11 @@ fn main() {
                 break;
             }
         }
+    }
+
+    // Priority 6: CMake find_package
+    if include_dir.is_empty() {
+        let _ = cmake_probe(&mut include_dir, &mut lib_dir);
     }
 
     // Error if SDK not found
