@@ -158,9 +158,18 @@ fn main() {
     // Generate Rust bindings
     let out_path = PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
+    let clang_include_args = include_dir.iter().map(|d| {
+        let s = d.to_string_lossy();
+        if cfg!(windows) && s.starts_with(r"\\?\") {
+            format!("-I{}", &s[4..])
+        } else {
+            format!("-I{}", s)
+        }
+    });
+
     let mut bindings_builder = bindgen::Builder::default()
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
-        .clang_args(include_dir.iter().map(|d| format!("-I{}", d.display())))
+        .clang_args(clang_include_args)
         .header("headers/wrapper.h");
 
     #[cfg(feature = "toolkit")]
