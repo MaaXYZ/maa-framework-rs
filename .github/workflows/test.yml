@@ -138,7 +138,7 @@ jobs:
             ls -R install || true
             
             cd maa-framework-rs
-            cargo test --verbose
+            cargo test --verbose -- --test-threads=1
 
   ubuntu:
     runs-on: ubuntu-latest
@@ -227,7 +227,7 @@ jobs:
             export MAA_TEST_RESOURCES_DIR=$(pwd)/MaaFramework/test/TestingDataSet/PipelineSmoking
             
             cd maa-framework-rs
-            cargo test --verbose
+            cargo test --verbose -- --test-threads=1
 
   macos:
     runs-on: macos-latest
@@ -323,4 +323,4 @@ jobs:
             export MAA_TEST_RESOURCES_DIR=$(pwd)/MaaFramework/test/TestingDataSet/PipelineSmoking
             
             cd maa-framework-rs
-            cargo test --verbose
+            cargo test --verbose -- --test-threads=1
