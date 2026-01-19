@@ -224,6 +224,16 @@ pub mod msg {
     pub const NODE_NEXT_LIST_STARTING: &str = "Node.NextList.Starting";
     pub const NODE_NEXT_LIST_SUCCEEDED: &str = "Node.NextList.Succeeded";
     pub const NODE_NEXT_LIST_FAILED: &str = "Node.NextList.Failed";
+
+    // Node recognition node trace events
+    pub const NODE_RECOGNITION_NODE_STARTING: &str = "Node.RecognitionNode.Starting";
+    pub const NODE_RECOGNITION_NODE_SUCCEEDED: &str = "Node.RecognitionNode.Succeeded";
+    pub const NODE_RECOGNITION_NODE_FAILED: &str = "Node.RecognitionNode.Failed";
+
+    // Node action node trace events
+    pub const NODE_ACTION_NODE_STARTING: &str = "Node.ActionNode.Starting";
+    pub const NODE_ACTION_NODE_SUCCEEDED: &str = "Node.ActionNode.Succeeded";
+    pub const NODE_ACTION_NODE_FAILED: &str = "Node.ActionNode.Failed";
 }
 
 // === Parse Functions ===
@@ -274,6 +284,64 @@ pub fn parse_node_pipeline_node(details: &str) -> Option<NodePipelineNodeDetail>
     serde_json::from_str(details).ok()
 }
 
+// === Context Event ===
+
+/// Enum representing parsed Context events.
+#[derive(Debug, Clone)]
+pub enum ContextEvent {
+    NodeNextList(NotificationType, NodeNextListDetail),
+    NodeRecognition(NotificationType, NodeRecognitionDetail),
+    NodeAction(NotificationType, NodeActionDetail),
+    NodePipelineNode(NotificationType, NodePipelineNodeDetail),
+    NodeRecognitionNode(NotificationType, NodePipelineNodeDetail),
+    NodeActionNode(NotificationType, NodePipelineNodeDetail),
+    Unknown(String, Value),
+}
+
+impl ContextEvent {
+    /// Parse a raw notification into a strongly-typed ContextEvent.
+    pub fn from_notification(msg: &str, details: &str) -> Option<Self> {
+        let noti_type = NotificationType::from(msg);
+
+        let parse_json = || -> Option<Value> { serde_json::from_str(details).ok() };
+
+        if msg.starts_with("Node.NextList") {
+            let detail = parse_node_next_list(details)?;
+            return Some(ContextEvent::NodeNextList(noti_type, detail));
+        }
+
+        if msg.starts_with("Node.Recognition.") {
+            let detail = parse_node_recognition(details)?;
+            return Some(ContextEvent::NodeRecognition(noti_type, detail));
+        }
+
+        if msg.starts_with("Node.Action.") {
+            let detail = parse_node_action(details)?;
+            return Some(ContextEvent::NodeAction(noti_type, detail));
+        }
+
+        if msg.starts_with("Node.PipelineNode") {
+            let detail = parse_node_pipeline_node(details)?;
+            return Some(ContextEvent::NodePipelineNode(noti_type, detail));
+        }
+
+        if msg.starts_with("Node.RecognitionNode") {
+            let detail = parse_node_pipeline_node(details)?;
+            return Some(ContextEvent::NodeRecognitionNode(noti_type, detail));
+        }
+
+        if msg.starts_with("Node.ActionNode") {
+            let detail = parse_node_pipeline_node(details)?;
+            return Some(ContextEvent::NodeActionNode(noti_type, detail));
+        }
+
+        Some(ContextEvent::Unknown(
+            msg.to_string(),
+            parse_json().unwrap_or(Value::Null),
+        ))
+    }
+}
+
 // === Event Sink Traits ===
 
 /// Trait for handling resource events.
@@ -318,6 +386,52 @@ pub trait ContextEventHandler: Send + Sync {
     fn on_node_pipeline_node(&self, _noti_type: NotificationType, _detail: NodePipelineNodeDetail) {
     }
 
+    /// Called when a node recognition node (trace) event occurs.
+    fn on_node_recognition_node(
+        &self,
+        _noti_type: NotificationType,
+        _detail: NodePipelineNodeDetail,
+    ) {
+    }
+
+    /// Called when a node action node (trace) event occurs.
+    fn on_node_action_node(&self, _noti_type: NotificationType, _detail: NodePipelineNodeDetail) {}
+
     /// Called when an unknown notification is received.
     fn on_unknown(&self, _msg: &str, _details: &Value) {}
+}
+
+// === Tests ===
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn test_context_event_parsing_logic() {
+        let msg_reco = "Node.Recognition.Succeeded";
+        let detail_reco =
+            json!({ "task_id": 1, "reco_id": 100, "name": "R", "focus": null }).to_string();
+
+        if let Some(ContextEvent::NodeRecognition(t, _)) =
+            ContextEvent::from_notification(msg_reco, &detail_reco)
+        {
+            assert_eq!(t, NotificationType::Succeeded);
+        } else {
+            panic!("Node.Recognition parse failed");
+        }
+
+        let msg_node = "Node.RecognitionNode.Starting";
+        let detail_node =
+            json!({ "task_id": 1, "node_id": 200, "name": "N", "focus": null }).to_string();
+
+        if let Some(ContextEvent::NodeRecognitionNode(t, _)) =
+            ContextEvent::from_notification(msg_node, &detail_node)
+        {
+            assert_eq!(t, NotificationType::Starting);
+        } else {
+            panic!("Node.RecognitionNode parse failed");
+        }
+    }
 }
