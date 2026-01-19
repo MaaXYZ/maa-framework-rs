@@ -37,8 +37,8 @@ pub type Roi = (i32, i32, i32, i32);
 /// Target can be:
 /// - true: recognized position
 /// - "NodeName": position from previously executed node
-/// - [x, y]: point (2 elements)
-/// - [x, y, w, h]: area (4 elements)
+/// - \[ x, y \]: point (2 elements)
+/// - \[ x, y, w, h \]: area (4 elements)
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum Target {
