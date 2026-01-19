@@ -59,6 +59,22 @@ impl MaaStringBuffer {
         }
     }
 
+    /// Check if the buffer is empty.
+    pub fn is_empty(&self) -> bool {
+        unsafe { sys::MaaStringBufferIsEmpty(self.handle.as_ptr()) != 0 }
+    }
+
+    /// Clear the buffer.
+    pub fn clear(&mut self) -> MaaResult<()> {
+        let ret = unsafe { sys::MaaStringBufferClear(self.handle.as_ptr()) };
+        crate::common::check_bool(ret)
+    }
+
+    /// Get the size of the buffer content (excluding null terminator).
+    pub fn len(&self) -> usize {
+        unsafe { sys::MaaStringBufferSize(self.handle.as_ptr()) as usize }
+    }
+
     pub fn raw(&self) -> *mut sys::MaaStringBuffer {
         self.handle.as_ptr()
     }
