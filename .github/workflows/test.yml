@@ -59,8 +59,11 @@ jobs:
             path: maa-framework-rs
 
       - name: Checkout MaaFramework
-        run: |
-          git clone --recursive https://github.com/MaaXYZ/MaaFramework.git MaaFramework
+        uses: actions/checkout@v4
+        with:
+            repository: MaaXYZ/MaaFramework
+            submodules: recursive
+            path: MaaFramework
 
       - name: Setup Windows 10 SDK
         uses: GuillaumeFalourd/setup-windows10-sdk-action@v2.2
@@ -101,9 +104,7 @@ jobs:
             cmake --install build --prefix ../install --config Debug
 
       - name: Download Plugin
-        id: download_plugin
         uses: robinraju/release-downloader@v1
-        continue-on-error: true
         with:
             repository: MaaXYZ/MaaPluginDemo
             latest: true
@@ -114,7 +115,6 @@ jobs:
 
       - name: Install Plugin
         shell: bash
-        if: steps.download_plugin.outcome == 'success'
         run: |
             cp -r download_plugins/bin install/bin/plugins
 
@@ -159,8 +159,11 @@ jobs:
             path: maa-framework-rs
 
       - name: Checkout MaaFramework
-        run: |
-          git clone --recursive https://github.com/MaaXYZ/MaaFramework.git MaaFramework
+        uses: actions/checkout@v4
+        with:
+            repository: MaaXYZ/MaaFramework
+            submodules: recursive
+            path: MaaFramework
 
       - name: Setup ccache
         uses: Chocobo1/setup-ccache-action@v1
@@ -203,9 +206,7 @@ jobs:
             cmake --install build --prefix ../install --config Debug
 
       - name: Download Plugin
-        id: download_plugin
         uses: robinraju/release-downloader@v1
-        continue-on-error: true
         with:
             repository: MaaXYZ/MaaPluginDemo
             latest: true
@@ -216,7 +217,6 @@ jobs:
 
       - name: Install Plugin
         shell: bash
-        if: steps.download_plugin.outcome == 'success'
         run: |
             cp -r download_plugins/bin install/bin/plugins
 
@@ -243,8 +243,11 @@ jobs:
             path: maa-framework-rs
 
       - name: Checkout MaaFramework
-        run: |
-          git clone --recursive https://github.com/MaaXYZ/MaaFramework.git MaaFramework
+        uses: actions/checkout@v4
+        with:
+            repository: MaaXYZ/MaaFramework
+            submodules: recursive
+            path: MaaFramework
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
@@ -299,9 +302,7 @@ jobs:
             cmake --install build --prefix ../install --config Debug
 
       - name: Download Plugin
-        id: download_plugin
         uses: robinraju/release-downloader@v1
-        continue-on-error: true
         with:
             repository: MaaXYZ/MaaPluginDemo
             latest: true
@@ -312,7 +313,6 @@ jobs:
 
       - name: Install Plugin
         shell: bash
-        if: steps.download_plugin.outcome == 'success'
         run: |
             cp -r download_plugins/bin install/bin/plugins
 
