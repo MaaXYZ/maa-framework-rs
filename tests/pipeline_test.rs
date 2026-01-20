@@ -3,7 +3,7 @@
 //! Port of Python's pipeline_test.py - following "brute force" testing principle.
 //! Tests MUST discover real errors. We do NOT bypass failures.
 //!
-//! Test coverage:
+//! Test coverage types adapted for Rust Enums:
 //! 1. Recognition types: DirectHit, TemplateMatch, FeatureMatch, ColorMatch, OCR,
 //!    NeuralNetworkClassify, NeuralNetworkDetect, And, Or, Custom
 //! 2. Action types: Click, LongPress, Swipe, MultiSwipe, InputText, StartApp,
@@ -20,7 +20,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use maa_framework::context::Context;
 use maa_framework::controller::Controller;
 use maa_framework::custom::{CustomAction, CustomRecognition};
-use maa_framework::pipeline::{ActionType, RecognitionType};
+use maa_framework::pipeline::{Action, Recognition};
 use maa_framework::resource::Resource;
 use maa_framework::tasker::Tasker;
 use maa_framework::{self, sys, MaaResult};
@@ -168,9 +168,18 @@ fn test_context_get_node_object(context: &Context) -> MaaResult<()> {
 
     let obj = node_obj.unwrap();
     // Default recognition is DirectHit
-    assert_eq!(obj.recognition.recognition_type, RecognitionType::DirectHit);
+    if let Recognition::DirectHit(_) = obj.recognition {
+        // pass
+    } else {
+        panic!("Expected DirectHit, got {:?}", obj.recognition);
+    }
+
     // Default action is DoNothing
-    assert_eq!(obj.action.action_type, ActionType::DoNothing);
+    if let Action::DoNothing(_) = obj.action {
+        // pass
+    } else {
+        panic!("Expected DoNothing, got {:?}", obj.action);
+    }
 
     println!("    PASS: context.get_node_object");
     Ok(())
@@ -212,18 +221,20 @@ fn test_context_override_pipeline(context: &Context) -> MaaResult<()> {
         .expect("OverrideTestNode MUST exist");
 
     // Verify recognition
-    assert_eq!(
-        node_obj.recognition.recognition_type,
-        RecognitionType::OCR,
-        "recognition type MUST be OCR"
-    );
+    match node_obj.recognition {
+        Recognition::OCR(ocr) => {
+            assert_eq!(ocr.expected, vec!["TestText"], "expected");
+        }
+        _ => panic!("Expected OCR recognition"),
+    }
 
     // Verify action
-    assert_eq!(
-        node_obj.action.action_type,
-        ActionType::Click,
-        "action type MUST be Click"
-    );
+    match node_obj.action {
+        Action::Click(_) => {
+            // pass
+        }
+        _ => panic!("Expected Click action"),
+    }
 
     // Verify other fields
     assert_eq!(node_obj.timeout, 5000, "timeout");
@@ -328,27 +339,15 @@ fn test_and_or_override_inheritance(context: &Context) -> MaaResult<()> {
         .get_node_object("AndTestNode")?
         .expect("AndTestNode MUST exist");
 
-    assert_eq!(
-        and_node.recognition.recognition_type,
-        RecognitionType::And,
-        "And type preserved"
-    );
-
-    // Verify all_of was inherited
-    let all_of = and_node
-        .recognition
-        .param
-        .all_of
-        .as_ref()
-        .expect("all_of should be inherited");
-    assert_eq!(all_of.len(), 2, "all_of should have 2 elements");
-
-    // Verify box_index was updated
-    assert_eq!(
-        and_node.recognition.param.box_index,
-        Some(0),
-        "box_index should be updated to 0"
-    );
+    match and_node.recognition {
+        Recognition::And(and) => {
+            // Verify all_of was inherited
+            assert_eq!(and.all_of.len(), 2, "all_of should have 2 elements");
+            // Verify box_index was updated
+            assert_eq!(and.box_index, 0, "box_index should be updated to 0");
+        }
+        _ => panic!("Expected And recognition"),
+    }
 
     // Test Or recognition
     new_ctx.override_pipeline(
@@ -373,19 +372,12 @@ fn test_and_or_override_inheritance(context: &Context) -> MaaResult<()> {
         .get_node_object("OrTestNode")?
         .expect("OrTestNode MUST exist");
 
-    assert_eq!(
-        or_node.recognition.recognition_type,
-        RecognitionType::Or,
-        "Or type preserved"
-    );
-
-    let any_of = or_node
-        .recognition
-        .param
-        .any_of
-        .as_ref()
-        .expect("any_of should be inherited");
-    assert_eq!(any_of.len(), 1, "any_of should have 1 element");
+    match or_node.recognition {
+        Recognition::Or(or) => {
+            assert_eq!(or.any_of.len(), 1, "any_of should have 1 element");
+        }
+        _ => panic!("Expected Or recognition"), // Corrected from And
+    }
 
     println!("    PASS: And/Or override inheritance");
     Ok(())
@@ -414,19 +406,17 @@ fn test_recognition_types(context: &Context) -> MaaResult<()> {
     )?;
 
     let obj = new_ctx.get_node_object("RecoTemplateMatch")?.expect("node");
-    assert_eq!(
-        obj.recognition.recognition_type,
-        RecognitionType::TemplateMatch
-    );
-    assert_eq!(
-        obj.recognition.param.template,
-        Some(vec!["test.png".to_string()])
-    );
-    assert_eq!(obj.recognition.param.threshold, Some(vec![0.8]));
-    assert_eq!(obj.recognition.param.order_by, Some("Score".to_string()));
-    assert_eq!(obj.recognition.param.index, Some(1));
-    assert_eq!(obj.recognition.param.method, Some(3));
-    assert_eq!(obj.recognition.param.green_mask, Some(true));
+    match obj.recognition {
+        Recognition::TemplateMatch(tm) => {
+            assert_eq!(tm.template, vec!["test.png".to_string()]);
+            assert_eq!(tm.threshold, vec![0.8]);
+            assert_eq!(tm.order_by, "Score");
+            assert_eq!(tm.index, 1);
+            assert_eq!(tm.method, 3);
+            assert_eq!(tm.green_mask, true);
+        }
+        _ => panic!("Expected TemplateMatch"),
+    }
 
     // FeatureMatch
     new_ctx.override_pipeline(
@@ -442,13 +432,14 @@ fn test_recognition_types(context: &Context) -> MaaResult<()> {
     )?;
 
     let obj = new_ctx.get_node_object("RecoFeatureMatch")?.expect("node");
-    assert_eq!(
-        obj.recognition.recognition_type,
-        RecognitionType::FeatureMatch
-    );
-    assert_eq!(obj.recognition.param.detector, Some("ORB".to_string()));
-    assert_eq!(obj.recognition.param.count, Some(10));
-    assert_eq!(obj.recognition.param.ratio, Some(0.75));
+    match obj.recognition {
+        Recognition::FeatureMatch(fm) => {
+            assert_eq!(fm.detector, "ORB");
+            assert_eq!(fm.count, 10);
+            assert_eq!(fm.ratio, 0.75);
+        }
+        _ => panic!("Expected FeatureMatch"),
+    }
 
     // ColorMatch
     new_ctx.override_pipeline(
@@ -465,15 +456,16 @@ fn test_recognition_types(context: &Context) -> MaaResult<()> {
     )?;
 
     let obj = new_ctx.get_node_object("RecoColorMatch")?.expect("node");
-    assert_eq!(
-        obj.recognition.recognition_type,
-        RecognitionType::ColorMatch
-    );
-    assert_eq!(obj.recognition.param.lower, Some(vec![vec![100, 100, 100]]));
-    assert_eq!(obj.recognition.param.upper, Some(vec![vec![255, 255, 255]]));
-    assert_eq!(obj.recognition.param.count, Some(50));
-    assert_eq!(obj.recognition.param.method, Some(40));
-    assert_eq!(obj.recognition.param.connected, Some(true));
+    match obj.recognition {
+        Recognition::ColorMatch(cm) => {
+            assert_eq!(cm.lower, vec![vec![100, 100, 100]]);
+            assert_eq!(cm.upper, vec![vec![255, 255, 255]]);
+            assert_eq!(cm.count, 50);
+            assert_eq!(cm.method, 40);
+            assert_eq!(cm.connected, true);
+        }
+        _ => panic!("Expected ColorMatch"),
+    }
 
     // OCR
     new_ctx.override_pipeline(
@@ -490,20 +482,14 @@ fn test_recognition_types(context: &Context) -> MaaResult<()> {
     )?;
 
     let obj = new_ctx.get_node_object("RecoOCR")?.expect("node");
-    assert_eq!(obj.recognition.recognition_type, RecognitionType::OCR);
-    assert!(
-        obj.recognition
-            .param
-            .expected
-            .as_ref()
-            .map_or(false, |v| v.len() == 2),
-        "expected should have 2 elements"
-    );
-    assert_eq!(obj.recognition.param.only_rec, Some(true));
-    assert_eq!(
-        obj.recognition.param.model,
-        Some("custom_model".to_string())
-    );
+    match obj.recognition {
+        Recognition::OCR(ocr) => {
+            assert_eq!(ocr.expected.len(), 2);
+            assert_eq!(ocr.only_rec, true);
+            assert_eq!(ocr.model, "custom_model");
+        }
+        _ => panic!("Expected OCR"),
+    }
 
     // NeuralNetworkClassify
     new_ctx.override_pipeline(
@@ -518,22 +504,16 @@ fn test_recognition_types(context: &Context) -> MaaResult<()> {
     )?;
 
     let obj = new_ctx.get_node_object("RecoNNClassify")?.expect("node");
-    assert_eq!(
-        obj.recognition.recognition_type,
-        RecognitionType::NeuralNetworkClassify
-    );
-    assert_eq!(
-        obj.recognition.param.model,
-        Some("classify.onnx".to_string())
-    );
-    assert_eq!(
-        obj.recognition.param.labels,
-        Some(vec![
-            "Cat".to_string(),
-            "Dog".to_string(),
-            "Mouse".to_string()
-        ])
-    );
+    match obj.recognition {
+        Recognition::NeuralNetworkClassify(nn) => {
+            assert_eq!(nn.model, "classify.onnx");
+            assert_eq!(
+                nn.labels,
+                vec!["Cat".to_string(), "Dog".to_string(), "Mouse".to_string()]
+            );
+        }
+        _ => panic!("Expected NeuralNetworkClassify"),
+    }
 
     // NeuralNetworkDetect
     new_ctx.override_pipeline(
@@ -548,12 +528,13 @@ fn test_recognition_types(context: &Context) -> MaaResult<()> {
     )?;
 
     let obj = new_ctx.get_node_object("RecoNNDetect")?.expect("node");
-    assert_eq!(
-        obj.recognition.recognition_type,
-        RecognitionType::NeuralNetworkDetect
-    );
-    assert_eq!(obj.recognition.param.model, Some("detect.onnx".to_string()));
-    assert_eq!(obj.recognition.param.threshold, Some(vec![0.5]));
+    match obj.recognition {
+        Recognition::NeuralNetworkDetect(nn) => {
+            assert_eq!(nn.model, "detect.onnx");
+            assert_eq!(nn.threshold, vec![0.5]);
+        }
+        _ => panic!("Expected NeuralNetworkDetect"),
+    }
 
     // Custom
     new_ctx.override_pipeline(
@@ -568,21 +549,18 @@ fn test_recognition_types(context: &Context) -> MaaResult<()> {
     )?;
 
     let obj = new_ctx.get_node_object("RecoCustom")?.expect("node");
-    assert_eq!(obj.recognition.recognition_type, RecognitionType::Custom);
-    assert_eq!(
-        obj.recognition.param.custom_recognition,
-        Some("MyCustomReco".to_string())
-    );
-    let custom_param = obj
-        .recognition
-        .param
-        .custom_recognition_param
-        .as_ref()
-        .expect("param");
-    assert_eq!(
-        custom_param.get("key").and_then(|v| v.as_str()),
-        Some("value")
-    );
+    match obj.recognition {
+        Recognition::Custom(c) => {
+            assert_eq!(c.custom_recognition, "MyCustomReco");
+            assert_eq!(
+                c.custom_recognition_param
+                    .get("key")
+                    .and_then(|v| v.as_str()),
+                Some("value")
+            );
+        }
+        _ => panic!("Expected Custom"),
+    }
 
     println!("    PASS: recognition types parsing");
     Ok(())
@@ -607,8 +585,12 @@ fn test_action_types(context: &Context) -> MaaResult<()> {
     )?;
 
     let obj = new_ctx.get_node_object("ActClick")?.expect("node");
-    assert_eq!(obj.action.action_type, ActionType::Click);
-    assert_eq!(obj.action.param.contact, Some(1));
+    match obj.action {
+        Action::Click(c) => {
+            assert_eq!(c.contact, 1);
+        }
+        _ => panic!("Expected Click"),
+    }
 
     // LongPress
     new_ctx.override_pipeline(
@@ -621,8 +603,12 @@ fn test_action_types(context: &Context) -> MaaResult<()> {
     )?;
 
     let obj = new_ctx.get_node_object("ActLongPress")?.expect("node");
-    assert_eq!(obj.action.action_type, ActionType::LongPress);
-    assert_eq!(obj.action.param.duration, Some(vec![2000]));
+    match obj.action {
+        Action::LongPress(lp) => {
+            assert_eq!(lp.duration, 2000);
+        }
+        _ => panic!("Expected LongPress"),
+    }
 
     // Swipe - test with [x, y] point format
     new_ctx.override_pipeline(
@@ -637,7 +623,10 @@ fn test_action_types(context: &Context) -> MaaResult<()> {
     )?;
 
     let obj = new_ctx.get_node_object("ActSwipe")?.expect("node");
-    assert_eq!(obj.action.action_type, ActionType::Swipe);
+    match obj.action {
+        Action::Swipe(_) => {} // ok
+        _ => panic!("Expected Swipe"),
+    }
 
     // MultiSwipe - test with swipes array
     new_ctx.override_pipeline(
@@ -653,9 +642,66 @@ fn test_action_types(context: &Context) -> MaaResult<()> {
     )?;
 
     let obj = new_ctx.get_node_object("ActMultiSwipe")?.expect("node");
-    assert_eq!(obj.action.action_type, ActionType::MultiSwipe);
-    let swipes = obj.action.param.swipes.as_ref().expect("swipes");
-    assert_eq!(swipes.len(), 2);
+    match obj.action {
+        Action::MultiSwipe(ms) => {
+            assert_eq!(ms.swipes.len(), 2);
+        }
+        _ => panic!("Expected MultiSwipe"),
+    }
+
+    // ClickKey
+    new_ctx.override_pipeline(
+        r#"{
+        "ActClickKey": {
+            "action": "ClickKey",
+            "key": 10
+        }
+    }"#,
+    )?;
+
+    let obj = new_ctx.get_node_object("ActClickKey")?.expect("node");
+    match obj.action {
+        Action::ClickKey(k) => {
+            assert_eq!(k.key, vec![10]);
+        }
+        _ => panic!("Expected ClickKey"),
+    }
+
+    // KeyDown
+    new_ctx.override_pipeline(
+        r#"{
+        "ActKeyDown": {
+            "action": "KeyDown",
+            "key": 11
+        }
+    }"#,
+    )?;
+
+    let obj = new_ctx.get_node_object("ActKeyDown")?.expect("node");
+    match obj.action {
+        Action::KeyDown(k) => {
+            assert_eq!(k.key, 11);
+        }
+        _ => panic!("Expected KeyDown"),
+    }
+
+    // KeyUp
+    new_ctx.override_pipeline(
+        r#"{
+        "ActKeyUp": {
+            "action": "KeyUp",
+            "key": 13
+        }
+    }"#,
+    )?;
+
+    let obj = new_ctx.get_node_object("ActKeyUp")?.expect("node");
+    match obj.action {
+        Action::KeyUp(k) => {
+            assert_eq!(k.key, 13);
+        }
+        _ => panic!("Expected KeyUp"),
+    }
 
     // InputText
     new_ctx.override_pipeline(
@@ -668,8 +714,12 @@ fn test_action_types(context: &Context) -> MaaResult<()> {
     )?;
 
     let obj = new_ctx.get_node_object("ActInputText")?.expect("node");
-    assert_eq!(obj.action.action_type, ActionType::InputText);
-    assert_eq!(obj.action.param.input_text, Some("Hello World".to_string()));
+    match obj.action {
+        Action::InputText(it) => {
+            assert_eq!(it.input_text, "Hello World");
+        }
+        _ => panic!("Expected InputText"),
+    }
 
     // StartApp
     new_ctx.override_pipeline(
@@ -682,11 +732,12 @@ fn test_action_types(context: &Context) -> MaaResult<()> {
     )?;
 
     let obj = new_ctx.get_node_object("ActStartApp")?.expect("node");
-    assert_eq!(obj.action.action_type, ActionType::StartApp);
-    assert_eq!(
-        obj.action.param.package,
-        Some("com.example.app".to_string())
-    );
+    match obj.action {
+        Action::StartApp(app) => {
+            assert_eq!(app.package, "com.example.app");
+        }
+        _ => panic!("Expected StartApp"),
+    }
 
     // StopApp
     new_ctx.override_pipeline(
@@ -699,11 +750,12 @@ fn test_action_types(context: &Context) -> MaaResult<()> {
     )?;
 
     let obj = new_ctx.get_node_object("ActStopApp")?.expect("node");
-    assert_eq!(obj.action.action_type, ActionType::StopApp);
-    assert_eq!(
-        obj.action.param.package,
-        Some("com.example.app".to_string())
-    );
+    match obj.action {
+        Action::StopApp(app) => {
+            assert_eq!(app.package, "com.example.app");
+        }
+        _ => panic!("Expected StopApp"),
+    }
 
     // Command
     new_ctx.override_pipeline(
@@ -718,13 +770,17 @@ fn test_action_types(context: &Context) -> MaaResult<()> {
     )?;
 
     let obj = new_ctx.get_node_object("ActCommand")?.expect("node");
-    assert_eq!(obj.action.action_type, ActionType::Command);
-    assert_eq!(obj.action.param.exec, Some("python".to_string()));
-    assert_eq!(
-        obj.action.param.args,
-        Some(vec!["script.py".to_string(), "--arg1".to_string()])
-    );
-    assert_eq!(obj.action.param.detach, Some(true));
+    match obj.action {
+        Action::Command(cmd) => {
+            assert_eq!(cmd.exec, "python");
+            assert_eq!(
+                cmd.args,
+                vec!["script.py".to_string(), "--arg1".to_string()]
+            );
+            assert_eq!(cmd.detach, true);
+        }
+        _ => panic!("Expected Command"),
+    }
 
     // Shell
     new_ctx.override_pipeline(
@@ -738,9 +794,13 @@ fn test_action_types(context: &Context) -> MaaResult<()> {
     )?;
 
     let obj = new_ctx.get_node_object("ActShell")?.expect("node");
-    assert_eq!(obj.action.action_type, ActionType::Shell);
-    assert_eq!(obj.action.param.cmd, Some("ls -la".to_string()));
-    assert_eq!(obj.action.param.timeout, Some(30000));
+    match obj.action {
+        Action::Shell(sh) => {
+            assert_eq!(sh.cmd, "ls -la");
+            assert_eq!(sh.timeout, 30000);
+        }
+        _ => panic!("Expected Shell"),
+    }
 
     // Custom
     new_ctx.override_pipeline(
@@ -754,18 +814,16 @@ fn test_action_types(context: &Context) -> MaaResult<()> {
     )?;
 
     let obj = new_ctx.get_node_object("ActCustom")?.expect("node");
-    assert_eq!(obj.action.action_type, ActionType::Custom);
-    assert_eq!(
-        obj.action.param.custom_action,
-        Some("MyCustomAction".to_string())
-    );
-    let custom_param = obj
-        .action
-        .param
-        .custom_action_param
-        .as_ref()
-        .expect("param");
-    assert_eq!(custom_param.get("data").and_then(|v| v.as_i64()), Some(123));
+    match obj.action {
+        Action::Custom(c) => {
+            assert_eq!(c.custom_action, "MyCustomAction");
+            assert_eq!(
+                c.custom_action_param.get("data").and_then(|v| v.as_i64()),
+                Some(123)
+            );
+        }
+        _ => panic!("Expected Custom"),
+    }
 
     // DoNothing
     new_ctx.override_pipeline(
@@ -777,7 +835,11 @@ fn test_action_types(context: &Context) -> MaaResult<()> {
     )?;
 
     let obj = new_ctx.get_node_object("ActDoNothing")?.expect("node");
-    assert_eq!(obj.action.action_type, ActionType::DoNothing);
+    if matches!(obj.action, Action::DoNothing(_)) {
+        // ok
+    } else {
+        panic!("Expected DoNothing");
+    }
 
     println!("    PASS: action types parsing");
     Ok(())
@@ -876,18 +938,20 @@ fn test_v2_format(context: &Context) -> MaaResult<()> {
 
     let obj = new_ctx.get_node_object("V2FormatNode")?.expect("node");
 
-    assert_eq!(
-        obj.recognition.recognition_type,
-        RecognitionType::TemplateMatch
-    );
-    assert_eq!(
-        obj.recognition.param.template,
-        Some(vec!["v2.png".to_string()])
-    );
-    assert_eq!(obj.recognition.param.threshold, Some(vec![0.9]));
+    match obj.recognition {
+        Recognition::TemplateMatch(tm) => {
+            assert_eq!(tm.template, vec!["v2.png".to_string()]);
+            assert_eq!(tm.threshold, vec![0.9]);
+        }
+        _ => panic!("Expected TemplateMatch"),
+    }
 
-    assert_eq!(obj.action.action_type, ActionType::Click);
-    assert_eq!(obj.action.param.contact, Some(2));
+    match obj.action {
+        Action::Click(c) => {
+            assert_eq!(c.contact, 2);
+        }
+        _ => panic!("Expected Click"),
+    }
 
     assert_eq!(obj.pre_delay, 50);
     assert_eq!(obj.post_delay, 150);
@@ -1134,11 +1198,8 @@ fn test_resource_get_node_object() {
         .expect("get_node_object MUST return Some");
 
     println!("  Testing node: {}", first_node);
-    println!(
-        "    recognition.type: {:?}",
-        obj.recognition.recognition_type
-    );
-    println!("    action.type: {:?}", obj.action.action_type);
+    println!("    recognition: {:?}", obj.recognition);
+    println!("    action: {:?}", obj.action);
     println!("    next count: {}", obj.next.len());
 
     println!("PASS: resource_get_node_object (STRICT)");
