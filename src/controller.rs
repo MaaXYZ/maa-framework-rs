@@ -1,7 +1,9 @@
 use crate::{common, sys, MaaError, MaaResult};
+use std::collections::HashMap;
 use std::ffi::CString;
 use std::os::raw::c_void;
 use std::ptr::NonNull;
+use std::sync::Mutex;
 
 /// Device controller interface.
 ///
@@ -12,6 +14,8 @@ use std::ptr::NonNull;
 /// - Connection management
 pub struct Controller {
     handle: NonNull<sys::MaaController>,
+    callbacks: Mutex<HashMap<sys::MaaSinkId, usize>>,
+    event_sinks: Mutex<HashMap<sys::MaaSinkId, usize>>,
 }
 
 unsafe impl Send for Controller {}
@@ -63,7 +67,11 @@ impl Controller {
         };
 
         if let Some(ptr) = NonNull::new(handle) {
-            Ok(Self { handle: ptr })
+            Ok(Self {
+                handle: ptr,
+                callbacks: Mutex::new(HashMap::new()),
+                event_sinks: Mutex::new(HashMap::new()),
+            })
         } else {
             Err(MaaError::FrameworkError(-1))
         }
@@ -88,7 +96,11 @@ impl Controller {
         };
 
         if let Some(ptr) = NonNull::new(handle) {
-            Ok(Self { handle: ptr })
+            Ok(Self {
+                handle: ptr,
+                callbacks: Mutex::new(HashMap::new()),
+                event_sinks: Mutex::new(HashMap::new()),
+            })
         } else {
             Err(MaaError::FrameworkError(-1))
         }
@@ -105,7 +117,11 @@ impl Controller {
         let handle = unsafe { sys::MaaPlayCoverControllerCreate(c_addr.as_ptr(), c_uuid.as_ptr()) };
 
         if let Some(ptr) = NonNull::new(handle) {
-            Ok(Self { handle: ptr })
+            Ok(Self {
+                handle: ptr,
+                callbacks: Mutex::new(HashMap::new()),
+                event_sinks: Mutex::new(HashMap::new()),
+            })
         } else {
             Err(MaaError::FrameworkError(-1))
         }
@@ -126,7 +142,11 @@ impl Controller {
         let handle =
             unsafe { sys::MaaCustomControllerCreate(callbacks as *const _ as *mut _, cb_ptr) };
         NonNull::new(handle)
-            .map(|ptr| Self { handle: ptr })
+            .map(|ptr| Self {
+                handle: ptr,
+                callbacks: Mutex::new(HashMap::new()),
+                event_sinks: Mutex::new(HashMap::new()),
+            })
             .ok_or_else(|| {
                 unsafe {
                     let _ = Box::from_raw(
@@ -422,7 +442,11 @@ impl Controller {
             sys::MaaDbgControllerCreate(c_read.as_ptr(), c_write.as_ptr(), dbg_type, c_cfg.as_ptr())
         };
         NonNull::new(handle)
-            .map(|ptr| Self { handle: ptr })
+            .map(|ptr| Self {
+                handle: ptr,
+                callbacks: Mutex::new(HashMap::new()),
+                event_sinks: Mutex::new(HashMap::new()),
+            })
             .ok_or(MaaError::FrameworkError(-1))
     }
 
@@ -466,7 +490,11 @@ impl Controller {
             sys::MaaGamepadControllerCreate(hwnd, gamepad_type as u64, screencap_method.bits())
         };
         NonNull::new(handle)
-            .map(|ptr| Self { handle: ptr })
+            .map(|ptr| Self {
+                handle: ptr,
+                callbacks: Mutex::new(HashMap::new()),
+                event_sinks: Mutex::new(HashMap::new()),
+            })
             .ok_or(MaaError::FrameworkError(-1))
     }
 
@@ -480,6 +508,10 @@ impl Controller {
         let (cb_fn, cb_arg) = crate::callback::EventCallback::new(callback);
         let sink_id = unsafe { sys::MaaControllerAddSink(self.handle.as_ptr(), cb_fn, cb_arg) };
         if sink_id != 0 {
+            self.callbacks
+                .lock()
+                .unwrap()
+                .insert(sink_id, cb_arg as usize);
             Ok(sink_id)
         } else {
             unsafe { crate::callback::EventCallback::drop_callback(cb_arg) };
@@ -487,12 +519,52 @@ impl Controller {
         }
     }
 
+    /// Register a strongly-typed event sink.
+    ///
+    /// This method registers an implementation of the [`EventSink`](crate::event_sink::EventSink) trait
+    /// to receive structured notifications from this controller.
+    ///
+    /// # Arguments
+    /// * `sink` - The event sink implementation (must be boxed).
+    ///
+    /// # Returns
+    /// A `MaaSinkId` which can be used to manually remove the sink later via [`remove_sink`](Self::remove_sink).
+    /// The sink will be automatically unregistered and dropped when the `Controller` is dropped.
+    pub fn add_event_sink(
+        &self,
+        sink: Box<dyn crate::event_sink::EventSink>,
+    ) -> MaaResult<sys::MaaSinkId> {
+        let handle_id = self.handle.as_ptr() as crate::common::MaaId;
+        let (cb, arg) = crate::callback::EventCallback::new_sink(handle_id, sink);
+        let id = unsafe { sys::MaaControllerAddSink(self.handle.as_ptr(), cb, arg) };
+        if id > 0 {
+            self.event_sinks.lock().unwrap().insert(id, arg as usize);
+            Ok(id)
+        } else {
+            unsafe { crate::callback::EventCallback::drop_sink(arg) };
+            Err(MaaError::FrameworkError(0))
+        }
+    }
+
     pub fn remove_sink(&self, sink_id: sys::MaaSinkId) {
-        unsafe { sys::MaaControllerRemoveSink(self.handle.as_ptr(), sink_id) }
+        unsafe { sys::MaaControllerRemoveSink(self.handle.as_ptr(), sink_id) };
+        if let Some(ptr) = self.callbacks.lock().unwrap().remove(&sink_id) {
+            unsafe { crate::callback::EventCallback::drop_callback(ptr as *mut c_void) };
+        } else if let Some(ptr) = self.event_sinks.lock().unwrap().remove(&sink_id) {
+            unsafe { crate::callback::EventCallback::drop_sink(ptr as *mut c_void) };
+        }
     }
 
     pub fn clear_sinks(&self) {
-        unsafe { sys::MaaControllerClearSinks(self.handle.as_ptr()) }
+        unsafe { sys::MaaControllerClearSinks(self.handle.as_ptr()) };
+        let mut callbacks = self.callbacks.lock().unwrap();
+        for (_, ptr) in callbacks.drain() {
+            unsafe { crate::callback::EventCallback::drop_callback(ptr as *mut c_void) };
+        }
+        let mut event_sinks = self.event_sinks.lock().unwrap();
+        for (_, ptr) in event_sinks.drain() {
+            unsafe { crate::callback::EventCallback::drop_sink(ptr as *mut c_void) };
+        }
     }
 }
 
@@ -500,6 +572,14 @@ impl Drop for Controller {
     fn drop(&mut self) {
         unsafe {
             sys::MaaControllerClearSinks(self.handle.as_ptr());
+            let mut callbacks = self.callbacks.lock().unwrap();
+            for (_, ptr) in callbacks.drain() {
+                crate::callback::EventCallback::drop_callback(ptr as *mut c_void);
+            }
+            let mut event_sinks = self.event_sinks.lock().unwrap();
+            for (_, ptr) in event_sinks.drain() {
+                crate::callback::EventCallback::drop_sink(ptr as *mut c_void);
+            }
             sys::MaaControllerDestroy(self.handle.as_ptr());
         }
     }

@@ -50,11 +50,10 @@ impl CustomRecognition for MyRecognition {
             custom_recognition_name
         );
 
-        // ================================================================
-        // Test Context API - matching Python's binding_test.py coverage
+        // Verify methods related to task context, including running tasks, recognition, and actions.
         // ================================================================
 
-        // 1. Test run_task
+        // Verify run_task functionality
         let ppover = r#"{
             "ColorMatch": {
                 "recognition": "ColorMatch",
@@ -66,7 +65,7 @@ impl CustomRecognition for MyRecognition {
         let run_result = context.run_task("ColorMatch", ppover);
         println!("  run_task result: {:?}", run_result);
 
-        // 3. Test run_action and run_recognition
+        // Verify direct action and recognition execution
         let rect = maa_framework::common::Rect {
             x: 114,
             y: 514,
@@ -76,26 +75,26 @@ impl CustomRecognition for MyRecognition {
         let action_detail = context.run_action("ColorMatch", ppover, &rect, "RunAction Detail");
         println!("  run_action result: {:?}", action_detail);
 
-        // Use a dummy buffer for testing API
+        // Use a dummy buffer for testing API calls (content irrelevant for this test)
         let dummy_img = maa_framework::buffer::MaaImageBuffer::new();
         if let Ok(img) = dummy_img {
             let reco_detail = context.run_recognition("ColorMatch", ppover, &img);
             println!("  run_recognition result: {:?}", reco_detail);
         }
 
-        // 4. Test clone_context and override_pipeline
+        // Verify context cloning and dynamic pipeline overrides
         if let Ok(new_ctx) = context.clone_context() {
             println!("  clone_context: OK");
 
-            // Test override_pipeline
+            // Verify pipeline overriding within cloned context
             let override_result = new_ctx.override_pipeline(r#"{"TaskA": {}, "TaskB": {}}"#);
             println!("  override_pipeline result: {:?}", override_result);
 
-            // Test override_next
+            // Verify next-node overriding within cloned context
             let override_next = new_ctx.override_next(node_name, &["TaskA", "TaskB"]);
             println!("  override_next result: {:?}", override_next);
 
-            // Test get_node_data (Context level)
+            // Verify retrieval of node data from context
             let node_data = new_ctx.get_node_data(node_name);
             println!(
                 "  get_node_data({}) is_some: {}",
@@ -103,21 +102,21 @@ impl CustomRecognition for MyRecognition {
                 node_data.as_ref().map_or(false, |o| o.is_some())
             );
 
-            // Test anchor API
+            // Verify anchor setting and retrieval
             let set_result = new_ctx.set_anchor("test_anchor", "TaskA");
             println!("  set_anchor result: {:?}", set_result);
 
             let anchor = new_ctx.get_anchor("test_anchor");
             println!("  get_anchor result: {:?}", anchor);
 
-            // Test hit count API
+            // Verify hit count tracking
             let hit_count = new_ctx.get_hit_count(node_name);
             println!("  get_hit_count({}) = {:?}", node_name, hit_count);
 
             let clear_result = new_ctx.clear_hit_count(node_name);
             println!("  clear_hit_count result: {:?}", clear_result);
 
-            // Test override_image
+            // Verify runtime image overriding in context
             let mut test_image_buf = maa_framework::buffer::MaaImageBuffer::new()
                 .expect("Failed to create image buffer");
             let raw_data = vec![0u8; 100 * 100 * 3];
@@ -125,22 +124,28 @@ impl CustomRecognition for MyRecognition {
             let override_img = new_ctx.override_image("test_image", &test_image_buf);
             println!("  override_image result: {:?}", override_img);
 
-            // Test from tasker - NOT SUPPORTED
-            // if let Some(tasker) = new_ctx.tasker() { ... }
-
-            // Test get_task_job
+            // Verify access to the underlying tasker handle from the context
+            let tasker_handle = new_ctx.tasker_handle();
+            println!("  context.tasker_handle: {:?}", tasker_handle);
+            if !tasker_handle.is_null() {
+                println!("  PASS: context.tasker_handle() is valid");
+            }
+            // Verify independent task job status query from context
             let task_job = new_ctx.get_task_job();
-            let task_detail = task_job.get(false);
-            println!(
-                "  get_task_job entry: {:?}",
-                task_detail
-                    .as_ref()
-                    .ok()
-                    .and_then(|o| o.as_ref().map(|d| d.entry.clone()))
-            );
+            match task_job.get(false) {
+                Ok(Some(task_detail)) => {
+                    println!("  get_task_job entry: {}", task_detail.entry);
+                }
+                Ok(None) => {
+                    println!("  get_task_job returned None");
+                }
+                Err(e) => {
+                    println!("  get_task_job failed: {}", e);
+                }
+            }
         }
 
-        // 5. Test task_id
+        // Verify task ID retrieval
         let task_id = context.task_id();
         println!("  context.task_id: {}", task_id);
 
@@ -358,7 +363,7 @@ fn test_resource_loading() {
         resource.loaded()
     );
 
-    // Test loading valid resources - STRICT: resources MUST exist (git submodule)
+    // Verify loading valid resources (requires git submodule to be initialized)
     let test_res_dir = get_test_resources_dir();
     let resource_path = test_res_dir.join("resource");
 
@@ -486,7 +491,7 @@ fn test_resource_node_operations() {
 
     let resource = Resource::new().expect("Failed to create resource");
 
-    // Load test resources - STRICT: MUST exist
+    // Load test resources (requires git submodule to be initialized)
     let test_res_dir = get_test_resources_dir();
     let resource_path = test_res_dir.join("resource");
 
@@ -503,12 +508,12 @@ fn test_resource_node_operations() {
 
     assert!(resource.loaded(), "Resource MUST be loaded");
 
-    // Test node_list - STRICT
+    // Verify retrieval of the full node list
     let node_list = resource.node_list().expect("node_list MUST work");
     println!("  node_list count: {}", node_list.len());
     assert!(!node_list.is_empty(), "node_list MUST NOT be empty");
 
-    // Test get_node_data - STRICT
+    // Verify retrieval of node property data
     let first_node = node_list
         .first()
         .expect("Node list MUST have at least one node");
@@ -526,10 +531,37 @@ fn test_resource_node_operations() {
         node_data.len()
     );
 
-    // Test hash - STRICT
+    // Verify resource hash availability
     let hash = resource.hash().expect("hash MUST work");
     assert!(!hash.is_empty(), "Hash MUST NOT be empty");
     println!("  resource.hash: {}", hash);
+
+    // Verify dynamic pipeline override functionality
+    let pipeline_override = r#"{"TestOverride": {"action": "DoNothing"}}"#;
+    resource
+        .override_pipeline(pipeline_override)
+        .expect("override_pipeline MUST succeed");
+    println!("  override_pipeline: OK");
+
+    // Verify dynamic next-node list override
+    resource
+        .override_next("TestOverride", &["SomeNode"])
+        .expect("override_next MUST succeed");
+    println!("  override_next: OK");
+
+    // Verify dynamic resource image override
+    let mut image_buf =
+        maa_framework::buffer::MaaImageBuffer::new().expect("Failed to create image buffer");
+    // Create a simple 10x10 black image
+    let img_data = vec![0u8; 10 * 10 * 3];
+    image_buf
+        .set_raw_data(&img_data, 10, 10, 16) // 16 = CV_8UC3
+        .expect("set_raw_data MUST succeed");
+
+    resource
+        .override_image("TestImage", &image_buf)
+        .expect("override_image MUST succeed");
+    println!("  override_image: OK");
 
     println!("  PASS: node operations (STRICT)");
 }
@@ -663,6 +695,18 @@ fn test_controller_screencap() {
         .post_connection()
         .expect("Failed to post connection");
     controller.wait(conn_id);
+
+    // Verify setting screenshot parameters
+    controller
+        .set_screenshot_target_long_side(1920)
+        .expect("set_screenshot_target_long_side failed");
+    controller
+        .set_screenshot_target_short_side(1080)
+        .expect("set_screenshot_target_short_side failed");
+    controller
+        .set_screenshot_use_raw_size(false)
+        .expect("set_screenshot_use_raw_size failed");
+    println!("  screenshot options set: OK");
 
     // Test screencap
     let cap_id = controller
@@ -813,25 +857,92 @@ fn test_tasker_api() {
             "custom_action_param": "Test111222333"
         }
     }"#;
+    // Post task
+    let task_job = tasker
+        .post_task("Entry", ppover)
+        .expect("Failed to post task");
 
-    let task_job = tasker.post_task("Entry", ppover).expect("post_task failed");
-    let task_status = task_job.wait();
-    println!("  task status: {:?}", task_status);
+    // Verify task execution status and detailed results
+    let status = task_job.wait();
+    assert!(status.succeeded(), "Task execution failed");
+    println!("  task status: {:?}", status);
 
-    // Strict checks for callbacks
-    let analyzed = ANALYZED.load(Ordering::SeqCst);
-    let runned = RUNNED.load(Ordering::SeqCst);
-    println!("  ANALYZED: {}, RUNNED: {}", analyzed, runned);
+    // Validate the complete task detail structure, including nodes, recognitions, and actions
+    let detail = task_job
+        .get(false)
+        .expect("Should get details")
+        .expect("Detail should be Some");
+    println!("  task detail entry: {}", detail.entry);
+    println!("  task detail status: {:?}", detail.status);
+    println!("  node_id_list len: {}", detail.node_id_list.len());
 
-    assert!(analyzed, "MyRecognition.analyze MUST be called");
-    assert!(runned, "MyAction.run MUST be called");
+    assert!(!detail.node_id_list.is_empty(), "Task should execute nodes");
 
-    println!("  PASS: tasker API (Active)");
+    for node_id in &detail.node_id_list {
+        let node_detail = tasker
+            .get_node_detail(*node_id)
+            .expect("Failed to get node detail")
+            .expect("Node detail should exist");
+
+        println!(
+            "    Node: {} (id: {}), completed: {}, reco: {}, act: {}",
+            node_detail.node_name,
+            *node_id,
+            node_detail.completed,
+            node_detail.reco_id,
+            node_detail.act_id
+        );
+
+        // Verify Recognition Detail
+        if node_detail.reco_id > 0 {
+            let reco_detail = tasker
+                .get_recognition_detail(node_detail.reco_id)
+                .expect("Failed to get reco detail")
+                .expect("Reco detail should exist");
+            println!(
+                "      Reco: {} (algo: {}, hit: {})",
+                reco_detail.node_name, reco_detail.algorithm, reco_detail.hit
+            );
+        }
+
+        // Verify Action Detail
+        if node_detail.act_id > 0 {
+            let act_detail = tasker
+                .get_action_detail(node_detail.act_id)
+                .expect("Failed to get action detail")
+                .expect("Action detail should exist");
+            println!(
+                "      Action: {} (method: {}, success: {})",
+                act_detail.node_name, act_detail.action, act_detail.success
+            );
+        }
+    }
+
+    assert!(
+        ANALYZED.load(Ordering::SeqCst),
+        "MyRecognition.analyze should be called"
+    );
+    assert!(
+        RUNNED.load(Ordering::SeqCst),
+        "MyAction.run should be called"
+    );
+
+    println!("  PASS: tasker api (STRICT)");
 }
 
 #[test]
 fn test_tasker_sink_operations() {
     println!("\n=== test_tasker_sink_operations ===");
+
+    use maa_framework::event_sink::EventSink;
+    use maa_framework::notification::MaaEvent;
+
+    struct TestSink;
+    impl EventSink for TestSink {
+        fn on_event(&self, _handle: maa_framework::common::MaaId, event: &MaaEvent) {
+            println!("  [ContextEventSink] event: {:?}", event);
+        }
+    }
 
     let tasker = Tasker::new().expect("Failed to create tasker");
 
@@ -849,14 +960,20 @@ fn test_tasker_sink_operations() {
         })
         .expect("Failed to add context sink");
 
+    // Add typed context event sink
+    let typed_sink_id = tasker
+        .add_context_event_sink(Box::new(TestSink))
+        .expect("Failed to add context event sink");
+
     println!(
-        "  tasker_sink_id: {:?}, context_sink_id: {:?}",
-        tasker_sink_id, context_sink_id
+        "  tasker_sink_id: {:?}, context_sink_id: {:?}, typed_sink_id: {:?}",
+        tasker_sink_id, context_sink_id, typed_sink_id
     );
 
     // Remove sinks
     tasker.remove_sink(tasker_sink_id);
     tasker.remove_context_sink(context_sink_id);
+    tasker.remove_context_sink(typed_sink_id);
 
     // Clear sinks
     let _ = tasker.add_sink(|_, _| {});

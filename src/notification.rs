@@ -401,6 +401,358 @@ pub trait ContextEventHandler: Send + Sync {
     fn on_unknown(&self, _msg: &str, _details: &Value) {}
 }
 
+// === MaaEvent ===
+
+/// Unified event enum for all framework notifications.
+///
+/// This enum encapsulates all possible event types emitted by the framework, providing
+/// a type-safe way to handle notifications from `Tasker`, `Controller`, or `Resource`.
+/// Each variant wraps a detailed structure containing relevant information about the event.
+///
+/// # See Also
+/// * [`EventSink`](crate::event_sink::EventSink) - The trait for receiving these events.
+/// * [`Tasker::add_event_sink`](crate::tasker::Tasker::add_event_sink) - Registering an event sink.
+#[derive(Debug, Clone)]
+pub enum MaaEvent {
+    // --- Resource Events ---
+    /// Triggered when a resource starts loading.
+    ResourceLoadingStarting(ResourceLoadingDetail),
+    /// Triggered when a resource is successfully loaded.
+    ResourceLoadingSucceeded(ResourceLoadingDetail),
+    /// Triggered when resource loading fails.
+    ResourceLoadingFailed(ResourceLoadingDetail),
+
+    // --- Controller Events ---
+    /// Triggered before a controller performs an action (e.g., click, swipe).
+    ControllerActionStarting(ControllerActionDetail),
+    /// Triggered after a controller action completes successfully.
+    ControllerActionSucceeded(ControllerActionDetail),
+    /// Triggered if a controller action fails.
+    ControllerActionFailed(ControllerActionDetail),
+
+    // --- Tasker Events ---
+    /// Triggered when a task begins execution.
+    TaskerTaskStarting(TaskerTaskDetail),
+    /// Triggered when a task completes successfully.
+    TaskerTaskSucceeded(TaskerTaskDetail),
+    /// Triggered when a task fails.
+    TaskerTaskFailed(TaskerTaskDetail),
+
+    // --- Node Pipeline Events ---
+    /// Triggered when a node in the pipeline starts execution.
+    NodePipelineNodeStarting(NodePipelineNodeDetail),
+    /// Triggered when a node in the pipeline completes successfully.
+    NodePipelineNodeSucceeded(NodePipelineNodeDetail),
+    /// Triggered when a node in the pipeline fails.
+    NodePipelineNodeFailed(NodePipelineNodeDetail),
+
+    // --- Node Recognition Events ---
+    /// Triggered when image recognition begins for a node.
+    NodeRecognitionStarting(NodeRecognitionDetail),
+    /// Triggered when image recognition succeeds.
+    NodeRecognitionSucceeded(NodeRecognitionDetail),
+    /// Triggered when image recognition fails.
+    NodeRecognitionFailed(NodeRecognitionDetail),
+
+    // --- Node Action Events ---
+    /// Triggered before a node action is executed.
+    NodeActionStarting(NodeActionDetail),
+    /// Triggered after a node action completes successfully.
+    NodeActionSucceeded(NodeActionDetail),
+    /// Triggered if a node action fails.
+    NodeActionFailed(NodeActionDetail),
+
+    // --- Node Next List Events ---
+    /// Triggered when processing the "next" list for a node.
+    NodeNextListStarting(NodeNextListDetail),
+    /// Triggered when the "next" list processing succeeds.
+    NodeNextListSucceeded(NodeNextListDetail),
+    /// Triggered when the "next" list processing fails.
+    NodeNextListFailed(NodeNextListDetail),
+
+    // --- Trace Events ---
+    /// Trace event: Recognition node starting.
+    NodeRecognitionNodeStarting(NodePipelineNodeDetail),
+    /// Trace event: Recognition node succeeded.
+    NodeRecognitionNodeSucceeded(NodePipelineNodeDetail),
+    /// Trace event: Recognition node failed.
+    NodeRecognitionNodeFailed(NodePipelineNodeDetail),
+
+    /// Trace event: Action node starting.
+    NodeActionNodeStarting(NodePipelineNodeDetail),
+    /// Trace event: Action node succeeded.
+    NodeActionNodeSucceeded(NodePipelineNodeDetail),
+    /// Trace event: Action node failed.
+    NodeActionNodeFailed(NodePipelineNodeDetail),
+
+    // --- Fallback ---
+    /// Represents an unknown or unparsable event.
+    ///
+    /// This variant is used as a fallback when the event message is not recognized
+    /// or if JSON deserialization fails.
+    Unknown {
+        /// The raw message string.
+        msg: String,
+        /// The raw JSON detail string.
+        raw_json: String,
+        err: Option<String>,
+    },
+}
+
+impl MaaEvent {
+    /// Parses a notification message and detail string into a `MaaEvent`.
+    ///
+    /// This function handles the conversion from the raw C-string values provided by the
+    /// framework callback into safe, typed Rust structures.
+    ///
+    /// # Arguments
+    /// * `msg` - The notification type identifier (e.g., "Resource.Loading.Starting").
+    /// * `details` - The JSON string containing event details.
+    pub fn from_json(msg: &str, details: &str) -> Self {
+        match msg {
+            // Resource
+            msg::RESOURCE_LOADING_STARTING => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::ResourceLoadingStarting(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::RESOURCE_LOADING_SUCCEEDED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::ResourceLoadingSucceeded(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::RESOURCE_LOADING_FAILED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::ResourceLoadingFailed(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+
+            // Controller
+            msg::CONTROLLER_ACTION_STARTING => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::ControllerActionStarting(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::CONTROLLER_ACTION_SUCCEEDED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::ControllerActionSucceeded(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::CONTROLLER_ACTION_FAILED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::ControllerActionFailed(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+
+            // Tasker
+            msg::TASKER_TASK_STARTING => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::TaskerTaskStarting(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::TASKER_TASK_SUCCEEDED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::TaskerTaskSucceeded(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::TASKER_TASK_FAILED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::TaskerTaskFailed(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+
+            // Node Pipeline
+            msg::NODE_PIPELINE_NODE_STARTING => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodePipelineNodeStarting(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::NODE_PIPELINE_NODE_SUCCEEDED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodePipelineNodeSucceeded(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::NODE_PIPELINE_NODE_FAILED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodePipelineNodeFailed(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+
+            // Node Recognition
+            msg::NODE_RECOGNITION_STARTING => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodeRecognitionStarting(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::NODE_RECOGNITION_SUCCEEDED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodeRecognitionSucceeded(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::NODE_RECOGNITION_FAILED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodeRecognitionFailed(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+
+            // Node Action
+            msg::NODE_ACTION_STARTING => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodeActionStarting(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::NODE_ACTION_SUCCEEDED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodeActionSucceeded(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::NODE_ACTION_FAILED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodeActionFailed(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+
+            // Node Next List
+            msg::NODE_NEXT_LIST_STARTING => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodeNextListStarting(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::NODE_NEXT_LIST_SUCCEEDED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodeNextListSucceeded(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::NODE_NEXT_LIST_FAILED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodeNextListFailed(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+
+            // Node Recognition Node
+            msg::NODE_RECOGNITION_NODE_STARTING => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodeRecognitionNodeStarting(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::NODE_RECOGNITION_NODE_SUCCEEDED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodeRecognitionNodeSucceeded(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::NODE_RECOGNITION_NODE_FAILED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodeRecognitionNodeFailed(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+
+            // Node Action Node
+            msg::NODE_ACTION_NODE_STARTING => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodeActionNodeStarting(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::NODE_ACTION_NODE_SUCCEEDED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodeActionNodeSucceeded(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::NODE_ACTION_NODE_FAILED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodeActionNodeFailed(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+
+            _ => MaaEvent::Unknown {
+                msg: msg.to_string(),
+                raw_json: details.to_string(),
+                err: None,
+            },
+        }
+    }
+}
+
 // === Tests ===
 
 #[cfg(test)]

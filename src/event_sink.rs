@@ -1,164 +1,84 @@
 //! Event sink system for typed callback notifications.
 //!
-//! This module provides a trait-based event sink system that matches the Python SDK's
-//! `EventSink` interface, allowing for structured handling of framework notifications.
+//! This module defines the `EventSink` trait, which provides a strongly-typed interface
+//! for handling framework notifications, replacing the legacy string-based callbacks.
 
-use crate::common::{MaaId, NotificationType};
-use serde::{Deserialize, Serialize};
+use crate::common::MaaId;
+use crate::notification::MaaEvent;
 
-/// Base trait for all event sinks.
+/// A trait for receiving structured events from the framework.
 ///
-/// Implement this trait to receive typed notifications from the framework.
-/// Each notification comes with a message type and parsed detail structure.
+/// Implementing this trait allows types to register as listeners on `Tasker` or `Controller` instances.
+/// Unlike raw closures which receive raw strings, `EventSink` implementation receives
+/// fully parsed `MaaEvent` structures.
+///
+/// # Thread Safety
+/// Implementations must be `Send + Sync` as they may be invoked from internal framework threads.
+///
+/// # Example
+///
+/// ```rust
+/// use maa_framework::event_sink::EventSink;
+/// use maa_framework::notification::MaaEvent;
+/// use maa_framework::common::MaaId;
+///
+/// struct MyLogger;
+///
+/// impl EventSink for MyLogger {
+///     fn on_event(&self, handle: MaaId, event: &MaaEvent) {
+///         match event {
+///             MaaEvent::TaskerTaskStarting(detail) => {
+///                 println!("Task started on instance {}: {}", handle, detail.entry);
+///             }
+///             MaaEvent::TaskerTaskSucceeded(_) => {
+///                 println!("Task succeeded on instance {}", handle);
+///             }
+///             _ => { /* Ignore other events */ }
+///         }
+///     }
+/// }
+/// ```
 pub trait EventSink: Send + Sync {
-    /// Called for each event notification.
+    /// Called when an event is emitted by the framework.
     ///
     /// # Arguments
-    /// * `msg` - The message type (e.g., "Resource.Loading.Starting")
-    /// * `details_json` - Raw JSON details string
-    fn on_event(&self, msg: &str, details_json: &str);
-
-    /// Called when the notification type cannot be determined.
-    fn on_unknown(&self, _msg: &str, _details_json: &str) {}
-}
-
-// === Resource Events ===
-
-/// Details for resource loading events.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ResourceLoadingDetail {
-    pub res_id: MaaId,
-    pub path: String,
-    #[serde(rename = "type")]
-    pub res_type: String,
-    pub hash: String,
-}
-
-/// Trait for resource-specific event handling.
-pub trait ResourceEventSink: EventSink {
-    fn on_loading_starting(&self, _detail: ResourceLoadingDetail) {}
-    fn on_loading_succeeded(&self, _detail: ResourceLoadingDetail) {}
-    fn on_loading_failed(&self, _detail: ResourceLoadingDetail) {}
-}
-
-// === Controller Events ===
-
-/// Details for controller action events.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ControllerActionDetail {
-    pub ctrl_id: MaaId,
-    pub uuid: String,
-    pub action: String,
-    #[serde(default)]
-    pub param: serde_json::Value,
-}
-
-/// Trait for controller-specific event handling.
-pub trait ControllerEventSink: EventSink {
-    fn on_action_starting(&self, _detail: ControllerActionDetail) {}
-    fn on_action_succeeded(&self, _detail: ControllerActionDetail) {}
-    fn on_action_failed(&self, _detail: ControllerActionDetail) {}
-}
-
-// === Tasker Events ===
-
-/// Details for tasker task events.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TaskerTaskDetail {
-    pub task_id: MaaId,
-    pub entry: String,
-    pub uuid: String,
-    pub hash: String,
-}
-
-/// Trait for tasker-specific event handling.
-pub trait TaskerEventSink: EventSink {
-    fn on_task_starting(&self, _detail: TaskerTaskDetail) {}
-    fn on_task_succeeded(&self, _detail: TaskerTaskDetail) {}
-    fn on_task_failed(&self, _detail: TaskerTaskDetail) {}
-}
-
-// === Node Events ===
-
-/// Details for node events (pipeline, recognition, action).
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NodeDetail {
-    pub task_id: MaaId,
-    #[serde(default)]
-    pub node_id: MaaId,
-    pub name: String,
-    #[serde(default)]
-    pub focus: serde_json::Value,
-}
-
-/// Details for recognition events.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RecognitionEventDetail {
-    pub task_id: MaaId,
-    pub reco_id: MaaId,
-    pub name: String,
-    #[serde(default)]
-    pub focus: serde_json::Value,
-}
-
-/// Details for action events.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ActionEventDetail {
-    pub task_id: MaaId,
-    pub action_id: MaaId,
-    pub name: String,
-    #[serde(default)]
-    pub focus: serde_json::Value,
-}
-
-/// Trait for context/node-specific event handling.
-pub trait ContextEventSink: EventSink {
-    // Pipeline node events
-    fn on_pipeline_starting(&self, _detail: NodeDetail) {}
-    fn on_pipeline_succeeded(&self, _detail: NodeDetail) {}
-    fn on_pipeline_failed(&self, _detail: NodeDetail) {}
-
-    // Recognition node events
-    fn on_recognition_starting(&self, _detail: RecognitionEventDetail) {}
-    fn on_recognition_succeeded(&self, _detail: RecognitionEventDetail) {}
-    fn on_recognition_failed(&self, _detail: RecognitionEventDetail) {}
-
-    // Action node events
-    fn on_action_starting(&self, _detail: ActionEventDetail) {}
-    fn on_action_succeeded(&self, _detail: ActionEventDetail) {}
-    fn on_action_failed(&self, _detail: ActionEventDetail) {}
+    /// * `handle` - The handle ID of the source instance (e.g., `Tasker` or `Controller` handle).
+    /// * `event` - The strongly-typed event details.
+    fn on_event(&self, handle: MaaId, event: &MaaEvent);
 }
 
 // === Helper Functions ===
 
-/// Parse a notification message to determine its type.
-pub fn parse_notification_type(msg: &str) -> NotificationType {
-    NotificationType::from_message(msg)
-}
-
-/// Parse a notification message to get its category (e.g., "Resource", "Controller").
-pub fn parse_category(msg: &str) -> Option<&str> {
-    msg.split('.').next()
-}
-
-/// Create an event sink adapter from a closure.
+/// helper to create an `EventSink` from a closure.
 ///
-/// This is a convenience function to wrap a simple closure as an EventSink.
+/// This is a convenience function to create a sink without defining a new struct.
+///
+/// # Example
+///
+/// ```rust
+/// use maa_framework::event_sink;
+///
+/// let sink = event_sink::from_closure(|handle, event| {
+///     println!("Received event {:?} from {}", event, handle);
+/// });
+/// ```
 pub fn from_closure<F>(f: F) -> ClosureEventSink<F>
 where
-    F: Fn(&str, &str) + Send + Sync,
+    F: Fn(MaaId, &MaaEvent) + Send + Sync,
 {
     ClosureEventSink(f)
 }
 
-/// Wrapper type that implements EventSink for closures.
+/// A wrapper struct needed to implement `EventSink` for closures.
+///
+/// Produced by [`from_closure`].
 pub struct ClosureEventSink<F>(pub F);
 
 impl<F> EventSink for ClosureEventSink<F>
 where
-    F: Fn(&str, &str) + Send + Sync,
+    F: Fn(MaaId, &MaaEvent) + Send + Sync,
 {
-    fn on_event(&self, msg: &str, details_json: &str) {
-        (self.0)(msg, details_json)
+    fn on_event(&self, handle: MaaId, event: &MaaEvent) {
+        (self.0)(handle, event)
     }
 }

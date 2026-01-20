@@ -16,6 +16,7 @@ use std::sync::Mutex;
 pub struct Tasker {
     handle: NonNull<sys::MaaTasker>,
     callbacks: Mutex<HashMap<sys::MaaSinkId, usize>>, // Store pointer address
+    event_sinks: Mutex<HashMap<sys::MaaSinkId, usize>>,
 }
 
 unsafe impl Send for Tasker {}
@@ -28,6 +29,7 @@ impl Tasker {
             Ok(Self {
                 handle: ptr,
                 callbacks: Mutex::new(HashMap::new()),
+                event_sinks: Mutex::new(HashMap::new()),
             })
         } else {
             Err(MaaError::NullPointer)
@@ -315,6 +317,33 @@ impl Tasker {
         }
     }
 
+    /// Register a strongly-typed event sink.
+    ///
+    /// This method registers an implementation of the [`EventSink`](crate::event_sink::EventSink) trait
+    /// to receive structured notifications from this tasker.
+    ///
+    /// # Arguments
+    /// * `sink` - The event sink implementation (must be boxed).
+    ///
+    /// # Returns
+    /// A `MaaSinkId` which can be used to manually remove the sink later via [`remove_sink`](Self::remove_sink).
+    /// The sink will be automatically unregistered and dropped when the `Tasker` is dropped.
+    pub fn add_event_sink(
+        &self,
+        sink: Box<dyn crate::event_sink::EventSink>,
+    ) -> MaaResult<sys::MaaSinkId> {
+        let handle_id = self.handle.as_ptr() as crate::common::MaaId;
+        let (cb, arg) = crate::callback::EventCallback::new_sink(handle_id, sink);
+        let id = unsafe { sys::MaaTaskerAddSink(self.handle.as_ptr(), cb, arg) };
+        if id > 0 {
+            self.event_sinks.lock().unwrap().insert(id, arg as usize);
+            Ok(id)
+        } else {
+            unsafe { crate::callback::EventCallback::drop_sink(arg) };
+            Err(MaaError::FrameworkError(0))
+        }
+    }
+
     /// Remove a tasker sink by ID.
     ///
     /// # Arguments
@@ -323,6 +352,8 @@ impl Tasker {
         unsafe { sys::MaaTaskerRemoveSink(self.handle.as_ptr(), sink_id) };
         if let Some(ptr) = self.callbacks.lock().unwrap().remove(&sink_id) {
             unsafe { crate::callback::EventCallback::drop_callback(ptr as *mut c_void) };
+        } else if let Some(ptr) = self.event_sinks.lock().unwrap().remove(&sink_id) {
+            unsafe { crate::callback::EventCallback::drop_sink(ptr as *mut c_void) };
         }
     }
 
@@ -332,6 +363,10 @@ impl Tasker {
         let mut callbacks = self.callbacks.lock().unwrap();
         for (_, ptr) in callbacks.drain() {
             unsafe { crate::callback::EventCallback::drop_callback(ptr as *mut c_void) };
+        }
+        let mut event_sinks = self.event_sinks.lock().unwrap();
+        for (_, ptr) in event_sinks.drain() {
+            unsafe { crate::callback::EventCallback::drop_sink(ptr as *mut c_void) };
         }
     }
 
@@ -384,11 +419,38 @@ impl Tasker {
         }
     }
 
+    /// Register a strongly-typed context event sink.
+    ///
+    /// This receives detailed execution events like Node.Recognition, Node.Action, etc.
+    ///
+    /// # Arguments
+    /// * `sink` - The event sink implementation (must be boxed).
+    ///
+    /// # Returns
+    /// A `MaaSinkId` which can be used to manually remove the sink later via [`remove_context_sink`](Self::remove_context_sink).
+    pub fn add_context_event_sink(
+        &self,
+        sink: Box<dyn crate::event_sink::EventSink>,
+    ) -> MaaResult<sys::MaaSinkId> {
+        let handle_id = self.handle.as_ptr() as crate::common::MaaId;
+        let (cb, arg) = crate::callback::EventCallback::new_sink(handle_id, sink);
+        let id = unsafe { sys::MaaTaskerAddContextSink(self.handle.as_ptr(), cb, arg) };
+        if id > 0 {
+            self.event_sinks.lock().unwrap().insert(id, arg as usize);
+            Ok(id)
+        } else {
+            unsafe { crate::callback::EventCallback::drop_sink(arg) };
+            Err(MaaError::FrameworkError(0))
+        }
+    }
+
     /// Remove a context sink by ID.
     pub fn remove_context_sink(&self, sink_id: sys::MaaSinkId) {
         unsafe { sys::MaaTaskerRemoveContextSink(self.handle.as_ptr(), sink_id) };
         if let Some(ptr) = self.callbacks.lock().unwrap().remove(&sink_id) {
             unsafe { crate::callback::EventCallback::drop_callback(ptr as *mut c_void) };
+        } else if let Some(ptr) = self.event_sinks.lock().unwrap().remove(&sink_id) {
+            unsafe { crate::callback::EventCallback::drop_sink(ptr as *mut c_void) };
         }
     }
 
@@ -643,6 +705,10 @@ impl Drop for Tasker {
             let mut callbacks = self.callbacks.lock().unwrap();
             for (_, ptr) in callbacks.drain() {
                 crate::callback::EventCallback::drop_callback(ptr as *mut c_void);
+            }
+            let mut event_sinks = self.event_sinks.lock().unwrap();
+            for (_, ptr) in event_sinks.drain() {
+                crate::callback::EventCallback::drop_sink(ptr as *mut c_void);
             }
             sys::MaaTaskerDestroy(self.handle.as_ptr())
         }
