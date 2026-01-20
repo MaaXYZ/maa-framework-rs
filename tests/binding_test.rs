@@ -354,8 +354,8 @@ fn test_resource_loading() {
     let resource = Resource::new().expect("Failed to create resource");
 
     // Test invalid path - wait for task completion to verify no crash
-    if let Ok(id) = resource.post_bundle("C:/_maafw_testing_/aaabbbccc") {
-        let status = resource.wait(id);
+    if let Ok(job) = resource.post_bundle("C:/_maafw_testing_/aaabbbccc") {
+        let status = job.wait();
         println!("  invalid path status: {:?} (expected failure)", status);
     }
     println!(
@@ -373,10 +373,10 @@ fn test_resource_loading() {
         resource_path
     );
 
-    let id = resource
+    let job = resource
         .post_bundle(resource_path.to_str().unwrap())
         .expect("post_bundle MUST succeed");
-    let status = resource.wait(id);
+    let status = job.wait();
     assert!(status.done(), "Resource loading MUST complete");
     assert!(resource.loaded(), "Resource MUST be loaded");
     println!(
@@ -484,6 +484,68 @@ fn test_resource_sink_operations() {
 }
 
 #[test]
+fn test_resource_event_sink_structured() {
+    println!("\n=== test_resource_event_sink_structured ===");
+
+    use maa_framework::event_sink::EventSink;
+    use maa_framework::notification::MaaEvent;
+    use std::sync::{Arc, Mutex};
+
+    struct TestSink {
+        events: Arc<Mutex<Vec<String>>>,
+    }
+
+    impl EventSink for TestSink {
+        fn on_event(&self, _handle: maa_framework::common::MaaId, event: &MaaEvent) {
+            let mut events = self.events.lock().unwrap();
+            match event {
+                MaaEvent::ResourceLoadingStarting(detail) => {
+                    println!("  [StructuredSink] Loading Starting: {}", detail.path);
+                    events.push("Starting".to_string());
+                }
+                MaaEvent::ResourceLoadingSucceeded(detail) => {
+                    println!("  [StructuredSink] Loading Succeeded: {}", detail.path);
+                    events.push("Succeeded".to_string());
+                }
+                MaaEvent::ResourceLoadingFailed(detail) => {
+                    println!("  [StructuredSink] Loading Failed: {}", detail.path);
+                    events.push("Failed".to_string());
+                }
+                _ => {}
+            }
+        }
+    }
+
+    let resource = Resource::new().expect("Failed to create resource");
+    let received_events = Arc::new(Mutex::new(Vec::new()));
+
+    // Register typed sink
+    resource
+        .add_event_sink(Box::new(TestSink {
+            events: received_events.clone(),
+        }))
+        .expect("Failed to add event sink");
+
+    // Load resources to trigger events
+    let test_res_dir = get_test_resources_dir();
+    let resource_path = test_res_dir.join("resource");
+
+    resource
+        .post_bundle(resource_path.to_str().unwrap())
+        .expect("post_bundle")
+        .wait();
+
+    // Verify events received
+    let events = received_events.lock().unwrap();
+    println!("  Received events: {:?}", *events);
+    assert!(!events.is_empty(), "Should receive resource events");
+    assert!(events.contains(&"Starting".to_string()));
+    assert!(events.contains(&"Succeeded".to_string()));
+
+    println!("  PASS: resource event sink structured");
+}
+
+#[test]
 fn test_resource_node_operations() {
     println!("\n=== test_resource_node_operations ===");
 
@@ -501,10 +563,10 @@ fn test_resource_node_operations() {
         resource_path
     );
 
-    let id = resource
+    resource
         .post_bundle(resource_path.to_str().unwrap())
-        .expect("post_bundle MUST succeed");
-    resource.wait(id);
+        .expect("post_bundle MUST succeed")
+        .wait();
 
     assert!(resource.loaded(), "Resource MUST be loaded");
 
@@ -813,10 +875,10 @@ fn test_tasker_api() {
         resource_path
     );
 
-    let id = resource
+    let job = resource
         .post_bundle(resource_path.to_str().unwrap())
         .expect("post_bundle MUST succeed");
-    let status = resource.wait(id);
+    let status = job.wait();
     assert!(status.succeeded(), "Resource loading failed");
 
     // Register custom components
@@ -1160,10 +1222,10 @@ fn test_tasker_with_native_dbg_controller() {
 
     // Prepare Resource
     let resource = Resource::new().unwrap();
-    let res_id = resource
+    let res_job = resource
         .post_bundle(resource_path.to_str().unwrap())
         .expect("post_bundle MUST succeed");
-    let res_status = resource.wait(res_id);
+    let res_status = res_job.wait();
     assert!(res_status.succeeded(), "Resource loading failed");
 
     // Create and bind Tasker

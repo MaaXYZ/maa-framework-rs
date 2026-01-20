@@ -1054,10 +1054,10 @@ fn test_pipeline_full_execution() {
 
     // 1. Create Resource
     let resource = Resource::new().unwrap();
-    let id = resource
+    resource
         .post_bundle(resource_dir.to_str().unwrap())
-        .unwrap();
-    resource.wait(id);
+        .unwrap()
+        .wait();
     assert!(resource.loaded(), "Resource MUST be loaded");
 
     // 2. Register custom recognition for Context-level tests
@@ -1124,10 +1124,10 @@ fn test_resource_get_node_data() {
     );
 
     let resource = Resource::new().unwrap();
-    let id = resource
+    resource
         .post_bundle(resource_dir.to_str().unwrap())
-        .unwrap();
-    resource.wait(id);
+        .unwrap()
+        .wait();
 
     assert!(resource.loaded(), "Resource MUST be loaded");
 
@@ -1180,10 +1180,10 @@ fn test_resource_get_node_object() {
     );
 
     let resource = Resource::new().unwrap();
-    let id = resource
+    resource
         .post_bundle(resource_dir.to_str().unwrap())
-        .unwrap();
-    resource.wait(id);
+        .unwrap()
+        .wait();
 
     assert!(resource.loaded(), "Resource MUST load successfully");
 
@@ -1216,10 +1216,10 @@ fn test_resource_override_pipeline() {
     assert!(resource_dir.exists(), "Test resources MUST exist");
 
     let resource = Resource::new().unwrap();
-    let id = resource
+    resource
         .post_bundle(resource_dir.to_str().unwrap())
-        .unwrap();
-    resource.wait(id);
+        .unwrap()
+        .wait();
 
     assert!(resource.loaded(), "Resource MUST load successfully");
 
@@ -1266,10 +1266,10 @@ fn test_resource_hash() {
     assert!(resource_dir.exists(), "Test resources MUST exist");
 
     let resource = Resource::new().unwrap();
-    let id = resource
+    resource
         .post_bundle(resource_dir.to_str().unwrap())
-        .unwrap();
-    resource.wait(id);
+        .unwrap()
+        .wait();
 
     assert!(resource.loaded(), "Resource MUST load successfully");
 

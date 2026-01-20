@@ -344,8 +344,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let resource_path = "sample/resource";
     println!("    Loading resource from: {}", resource_path);
     match resource.post_bundle(resource_path) {
-        Ok(job_id) => {
-            let status = resource.wait(job_id);
+        Ok(job) => {
+            let status = job.wait();
             println!("    Load status: {:?}", status);
         }
         Err(e) => println!("    Load failed: {} (OK for demo)", e),

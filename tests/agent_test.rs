@@ -174,10 +174,10 @@ fn test_agent_full_integration() {
     assert!(resource_dir.exists());
 
     let resource = Resource::new().unwrap();
-    let id = resource
+    resource
         .post_bundle(resource_dir.to_str().unwrap())
-        .unwrap();
-    resource.wait(id);
+        .unwrap()
+        .wait();
     client.bind(&resource).expect("Failed to bind resource");
 
     let img_ctrl = ImageController::new(screenshot_dir);

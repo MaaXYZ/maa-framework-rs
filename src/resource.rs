@@ -16,6 +16,8 @@ struct ResourceInner {
     handle: NonNull<sys::MaaResource>,
     custom_actions: std::sync::Mutex<std::collections::HashMap<String, usize>>, // Store pointer address
     custom_recognitions: std::sync::Mutex<std::collections::HashMap<String, usize>>,
+    callbacks: std::sync::Mutex<std::collections::HashMap<sys::MaaSinkId, usize>>,
+    event_sinks: std::sync::Mutex<std::collections::HashMap<sys::MaaSinkId, usize>>,
 }
 
 unsafe impl Send for ResourceInner {}
@@ -39,6 +41,29 @@ impl Resource {
                     handle: ptr,
                     custom_actions: std::sync::Mutex::new(std::collections::HashMap::new()),
                     custom_recognitions: std::sync::Mutex::new(std::collections::HashMap::new()),
+                    callbacks: std::sync::Mutex::new(std::collections::HashMap::new()),
+                    event_sinks: std::sync::Mutex::new(std::collections::HashMap::new()),
+                }),
+            })
+        } else {
+            Err(MaaError::NullPointer)
+        }
+    }
+
+    /// Create a Resource from a raw pointer, taking ownership.
+    ///
+    /// # Safety
+    /// The pointer must be valid and the caller transfers ownership to the Resource.
+    /// The Resource will call `MaaResourceDestroy` when dropped.
+    pub unsafe fn from_raw(ptr: *mut sys::MaaResource) -> MaaResult<Self> {
+        if let Some(handle) = NonNull::new(ptr) {
+            Ok(Self {
+                inner: Arc::new(ResourceInner {
+                    handle,
+                    custom_actions: std::sync::Mutex::new(std::collections::HashMap::new()),
+                    custom_recognitions: std::sync::Mutex::new(std::collections::HashMap::new()),
+                    callbacks: std::sync::Mutex::new(std::collections::HashMap::new()),
+                    event_sinks: std::sync::Mutex::new(std::collections::HashMap::new()),
                 }),
             })
         } else {
@@ -49,10 +74,10 @@ impl Resource {
     /// Load a resource bundle from the specified directory.
     ///
     /// The bundle should contain pipeline definitions, images, and models.
-    pub fn post_bundle(&self, path: &str) -> MaaResult<i64> {
+    pub fn post_bundle(&self, path: &str) -> MaaResult<crate::job::Job> {
         let c_path = CString::new(path)?;
         let id = unsafe { sys::MaaResourcePostBundle(self.inner.handle.as_ptr(), c_path.as_ptr()) };
-        Ok(id)
+        Ok(crate::job::Job::for_resource(self, id))
     }
 
     /// Check if resources have been loaded.
@@ -85,24 +110,24 @@ impl Resource {
 
     // === Additional resource loading ===
 
-    pub fn post_ocr_model(&self, path: &str) -> MaaResult<i64> {
+    pub fn post_ocr_model(&self, path: &str) -> MaaResult<crate::job::Job> {
         let c_path = CString::new(path)?;
         let id =
             unsafe { sys::MaaResourcePostOcrModel(self.inner.handle.as_ptr(), c_path.as_ptr()) };
-        Ok(id)
+        Ok(crate::job::Job::for_resource(self, id))
     }
 
-    pub fn post_pipeline(&self, path: &str) -> MaaResult<i64> {
+    pub fn post_pipeline(&self, path: &str) -> MaaResult<crate::job::Job> {
         let c_path = CString::new(path)?;
         let id =
             unsafe { sys::MaaResourcePostPipeline(self.inner.handle.as_ptr(), c_path.as_ptr()) };
-        Ok(id)
+        Ok(crate::job::Job::for_resource(self, id))
     }
 
-    pub fn post_image(&self, path: &str) -> MaaResult<i64> {
+    pub fn post_image(&self, path: &str) -> MaaResult<crate::job::Job> {
         let c_path = CString::new(path)?;
         let id = unsafe { sys::MaaResourcePostImage(self.inner.handle.as_ptr(), c_path.as_ptr()) };
-        Ok(id)
+        Ok(crate::job::Job::for_resource(self, id))
     }
 
     // === Pipeline operations ===
@@ -197,8 +222,20 @@ impl Resource {
     // === Inference device ===
 
     pub fn use_cpu(&self) -> MaaResult<()> {
+        let mut ep: i32 =
+            sys::MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_CPU as i32;
+        let ret1 = unsafe {
+            sys::MaaResourceSetOption(
+                self.inner.handle.as_ptr(),
+                sys::MaaResOptionEnum_MaaResOption_InferenceExecutionProvider as i32,
+                &mut ep as *mut _ as *mut std::ffi::c_void,
+                std::mem::size_of::<i32>() as u64,
+            )
+        };
+        common::check_bool(ret1)?;
+
         let mut device: i32 = sys::MaaInferenceDeviceEnum_MaaInferenceDevice_CPU as i32;
-        let ret = unsafe {
+        let ret2 = unsafe {
             sys::MaaResourceSetOption(
                 self.inner.handle.as_ptr(),
                 sys::MaaResOptionEnum_MaaResOption_InferenceDevice as i32,
@@ -206,7 +243,7 @@ impl Resource {
                 std::mem::size_of::<i32>() as u64,
             )
         };
-        common::check_bool(ret)
+        common::check_bool(ret2)
     }
 
     pub fn use_directml(&self, device_id: i32) -> MaaResult<()> {
@@ -243,6 +280,11 @@ impl Resource {
         let (cb_fn, cb_arg) = crate::callback::EventCallback::new(callback);
         let sink_id = unsafe { sys::MaaResourceAddSink(self.inner.handle.as_ptr(), cb_fn, cb_arg) };
         if sink_id != 0 {
+            self.inner
+                .callbacks
+                .lock()
+                .unwrap()
+                .insert(sink_id, cb_arg as usize);
             Ok(sink_id)
         } else {
             unsafe { crate::callback::EventCallback::drop_callback(cb_arg) };
@@ -250,12 +292,56 @@ impl Resource {
         }
     }
 
+    /// Register a strongly-typed event sink.
+    ///
+    /// This method registers an implementation of the [`EventSink`](crate::event_sink::EventSink) trait
+    /// to receive structured notifications from this resource.
+    ///
+    /// # Arguments
+    /// * `sink` - The event sink implementation (must be boxed).
+    ///
+    /// # Returns
+    /// A `MaaSinkId` which can be used to manually remove the sink later via [`remove_sink`](Self::remove_sink).
+    /// The sink will be automatically unregistered and dropped when the `Resource` is dropped.
+    pub fn add_event_sink(
+        &self,
+        sink: Box<dyn crate::event_sink::EventSink>,
+    ) -> MaaResult<sys::MaaSinkId> {
+        let handle_id = self.inner.handle.as_ptr() as crate::common::MaaId;
+        let (cb, arg) = crate::callback::EventCallback::new_sink(handle_id, sink);
+        let id = unsafe { sys::MaaResourceAddSink(self.inner.handle.as_ptr(), cb, arg) };
+        if id > 0 {
+            self.inner
+                .event_sinks
+                .lock()
+                .unwrap()
+                .insert(id, arg as usize);
+            Ok(id)
+        } else {
+            unsafe { crate::callback::EventCallback::drop_sink(arg) };
+            Err(MaaError::FrameworkError(0))
+        }
+    }
+
     pub fn remove_sink(&self, sink_id: sys::MaaSinkId) {
         unsafe { sys::MaaResourceRemoveSink(self.inner.handle.as_ptr(), sink_id) }
+        if let Some(ptr) = self.inner.callbacks.lock().unwrap().remove(&sink_id) {
+            unsafe { crate::callback::EventCallback::drop_callback(ptr as *mut std::ffi::c_void) };
+        } else if let Some(ptr) = self.inner.event_sinks.lock().unwrap().remove(&sink_id) {
+            unsafe { crate::callback::EventCallback::drop_sink(ptr as *mut std::ffi::c_void) };
+        }
     }
 
     pub fn clear_sinks(&self) {
         unsafe { sys::MaaResourceClearSinks(self.inner.handle.as_ptr()) }
+        let mut callbacks = self.inner.callbacks.lock().unwrap();
+        for (_, ptr) in callbacks.drain() {
+            unsafe { crate::callback::EventCallback::drop_callback(ptr as *mut std::ffi::c_void) };
+        }
+        let mut event_sinks = self.inner.event_sinks.lock().unwrap();
+        for (_, ptr) in event_sinks.drain() {
+            unsafe { crate::callback::EventCallback::drop_sink(ptr as *mut std::ffi::c_void) };
+        }
     }
 
     // === Image override ===
@@ -458,6 +544,19 @@ impl Resource {
 impl Drop for ResourceInner {
     fn drop(&mut self) {
         unsafe {
+            {
+                let mut callbacks = self.callbacks.lock().unwrap();
+                for (_, ptr) in callbacks.drain() {
+                    let _ =
+                        crate::callback::EventCallback::drop_callback(ptr as *mut std::ffi::c_void);
+                }
+            }
+            {
+                let mut event_sinks = self.event_sinks.lock().unwrap();
+                for (_, ptr) in event_sinks.drain() {
+                    let _ = crate::callback::EventCallback::drop_sink(ptr as *mut std::ffi::c_void);
+                }
+            }
             sys::MaaResourceClearSinks(self.handle.as_ptr());
             sys::MaaResourceClearCustomAction(self.handle.as_ptr());
             sys::MaaResourceClearCustomRecognition(self.handle.as_ptr());
