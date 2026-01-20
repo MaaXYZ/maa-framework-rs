@@ -59,41 +59,44 @@ impl Job {
         }
     }
 
-    pub fn for_tasker(tasker_ptr: *mut sys::MaaTasker, id: MaaId) -> Self {
-        let ptr = SendSyncPtr::new(tasker_ptr);
+    pub fn for_tasker(tasker: &crate::tasker::Tasker, id: MaaId) -> Self {
+        let tasker1 = tasker.clone();
+        let tasker2 = tasker.clone();
         Self {
             id,
             status_fn: Box::new(move |job_id| {
-                MaaStatus(unsafe { sys::MaaTaskerStatus(ptr.get(), job_id) })
+                MaaStatus(unsafe { sys::MaaTaskerStatus(tasker1.raw(), job_id) })
             }),
             wait_fn: Box::new(move |job_id| {
-                MaaStatus(unsafe { sys::MaaTaskerWait(ptr.get(), job_id) })
+                MaaStatus(unsafe { sys::MaaTaskerWait(tasker2.raw(), job_id) })
             }),
         }
     }
 
-    pub fn for_controller(ctrl_ptr: *mut sys::MaaController, id: MaaId) -> Self {
-        let ptr = SendSyncPtr::new(ctrl_ptr);
+    pub fn for_controller(controller: &crate::controller::Controller, id: MaaId) -> Self {
+        let controller1 = controller.clone();
+        let controller2 = controller.clone();
         Self {
             id,
             status_fn: Box::new(move |job_id| {
-                MaaStatus(unsafe { sys::MaaControllerStatus(ptr.get(), job_id) })
+                MaaStatus(unsafe { sys::MaaControllerStatus(controller1.raw(), job_id) })
             }),
             wait_fn: Box::new(move |job_id| {
-                MaaStatus(unsafe { sys::MaaControllerWait(ptr.get(), job_id) })
+                MaaStatus(unsafe { sys::MaaControllerWait(controller2.raw(), job_id) })
             }),
         }
     }
 
-    pub fn for_resource(res_ptr: *mut sys::MaaResource, id: MaaId) -> Self {
-        let ptr = SendSyncPtr::new(res_ptr);
+    pub fn for_resource(resource: &crate::resource::Resource, id: MaaId) -> Self {
+        let resource1 = resource.clone();
+        let resource2 = resource.clone();
         Self {
             id,
             status_fn: Box::new(move |job_id| {
-                MaaStatus(unsafe { sys::MaaResourceStatus(ptr.get(), job_id) })
+                MaaStatus(unsafe { sys::MaaResourceStatus(resource1.raw(), job_id) })
             }),
             wait_fn: Box::new(move |job_id| {
-                MaaStatus(unsafe { sys::MaaResourceWait(ptr.get(), job_id) })
+                MaaStatus(unsafe { sys::MaaResourceWait(resource2.raw(), job_id) })
             }),
         }
     }

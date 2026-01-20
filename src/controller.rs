@@ -12,10 +12,27 @@ use std::sync::Mutex;
 /// - Screen capture
 /// - App management (start/stop)
 /// - Connection management
-pub struct Controller {
+use std::sync::Arc;
+
+struct ControllerInner {
     handle: NonNull<sys::MaaController>,
     callbacks: Mutex<HashMap<sys::MaaSinkId, usize>>,
     event_sinks: Mutex<HashMap<sys::MaaSinkId, usize>>,
+}
+
+unsafe impl Send for ControllerInner {}
+unsafe impl Sync for ControllerInner {}
+
+/// Device controller interface.
+///
+/// Handles interaction with the target device, including:
+/// - Input events (click, swipe, key press)
+/// - Screen capture
+/// - App management (start/stop)
+/// - Connection management
+#[derive(Clone)]
+pub struct Controller {
+    inner: Arc<ControllerInner>,
 }
 
 unsafe impl Send for Controller {}
@@ -68,9 +85,11 @@ impl Controller {
 
         if let Some(ptr) = NonNull::new(handle) {
             Ok(Self {
-                handle: ptr,
-                callbacks: Mutex::new(HashMap::new()),
-                event_sinks: Mutex::new(HashMap::new()),
+                inner: Arc::new(ControllerInner {
+                    handle: ptr,
+                    callbacks: Mutex::new(HashMap::new()),
+                    event_sinks: Mutex::new(HashMap::new()),
+                }),
             })
         } else {
             Err(MaaError::FrameworkError(-1))
@@ -97,9 +116,11 @@ impl Controller {
 
         if let Some(ptr) = NonNull::new(handle) {
             Ok(Self {
-                handle: ptr,
-                callbacks: Mutex::new(HashMap::new()),
-                event_sinks: Mutex::new(HashMap::new()),
+                inner: Arc::new(ControllerInner {
+                    handle: ptr,
+                    callbacks: Mutex::new(HashMap::new()),
+                    event_sinks: Mutex::new(HashMap::new()),
+                }),
             })
         } else {
             Err(MaaError::FrameworkError(-1))
@@ -118,9 +139,11 @@ impl Controller {
 
         if let Some(ptr) = NonNull::new(handle) {
             Ok(Self {
-                handle: ptr,
-                callbacks: Mutex::new(HashMap::new()),
-                event_sinks: Mutex::new(HashMap::new()),
+                inner: Arc::new(ControllerInner {
+                    handle: ptr,
+                    callbacks: Mutex::new(HashMap::new()),
+                    event_sinks: Mutex::new(HashMap::new()),
+                }),
             })
         } else {
             Err(MaaError::FrameworkError(-1))
@@ -143,9 +166,11 @@ impl Controller {
             unsafe { sys::MaaCustomControllerCreate(callbacks as *const _ as *mut _, cb_ptr) };
         NonNull::new(handle)
             .map(|ptr| Self {
-                handle: ptr,
-                callbacks: Mutex::new(HashMap::new()),
-                event_sinks: Mutex::new(HashMap::new()),
+                inner: Arc::new(ControllerInner {
+                    handle: ptr,
+                    callbacks: Mutex::new(HashMap::new()),
+                    event_sinks: Mutex::new(HashMap::new()),
+                }),
             })
             .ok_or_else(|| {
                 unsafe {
@@ -161,7 +186,7 @@ impl Controller {
     ///
     /// Returns immediately with an operation ID. Use `wait()` to block until complete.
     pub fn post_click(&self, x: i32, y: i32) -> MaaResult<common::MaaId> {
-        let id = unsafe { sys::MaaControllerPostClick(self.handle.as_ptr(), x, y) };
+        let id = unsafe { sys::MaaControllerPostClick(self.inner.handle.as_ptr(), x, y) };
         Ok(id)
     }
 
@@ -169,7 +194,7 @@ impl Controller {
     ///
     /// Returns immediately. After completion, use `cached_image()` to retrieve the result.
     pub fn post_screencap(&self) -> MaaResult<common::MaaId> {
-        let id = unsafe { sys::MaaControllerPostScreencap(self.handle.as_ptr()) };
+        let id = unsafe { sys::MaaControllerPostScreencap(self.inner.handle.as_ptr()) };
         Ok(id)
     }
 
@@ -180,8 +205,9 @@ impl Controller {
         contact: i32,
         pressure: i32,
     ) -> MaaResult<common::MaaId> {
-        let id =
-            unsafe { sys::MaaControllerPostClickV2(self.handle.as_ptr(), x, y, contact, pressure) };
+        let id = unsafe {
+            sys::MaaControllerPostClickV2(self.inner.handle.as_ptr(), x, y, contact, pressure)
+        };
         Ok(id)
     }
 
@@ -193,13 +219,14 @@ impl Controller {
         y2: i32,
         duration: i32,
     ) -> MaaResult<common::MaaId> {
-        let id =
-            unsafe { sys::MaaControllerPostSwipe(self.handle.as_ptr(), x1, y1, x2, y2, duration) };
+        let id = unsafe {
+            sys::MaaControllerPostSwipe(self.inner.handle.as_ptr(), x1, y1, x2, y2, duration)
+        };
         Ok(id)
     }
 
     pub fn post_click_key(&self, keycode: i32) -> MaaResult<common::MaaId> {
-        let id = unsafe { sys::MaaControllerPostClickKey(self.handle.as_ptr(), keycode) };
+        let id = unsafe { sys::MaaControllerPostClickKey(self.inner.handle.as_ptr(), keycode) };
         Ok(id)
     }
 
@@ -209,14 +236,16 @@ impl Controller {
 
     pub fn post_input_text(&self, text: &str) -> MaaResult<common::MaaId> {
         let c_text = CString::new(text)?;
-        let id = unsafe { sys::MaaControllerPostInputText(self.handle.as_ptr(), c_text.as_ptr()) };
+        let id =
+            unsafe { sys::MaaControllerPostInputText(self.inner.handle.as_ptr(), c_text.as_ptr()) };
         Ok(id)
     }
 
     pub fn post_shell(&self, cmd: &str, timeout: i64) -> MaaResult<common::MaaId> {
         let c_cmd = CString::new(cmd)?;
-        let id =
-            unsafe { sys::MaaControllerPostShell(self.handle.as_ptr(), c_cmd.as_ptr(), timeout) };
+        let id = unsafe {
+            sys::MaaControllerPostShell(self.inner.handle.as_ptr(), c_cmd.as_ptr(), timeout)
+        };
         Ok(id)
     }
 
@@ -228,7 +257,7 @@ impl Controller {
         pressure: i32,
     ) -> MaaResult<common::MaaId> {
         let id = unsafe {
-            sys::MaaControllerPostTouchDown(self.handle.as_ptr(), contact, x, y, pressure)
+            sys::MaaControllerPostTouchDown(self.inner.handle.as_ptr(), contact, x, y, pressure)
         };
         Ok(id)
     }
@@ -241,34 +270,34 @@ impl Controller {
         pressure: i32,
     ) -> MaaResult<common::MaaId> {
         let id = unsafe {
-            sys::MaaControllerPostTouchMove(self.handle.as_ptr(), contact, x, y, pressure)
+            sys::MaaControllerPostTouchMove(self.inner.handle.as_ptr(), contact, x, y, pressure)
         };
         Ok(id)
     }
 
     pub fn post_touch_up(&self, contact: i32) -> MaaResult<common::MaaId> {
-        let id = unsafe { sys::MaaControllerPostTouchUp(self.handle.as_ptr(), contact) };
+        let id = unsafe { sys::MaaControllerPostTouchUp(self.inner.handle.as_ptr(), contact) };
         Ok(id)
     }
 
     pub fn raw(&self) -> *mut sys::MaaController {
-        self.handle.as_ptr()
+        self.inner.handle.as_ptr()
     }
 
     // === Connection ===
 
     pub fn post_connection(&self) -> MaaResult<common::MaaId> {
-        let id = unsafe { sys::MaaControllerPostConnection(self.handle.as_ptr()) };
+        let id = unsafe { sys::MaaControllerPostConnection(self.inner.handle.as_ptr()) };
         Ok(id)
     }
 
     pub fn connected(&self) -> bool {
-        unsafe { sys::MaaControllerConnected(self.handle.as_ptr()) != 0 }
+        unsafe { sys::MaaControllerConnected(self.inner.handle.as_ptr()) != 0 }
     }
 
     pub fn uuid(&self) -> MaaResult<String> {
         let buffer = crate::buffer::MaaStringBuffer::new()?;
-        let ret = unsafe { sys::MaaControllerGetUuid(self.handle.as_ptr(), buffer.raw()) };
+        let ret = unsafe { sys::MaaControllerGetUuid(self.inner.handle.as_ptr(), buffer.raw()) };
         if ret != 0 {
             Ok(buffer.to_string())
         } else {
@@ -280,7 +309,7 @@ impl Controller {
         let mut width: i32 = 0;
         let mut height: i32 = 0;
         let ret = unsafe {
-            sys::MaaControllerGetResolution(self.handle.as_ptr(), &mut width, &mut height)
+            sys::MaaControllerGetResolution(self.inner.handle.as_ptr(), &mut width, &mut height)
         };
         if ret != 0 {
             Ok((width, height))
@@ -303,7 +332,7 @@ impl Controller {
     ) -> MaaResult<common::MaaId> {
         let id = unsafe {
             sys::MaaControllerPostSwipeV2(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 x1,
                 y1,
                 x2,
@@ -319,12 +348,12 @@ impl Controller {
     // === Key control ===
 
     pub fn post_key_down(&self, keycode: i32) -> MaaResult<common::MaaId> {
-        let id = unsafe { sys::MaaControllerPostKeyDown(self.handle.as_ptr(), keycode) };
+        let id = unsafe { sys::MaaControllerPostKeyDown(self.inner.handle.as_ptr(), keycode) };
         Ok(id)
     }
 
     pub fn post_key_up(&self, keycode: i32) -> MaaResult<common::MaaId> {
-        let id = unsafe { sys::MaaControllerPostKeyUp(self.handle.as_ptr(), keycode) };
+        let id = unsafe { sys::MaaControllerPostKeyUp(self.inner.handle.as_ptr(), keycode) };
         Ok(id)
     }
 
@@ -332,20 +361,23 @@ impl Controller {
 
     pub fn post_start_app(&self, intent: &str) -> MaaResult<common::MaaId> {
         let c_intent = CString::new(intent)?;
-        let id = unsafe { sys::MaaControllerPostStartApp(self.handle.as_ptr(), c_intent.as_ptr()) };
+        let id = unsafe {
+            sys::MaaControllerPostStartApp(self.inner.handle.as_ptr(), c_intent.as_ptr())
+        };
         Ok(id)
     }
 
     pub fn post_stop_app(&self, intent: &str) -> MaaResult<common::MaaId> {
         let c_intent = CString::new(intent)?;
-        let id = unsafe { sys::MaaControllerPostStopApp(self.handle.as_ptr(), c_intent.as_ptr()) };
+        let id =
+            unsafe { sys::MaaControllerPostStopApp(self.inner.handle.as_ptr(), c_intent.as_ptr()) };
         Ok(id)
     }
 
     // === Scroll ===
 
     pub fn post_scroll(&self, dx: i32, dy: i32) -> MaaResult<common::MaaId> {
-        let id = unsafe { sys::MaaControllerPostScroll(self.handle.as_ptr(), dx, dy) };
+        let id = unsafe { sys::MaaControllerPostScroll(self.inner.handle.as_ptr(), dx, dy) };
         Ok(id)
     }
 
@@ -353,7 +385,8 @@ impl Controller {
 
     pub fn cached_image(&self) -> MaaResult<crate::buffer::MaaImageBuffer> {
         let buffer = crate::buffer::MaaImageBuffer::new()?;
-        let ret = unsafe { sys::MaaControllerCachedImage(self.handle.as_ptr(), buffer.raw()) };
+        let ret =
+            unsafe { sys::MaaControllerCachedImage(self.inner.handle.as_ptr(), buffer.raw()) };
         if ret != 0 {
             Ok(buffer)
         } else {
@@ -365,7 +398,8 @@ impl Controller {
 
     pub fn shell_output(&self) -> MaaResult<String> {
         let buffer = crate::buffer::MaaStringBuffer::new()?;
-        let ret = unsafe { sys::MaaControllerGetShellOutput(self.handle.as_ptr(), buffer.raw()) };
+        let ret =
+            unsafe { sys::MaaControllerGetShellOutput(self.inner.handle.as_ptr(), buffer.raw()) };
         if ret != 0 {
             Ok(buffer.to_string())
         } else {
@@ -376,12 +410,12 @@ impl Controller {
     // === Status ===
 
     pub fn status(&self, ctrl_id: common::MaaId) -> common::MaaStatus {
-        let s = unsafe { sys::MaaControllerStatus(self.handle.as_ptr(), ctrl_id) };
+        let s = unsafe { sys::MaaControllerStatus(self.inner.handle.as_ptr(), ctrl_id) };
         common::MaaStatus(s)
     }
 
     pub fn wait(&self, ctrl_id: common::MaaId) -> common::MaaStatus {
-        let s = unsafe { sys::MaaControllerWait(self.handle.as_ptr(), ctrl_id) };
+        let s = unsafe { sys::MaaControllerWait(self.inner.handle.as_ptr(), ctrl_id) };
         common::MaaStatus(s)
     }
 
@@ -391,7 +425,7 @@ impl Controller {
         let mut val = long_side;
         let ret = unsafe {
             sys::MaaControllerSetOption(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 sys::MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotTargetLongSide as i32,
                 &mut val as *mut _ as *mut c_void,
                 std::mem::size_of::<i32>() as u64,
@@ -404,7 +438,7 @@ impl Controller {
         let mut val = short_side;
         let ret = unsafe {
             sys::MaaControllerSetOption(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 sys::MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotTargetShortSide as i32,
                 &mut val as *mut _ as *mut c_void,
                 std::mem::size_of::<i32>() as u64,
@@ -417,7 +451,7 @@ impl Controller {
         let mut val: u8 = if enable { 1 } else { 0 };
         let ret = unsafe {
             sys::MaaControllerSetOption(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 sys::MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotUseRawSize as i32,
                 &mut val as *mut _ as *mut c_void,
                 std::mem::size_of::<u8>() as u64,
@@ -443,9 +477,11 @@ impl Controller {
         };
         NonNull::new(handle)
             .map(|ptr| Self {
-                handle: ptr,
-                callbacks: Mutex::new(HashMap::new()),
-                event_sinks: Mutex::new(HashMap::new()),
+                inner: Arc::new(ControllerInner {
+                    handle: ptr,
+                    callbacks: Mutex::new(HashMap::new()),
+                    event_sinks: Mutex::new(HashMap::new()),
+                }),
             })
             .ok_or(MaaError::FrameworkError(-1))
     }
@@ -491,9 +527,11 @@ impl Controller {
         };
         NonNull::new(handle)
             .map(|ptr| Self {
-                handle: ptr,
-                callbacks: Mutex::new(HashMap::new()),
-                event_sinks: Mutex::new(HashMap::new()),
+                inner: Arc::new(ControllerInner {
+                    handle: ptr,
+                    callbacks: Mutex::new(HashMap::new()),
+                    event_sinks: Mutex::new(HashMap::new()),
+                }),
             })
             .ok_or(MaaError::FrameworkError(-1))
     }
@@ -506,9 +544,11 @@ impl Controller {
         F: Fn(&str, &str) + Send + Sync + 'static,
     {
         let (cb_fn, cb_arg) = crate::callback::EventCallback::new(callback);
-        let sink_id = unsafe { sys::MaaControllerAddSink(self.handle.as_ptr(), cb_fn, cb_arg) };
+        let sink_id =
+            unsafe { sys::MaaControllerAddSink(self.inner.handle.as_ptr(), cb_fn, cb_arg) };
         if sink_id != 0 {
-            self.callbacks
+            self.inner
+                .callbacks
                 .lock()
                 .unwrap()
                 .insert(sink_id, cb_arg as usize);
@@ -534,11 +574,15 @@ impl Controller {
         &self,
         sink: Box<dyn crate::event_sink::EventSink>,
     ) -> MaaResult<sys::MaaSinkId> {
-        let handle_id = self.handle.as_ptr() as crate::common::MaaId;
+        let handle_id = self.inner.handle.as_ptr() as crate::common::MaaId;
         let (cb, arg) = crate::callback::EventCallback::new_sink(handle_id, sink);
-        let id = unsafe { sys::MaaControllerAddSink(self.handle.as_ptr(), cb, arg) };
+        let id = unsafe { sys::MaaControllerAddSink(self.inner.handle.as_ptr(), cb, arg) };
         if id > 0 {
-            self.event_sinks.lock().unwrap().insert(id, arg as usize);
+            self.inner
+                .event_sinks
+                .lock()
+                .unwrap()
+                .insert(id, arg as usize);
             Ok(id)
         } else {
             unsafe { crate::callback::EventCallback::drop_sink(arg) };
@@ -547,28 +591,28 @@ impl Controller {
     }
 
     pub fn remove_sink(&self, sink_id: sys::MaaSinkId) {
-        unsafe { sys::MaaControllerRemoveSink(self.handle.as_ptr(), sink_id) };
-        if let Some(ptr) = self.callbacks.lock().unwrap().remove(&sink_id) {
+        unsafe { sys::MaaControllerRemoveSink(self.inner.handle.as_ptr(), sink_id) };
+        if let Some(ptr) = self.inner.callbacks.lock().unwrap().remove(&sink_id) {
             unsafe { crate::callback::EventCallback::drop_callback(ptr as *mut c_void) };
-        } else if let Some(ptr) = self.event_sinks.lock().unwrap().remove(&sink_id) {
+        } else if let Some(ptr) = self.inner.event_sinks.lock().unwrap().remove(&sink_id) {
             unsafe { crate::callback::EventCallback::drop_sink(ptr as *mut c_void) };
         }
     }
 
     pub fn clear_sinks(&self) {
-        unsafe { sys::MaaControllerClearSinks(self.handle.as_ptr()) };
-        let mut callbacks = self.callbacks.lock().unwrap();
+        unsafe { sys::MaaControllerClearSinks(self.inner.handle.as_ptr()) };
+        let mut callbacks = self.inner.callbacks.lock().unwrap();
         for (_, ptr) in callbacks.drain() {
             unsafe { crate::callback::EventCallback::drop_callback(ptr as *mut c_void) };
         }
-        let mut event_sinks = self.event_sinks.lock().unwrap();
+        let mut event_sinks = self.inner.event_sinks.lock().unwrap();
         for (_, ptr) in event_sinks.drain() {
             unsafe { crate::callback::EventCallback::drop_sink(ptr as *mut c_void) };
         }
     }
 }
 
-impl Drop for Controller {
+impl Drop for ControllerInner {
     fn drop(&mut self) {
         unsafe {
             sys::MaaControllerClearSinks(self.handle.as_ptr());

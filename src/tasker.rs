@@ -13,10 +13,27 @@ use std::sync::Mutex;
 /// - Controller binding (device connection)
 /// - Task execution (pipelines)
 /// - Event handling (callbacks)
-pub struct Tasker {
+use std::sync::Arc;
+
+struct TaskerInner {
     handle: NonNull<sys::MaaTasker>,
     callbacks: Mutex<HashMap<sys::MaaSinkId, usize>>, // Store pointer address
     event_sinks: Mutex<HashMap<sys::MaaSinkId, usize>>,
+}
+
+unsafe impl Send for TaskerInner {}
+unsafe impl Sync for TaskerInner {}
+
+/// Task manager for executing pipelines.
+///
+/// Tasker is the central component that coordinates:
+/// - Resource binding (images, models)
+/// - Controller binding (device connection)
+/// - Task execution (pipelines)
+/// - Event handling (callbacks)
+#[derive(Clone)]
+pub struct Tasker {
+    inner: Arc<TaskerInner>,
 }
 
 unsafe impl Send for Tasker {}
@@ -27,9 +44,11 @@ impl Tasker {
         let handle = unsafe { sys::MaaTaskerCreate() };
         if let Some(ptr) = NonNull::new(handle) {
             Ok(Self {
-                handle: ptr,
-                callbacks: Mutex::new(HashMap::new()),
-                event_sinks: Mutex::new(HashMap::new()),
+                inner: Arc::new(TaskerInner {
+                    handle: ptr,
+                    callbacks: Mutex::new(HashMap::new()),
+                    event_sinks: Mutex::new(HashMap::new()),
+                }),
             })
         } else {
             Err(MaaError::NullPointer)
@@ -37,12 +56,12 @@ impl Tasker {
     }
 
     pub fn bind_resource(&self, res: &Resource) -> MaaResult<()> {
-        let ret = unsafe { sys::MaaTaskerBindResource(self.handle.as_ptr(), res.raw()) };
+        let ret = unsafe { sys::MaaTaskerBindResource(self.inner.handle.as_ptr(), res.raw()) };
         common::check_bool(ret)
     }
 
     pub fn bind_controller(&self, ctrl: &crate::controller::Controller) -> MaaResult<()> {
-        let ret = unsafe { sys::MaaTaskerBindController(self.handle.as_ptr(), ctrl.raw()) };
+        let ret = unsafe { sys::MaaTaskerBindController(self.inner.handle.as_ptr(), ctrl.raw()) };
         common::check_bool(ret)
     }
 
@@ -65,7 +84,7 @@ impl Tasker {
 
         let ret = unsafe {
             sys::MaaTaskerGetRecognitionDetail(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 reco_id,
                 node_name.raw(),
                 algorithm.raw(),
@@ -109,7 +128,7 @@ impl Tasker {
 
         let ret = unsafe {
             sys::MaaTaskerGetActionDetail(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 act_id,
                 node_name.raw(),
                 action.raw(),
@@ -143,7 +162,7 @@ impl Tasker {
 
         let ret = unsafe {
             sys::MaaTaskerGetNodeDetail(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 node_id,
                 node_name.raw(),
                 &mut reco_id,
@@ -174,7 +193,7 @@ impl Tasker {
 
         let ret = unsafe {
             sys::MaaTaskerGetTaskDetail(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 task_id,
                 entry.raw(),
                 std::ptr::null_mut(),
@@ -190,7 +209,7 @@ impl Tasker {
         let mut node_id_list = vec![0; node_id_list_size as usize];
         let ret = unsafe {
             sys::MaaTaskerGetTaskDetail(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 task_id,
                 entry.raw(),
                 node_id_list.as_mut_ptr(),
@@ -218,18 +237,24 @@ impl Tasker {
         let c_entry = std::ffi::CString::new(entry)?;
         let c_pipeline = std::ffi::CString::new(pipeline_override)?;
         let id = unsafe {
-            sys::MaaTaskerPostTask(self.handle.as_ptr(), c_entry.as_ptr(), c_pipeline.as_ptr())
+            sys::MaaTaskerPostTask(
+                self.inner.handle.as_ptr(),
+                c_entry.as_ptr(),
+                c_pipeline.as_ptr(),
+            )
         };
 
-        let ptr = crate::job::tasker_ptr(self.handle.as_ptr());
+        let inner = self.inner.clone();
         let status_fn: crate::job::StatusFn = Box::new(move |job_id| {
-            crate::common::MaaStatus(unsafe { sys::MaaTaskerStatus(ptr.get(), job_id) })
-        });
-        let wait_fn: crate::job::WaitFn = Box::new(move |job_id| {
-            crate::common::MaaStatus(unsafe { sys::MaaTaskerWait(ptr.get(), job_id) })
+            crate::common::MaaStatus(unsafe { sys::MaaTaskerStatus(inner.handle.as_ptr(), job_id) })
         });
 
-        let tasker_ptr = crate::job::tasker_ptr(self.handle.as_ptr());
+        let inner = self.inner.clone();
+        let wait_fn: crate::job::WaitFn = Box::new(move |job_id| {
+            crate::common::MaaStatus(unsafe { sys::MaaTaskerWait(inner.handle.as_ptr(), job_id) })
+        });
+
+        let inner = self.inner.clone();
         let get_fn =
             move |task_id: crate::common::MaaId| -> MaaResult<Option<crate::common::TaskDetail>> {
                 let entry_buf = crate::buffer::MaaStringBuffer::new()?;
@@ -239,7 +264,7 @@ impl Tasker {
 
                 let ret = unsafe {
                     sys::MaaTaskerGetTaskDetail(
-                        tasker_ptr.get(),
+                        inner.handle.as_ptr(),
                         task_id,
                         entry_buf.raw(),
                         node_ids.as_mut_ptr(),
@@ -285,11 +310,11 @@ impl Tasker {
     }
 
     pub fn inited(&self) -> bool {
-        unsafe { sys::MaaTaskerInited(self.handle.as_ptr()) != 0 }
+        unsafe { sys::MaaTaskerInited(self.inner.handle.as_ptr()) != 0 }
     }
 
     pub fn raw(&self) -> *mut sys::MaaTasker {
-        self.handle.as_ptr()
+        self.inner.handle.as_ptr()
     }
 
     /// Add a tasker event sink callback.
@@ -307,9 +332,13 @@ impl Tasker {
         F: Fn(&str, &str) + Send + Sync + 'static,
     {
         let (cb, arg) = crate::callback::EventCallback::new(callback);
-        let id = unsafe { sys::MaaTaskerAddSink(self.handle.as_ptr(), cb, arg) };
+        let id = unsafe { sys::MaaTaskerAddSink(self.inner.handle.as_ptr(), cb, arg) };
         if id > 0 {
-            self.callbacks.lock().unwrap().insert(id, arg as usize);
+            self.inner
+                .callbacks
+                .lock()
+                .unwrap()
+                .insert(id, arg as usize);
             Ok(id)
         } else {
             unsafe { crate::callback::EventCallback::drop_callback(arg) };
@@ -332,11 +361,15 @@ impl Tasker {
         &self,
         sink: Box<dyn crate::event_sink::EventSink>,
     ) -> MaaResult<sys::MaaSinkId> {
-        let handle_id = self.handle.as_ptr() as crate::common::MaaId;
+        let handle_id = self.inner.handle.as_ptr() as crate::common::MaaId;
         let (cb, arg) = crate::callback::EventCallback::new_sink(handle_id, sink);
-        let id = unsafe { sys::MaaTaskerAddSink(self.handle.as_ptr(), cb, arg) };
+        let id = unsafe { sys::MaaTaskerAddSink(self.inner.handle.as_ptr(), cb, arg) };
         if id > 0 {
-            self.event_sinks.lock().unwrap().insert(id, arg as usize);
+            self.inner
+                .event_sinks
+                .lock()
+                .unwrap()
+                .insert(id, arg as usize);
             Ok(id)
         } else {
             unsafe { crate::callback::EventCallback::drop_sink(arg) };
@@ -349,22 +382,22 @@ impl Tasker {
     /// # Arguments
     /// * `sink_id` - ID returned from `add_sink()`
     pub fn remove_sink(&self, sink_id: sys::MaaSinkId) {
-        unsafe { sys::MaaTaskerRemoveSink(self.handle.as_ptr(), sink_id) };
-        if let Some(ptr) = self.callbacks.lock().unwrap().remove(&sink_id) {
+        unsafe { sys::MaaTaskerRemoveSink(self.inner.handle.as_ptr(), sink_id) };
+        if let Some(ptr) = self.inner.callbacks.lock().unwrap().remove(&sink_id) {
             unsafe { crate::callback::EventCallback::drop_callback(ptr as *mut c_void) };
-        } else if let Some(ptr) = self.event_sinks.lock().unwrap().remove(&sink_id) {
+        } else if let Some(ptr) = self.inner.event_sinks.lock().unwrap().remove(&sink_id) {
             unsafe { crate::callback::EventCallback::drop_sink(ptr as *mut c_void) };
         }
     }
 
     /// Clear all tasker sinks.
     pub fn clear_sinks(&self) {
-        unsafe { sys::MaaTaskerClearSinks(self.handle.as_ptr()) };
-        let mut callbacks = self.callbacks.lock().unwrap();
+        unsafe { sys::MaaTaskerClearSinks(self.inner.handle.as_ptr()) };
+        let mut callbacks = self.inner.callbacks.lock().unwrap();
         for (_, ptr) in callbacks.drain() {
             unsafe { crate::callback::EventCallback::drop_callback(ptr as *mut c_void) };
         }
-        let mut event_sinks = self.event_sinks.lock().unwrap();
+        let mut event_sinks = self.inner.event_sinks.lock().unwrap();
         for (_, ptr) in event_sinks.drain() {
             unsafe { crate::callback::EventCallback::drop_sink(ptr as *mut c_void) };
         }
@@ -380,14 +413,14 @@ impl Tasker {
 
     pub fn post_stop(&self) -> MaaResult<crate::common::MaaId> {
         unsafe {
-            let id = sys::MaaTaskerPostStop(self.handle.as_ptr());
+            let id = sys::MaaTaskerPostStop(self.inner.handle.as_ptr());
             Ok(id)
         }
     }
 
     /// Check if the tasker is currently running.
     pub fn is_running(&self) -> bool {
-        unsafe { sys::MaaTaskerRunning(self.handle.as_ptr()) != 0 }
+        unsafe { sys::MaaTaskerRunning(self.inner.handle.as_ptr()) != 0 }
     }
 
     /// Check if the tasker is currently running (alias for `is_running`).
@@ -397,7 +430,7 @@ impl Tasker {
 
     /// Check if the tasker is currently stopping.
     pub fn stopping(&self) -> bool {
-        unsafe { sys::MaaTaskerStopping(self.handle.as_ptr()) != 0 }
+        unsafe { sys::MaaTaskerStopping(self.inner.handle.as_ptr()) != 0 }
     }
 
     // === Context Sink ===
@@ -409,9 +442,13 @@ impl Tasker {
         F: Fn(&str, &str) + Send + Sync + 'static,
     {
         let (cb, arg) = crate::callback::EventCallback::new(callback);
-        let id = unsafe { sys::MaaTaskerAddContextSink(self.handle.as_ptr(), cb, arg) };
+        let id = unsafe { sys::MaaTaskerAddContextSink(self.inner.handle.as_ptr(), cb, arg) };
         if id > 0 {
-            self.callbacks.lock().unwrap().insert(id, arg as usize);
+            self.inner
+                .callbacks
+                .lock()
+                .unwrap()
+                .insert(id, arg as usize);
             Ok(id)
         } else {
             unsafe { crate::callback::EventCallback::drop_callback(arg) };
@@ -432,11 +469,15 @@ impl Tasker {
         &self,
         sink: Box<dyn crate::event_sink::EventSink>,
     ) -> MaaResult<sys::MaaSinkId> {
-        let handle_id = self.handle.as_ptr() as crate::common::MaaId;
+        let handle_id = self.inner.handle.as_ptr() as crate::common::MaaId;
         let (cb, arg) = crate::callback::EventCallback::new_sink(handle_id, sink);
-        let id = unsafe { sys::MaaTaskerAddContextSink(self.handle.as_ptr(), cb, arg) };
+        let id = unsafe { sys::MaaTaskerAddContextSink(self.inner.handle.as_ptr(), cb, arg) };
         if id > 0 {
-            self.event_sinks.lock().unwrap().insert(id, arg as usize);
+            self.inner
+                .event_sinks
+                .lock()
+                .unwrap()
+                .insert(id, arg as usize);
             Ok(id)
         } else {
             unsafe { crate::callback::EventCallback::drop_sink(arg) };
@@ -446,22 +487,22 @@ impl Tasker {
 
     /// Remove a context sink by ID.
     pub fn remove_context_sink(&self, sink_id: sys::MaaSinkId) {
-        unsafe { sys::MaaTaskerRemoveContextSink(self.handle.as_ptr(), sink_id) };
-        if let Some(ptr) = self.callbacks.lock().unwrap().remove(&sink_id) {
+        unsafe { sys::MaaTaskerRemoveContextSink(self.inner.handle.as_ptr(), sink_id) };
+        if let Some(ptr) = self.inner.callbacks.lock().unwrap().remove(&sink_id) {
             unsafe { crate::callback::EventCallback::drop_callback(ptr as *mut c_void) };
-        } else if let Some(ptr) = self.event_sinks.lock().unwrap().remove(&sink_id) {
+        } else if let Some(ptr) = self.inner.event_sinks.lock().unwrap().remove(&sink_id) {
             unsafe { crate::callback::EventCallback::drop_sink(ptr as *mut c_void) };
         }
     }
 
     /// Clear all context sinks.
     pub fn clear_context_sinks(&self) {
-        unsafe { sys::MaaTaskerClearContextSinks(self.handle.as_ptr()) };
+        unsafe { sys::MaaTaskerClearContextSinks(self.inner.handle.as_ptr()) };
         // Note: callbacks registered via add_context_sink will be cleaned up
     }
 
     pub fn clear_cache(&self) -> MaaResult<()> {
-        let ret = unsafe { sys::MaaTaskerClearCache(self.handle.as_ptr()) };
+        let ret = unsafe { sys::MaaTaskerClearCache(self.inner.handle.as_ptr()) };
         crate::common::check_bool(ret)
     }
 
@@ -469,7 +510,7 @@ impl Tasker {
         let c_name = std::ffi::CString::new(node_name)?;
         let mut node_id: crate::common::MaaId = 0;
         let ret = unsafe {
-            sys::MaaTaskerGetLatestNode(self.handle.as_ptr(), c_name.as_ptr(), &mut node_id)
+            sys::MaaTaskerGetLatestNode(self.inner.handle.as_ptr(), c_name.as_ptr(), &mut node_id)
         };
         if ret != 0 && node_id != 0 {
             Ok(Some(node_id))
@@ -499,7 +540,7 @@ impl Tasker {
     /// }
     /// ```
     pub fn resource(&self) -> Option<crate::resource::ResourceRef<'_>> {
-        let ptr = unsafe { sys::MaaTaskerGetResource(self.handle.as_ptr()) };
+        let ptr = unsafe { sys::MaaTaskerGetResource(self.inner.handle.as_ptr()) };
         crate::resource::ResourceRef::from_ptr(ptr)
     }
 
@@ -514,7 +555,7 @@ impl Tasker {
     /// }
     /// ```
     pub fn controller(&self) -> Option<crate::controller::ControllerRef<'_>> {
-        let ptr = unsafe { sys::MaaTaskerGetController(self.handle.as_ptr()) };
+        let ptr = unsafe { sys::MaaTaskerGetController(self.inner.handle.as_ptr()) };
         crate::controller::ControllerRef::from_ptr(ptr)
     }
 
@@ -522,14 +563,14 @@ impl Tasker {
     ///
     /// Returns the raw pointer to the resource. The caller should not destroy this handle.
     pub fn resource_handle(&self) -> *mut sys::MaaResource {
-        unsafe { sys::MaaTaskerGetResource(self.handle.as_ptr()) }
+        unsafe { sys::MaaTaskerGetResource(self.inner.handle.as_ptr()) }
     }
 
     /// Get the bound controller handle (raw pointer).
     ///
     /// Returns the raw pointer to the controller. The caller should not destroy this handle.
     pub fn controller_handle(&self) -> *mut sys::MaaController {
-        unsafe { sys::MaaTaskerGetController(self.handle.as_ptr()) }
+        unsafe { sys::MaaTaskerGetController(self.inner.handle.as_ptr()) }
     }
 
     /// Post a recognition task directly without executing through a pipeline.
@@ -548,22 +589,24 @@ impl Tasker {
         let c_param = std::ffi::CString::new(reco_param)?;
         let id = unsafe {
             sys::MaaTaskerPostRecognition(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 c_type.as_ptr(),
                 c_param.as_ptr(),
                 image.raw(),
             )
         };
 
-        let ptr = crate::job::tasker_ptr(self.handle.as_ptr());
+        let inner = self.inner.clone();
         let status_fn: crate::job::StatusFn = Box::new(move |job_id| {
-            common::MaaStatus(unsafe { sys::MaaTaskerStatus(ptr.get(), job_id) })
-        });
-        let wait_fn: crate::job::WaitFn = Box::new(move |job_id| {
-            common::MaaStatus(unsafe { sys::MaaTaskerWait(ptr.get(), job_id) })
+            common::MaaStatus(unsafe { sys::MaaTaskerStatus(inner.handle.as_ptr(), job_id) })
         });
 
-        let tasker_ptr = crate::job::tasker_ptr(self.handle.as_ptr());
+        let inner = self.inner.clone();
+        let wait_fn: crate::job::WaitFn = Box::new(move |job_id| {
+            common::MaaStatus(unsafe { sys::MaaTaskerWait(inner.handle.as_ptr(), job_id) })
+        });
+
+        let inner = self.inner.clone();
         let get_fn = move |reco_id: common::MaaId| -> MaaResult<Option<common::RecognitionDetail>> {
             let node_name = crate::buffer::MaaStringBuffer::new()?;
             let algorithm = crate::buffer::MaaStringBuffer::new()?;
@@ -580,7 +623,7 @@ impl Tasker {
 
             let ret = unsafe {
                 sys::MaaTaskerGetRecognitionDetail(
-                    tasker_ptr.get(),
+                    inner.handle.as_ptr(),
                     reco_id,
                     node_name.raw(),
                     algorithm.raw(),
@@ -638,7 +681,7 @@ impl Tasker {
 
         let id = unsafe {
             sys::MaaTaskerPostAction(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 c_type.as_ptr(),
                 c_param.as_ptr(),
                 &maa_rect,
@@ -646,15 +689,17 @@ impl Tasker {
             )
         };
 
-        let ptr = crate::job::tasker_ptr(self.handle.as_ptr());
+        let inner = self.inner.clone();
         let status_fn: crate::job::StatusFn = Box::new(move |job_id| {
-            common::MaaStatus(unsafe { sys::MaaTaskerStatus(ptr.get(), job_id) })
-        });
-        let wait_fn: crate::job::WaitFn = Box::new(move |job_id| {
-            common::MaaStatus(unsafe { sys::MaaTaskerWait(ptr.get(), job_id) })
+            common::MaaStatus(unsafe { sys::MaaTaskerStatus(inner.handle.as_ptr(), job_id) })
         });
 
-        let tasker_ptr = crate::job::tasker_ptr(self.handle.as_ptr());
+        let inner = self.inner.clone();
+        let wait_fn: crate::job::WaitFn = Box::new(move |job_id| {
+            common::MaaStatus(unsafe { sys::MaaTaskerWait(inner.handle.as_ptr(), job_id) })
+        });
+
+        let inner = self.inner.clone();
         let get_fn = move |act_id: common::MaaId| -> MaaResult<Option<common::ActionDetail>> {
             let node_name = crate::buffer::MaaStringBuffer::new()?;
             let action = crate::buffer::MaaStringBuffer::new()?;
@@ -669,7 +714,7 @@ impl Tasker {
 
             let ret = unsafe {
                 sys::MaaTaskerGetActionDetail(
-                    tasker_ptr.get(),
+                    inner.handle.as_ptr(),
                     act_id,
                     node_name.raw(),
                     action.raw(),
@@ -698,18 +743,23 @@ impl Tasker {
     }
 }
 
-impl Drop for Tasker {
+impl Drop for TaskerInner {
     fn drop(&mut self) {
         unsafe {
             sys::MaaTaskerClearSinks(self.handle.as_ptr());
+
+            // Clean up callbacks
             let mut callbacks = self.callbacks.lock().unwrap();
             for (_, ptr) in callbacks.drain() {
                 crate::callback::EventCallback::drop_callback(ptr as *mut c_void);
             }
+
+            // Clean up event sinks
             let mut event_sinks = self.event_sinks.lock().unwrap();
             for (_, ptr) in event_sinks.drain() {
                 crate::callback::EventCallback::drop_sink(ptr as *mut c_void);
             }
+
             sys::MaaTaskerDestroy(self.handle.as_ptr())
         }
     }

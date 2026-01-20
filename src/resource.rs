@@ -10,10 +10,20 @@ use crate::{common, sys, MaaError, MaaResult};
 /// - OCR models
 /// - Task pipelines
 /// - Custom recognizers and actions
+use std::sync::Arc;
+
+struct ResourceInner {
+    handle: NonNull<sys::MaaResource>,
+    custom_actions: std::sync::Mutex<std::collections::HashMap<String, usize>>, // Store pointer address
+    custom_recognitions: std::sync::Mutex<std::collections::HashMap<String, usize>>,
+}
+
+unsafe impl Send for ResourceInner {}
+unsafe impl Sync for ResourceInner {}
+
+#[derive(Clone)]
 pub struct Resource {
-    pub(crate) handle: NonNull<sys::MaaResource>,
-    pub(crate) custom_actions: std::sync::Mutex<std::collections::HashMap<String, usize>>, // Store pointer address
-    pub(crate) custom_recognitions: std::sync::Mutex<std::collections::HashMap<String, usize>>,
+    inner: Arc<ResourceInner>,
 }
 
 unsafe impl Send for Resource {}
@@ -25,9 +35,11 @@ impl Resource {
         let handle = unsafe { sys::MaaResourceCreate() };
         if let Some(ptr) = NonNull::new(handle) {
             Ok(Self {
-                handle: ptr,
-                custom_actions: std::sync::Mutex::new(std::collections::HashMap::new()),
-                custom_recognitions: std::sync::Mutex::new(std::collections::HashMap::new()),
+                inner: Arc::new(ResourceInner {
+                    handle: ptr,
+                    custom_actions: std::sync::Mutex::new(std::collections::HashMap::new()),
+                    custom_recognitions: std::sync::Mutex::new(std::collections::HashMap::new()),
+                }),
             })
         } else {
             Err(MaaError::NullPointer)
@@ -39,55 +51,57 @@ impl Resource {
     /// The bundle should contain pipeline definitions, images, and models.
     pub fn post_bundle(&self, path: &str) -> MaaResult<i64> {
         let c_path = CString::new(path)?;
-        let id = unsafe { sys::MaaResourcePostBundle(self.handle.as_ptr(), c_path.as_ptr()) };
+        let id = unsafe { sys::MaaResourcePostBundle(self.inner.handle.as_ptr(), c_path.as_ptr()) };
         Ok(id)
     }
 
     /// Check if resources have been loaded.
     pub fn loaded(&self) -> bool {
-        unsafe { sys::MaaResourceLoaded(self.handle.as_ptr()) != 0 }
+        unsafe { sys::MaaResourceLoaded(self.inner.handle.as_ptr()) != 0 }
     }
 
     /// Clear all loaded resources.
     pub fn clear(&self) -> MaaResult<()> {
-        let ret = unsafe { sys::MaaResourceClear(self.handle.as_ptr()) };
+        let ret = unsafe { sys::MaaResourceClear(self.inner.handle.as_ptr()) };
         common::check_bool(ret)
     }
 
     /// Get the status of a loading operation.
     pub fn status(&self, id: common::MaaId) -> common::MaaStatus {
-        let status = unsafe { sys::MaaResourceStatus(self.handle.as_ptr(), id) };
+        let status = unsafe { sys::MaaResourceStatus(self.inner.handle.as_ptr(), id) };
         common::MaaStatus(status)
     }
 
     /// Wait for a loading operation to complete.
     pub fn wait(&self, id: common::MaaId) -> common::MaaStatus {
-        let status = unsafe { sys::MaaResourceWait(self.handle.as_ptr(), id) };
+        let status = unsafe { sys::MaaResourceWait(self.inner.handle.as_ptr(), id) };
         common::MaaStatus(status)
     }
 
     /// Get the raw resource handle.
     pub fn raw(&self) -> *mut sys::MaaResource {
-        self.handle.as_ptr()
+        self.inner.handle.as_ptr()
     }
 
     // === Additional resource loading ===
 
     pub fn post_ocr_model(&self, path: &str) -> MaaResult<i64> {
         let c_path = CString::new(path)?;
-        let id = unsafe { sys::MaaResourcePostOcrModel(self.handle.as_ptr(), c_path.as_ptr()) };
+        let id =
+            unsafe { sys::MaaResourcePostOcrModel(self.inner.handle.as_ptr(), c_path.as_ptr()) };
         Ok(id)
     }
 
     pub fn post_pipeline(&self, path: &str) -> MaaResult<i64> {
         let c_path = CString::new(path)?;
-        let id = unsafe { sys::MaaResourcePostPipeline(self.handle.as_ptr(), c_path.as_ptr()) };
+        let id =
+            unsafe { sys::MaaResourcePostPipeline(self.inner.handle.as_ptr(), c_path.as_ptr()) };
         Ok(id)
     }
 
     pub fn post_image(&self, path: &str) -> MaaResult<i64> {
         let c_path = CString::new(path)?;
-        let id = unsafe { sys::MaaResourcePostImage(self.handle.as_ptr(), c_path.as_ptr()) };
+        let id = unsafe { sys::MaaResourcePostImage(self.inner.handle.as_ptr(), c_path.as_ptr()) };
         Ok(id)
     }
 
@@ -95,8 +109,9 @@ impl Resource {
 
     pub fn override_pipeline(&self, pipeline_override: &str) -> MaaResult<()> {
         let c_json = CString::new(pipeline_override)?;
-        let ret =
-            unsafe { sys::MaaResourceOverridePipeline(self.handle.as_ptr(), c_json.as_ptr()) };
+        let ret = unsafe {
+            sys::MaaResourceOverridePipeline(self.inner.handle.as_ptr(), c_json.as_ptr())
+        };
         common::check_bool(ret)
     }
 
@@ -122,7 +137,11 @@ impl Resource {
             list_buf.append(item)?;
         }
         let ret = unsafe {
-            sys::MaaResourceOverrideNext(self.handle.as_ptr(), c_name.as_ptr(), list_buf.raw())
+            sys::MaaResourceOverrideNext(
+                self.inner.handle.as_ptr(),
+                c_name.as_ptr(),
+                list_buf.raw(),
+            )
         };
         common::check_bool(ret)
     }
@@ -131,7 +150,7 @@ impl Resource {
         let c_name = CString::new(node_name)?;
         let buffer = crate::buffer::MaaStringBuffer::new()?;
         let ret = unsafe {
-            sys::MaaResourceGetNodeData(self.handle.as_ptr(), c_name.as_ptr(), buffer.raw())
+            sys::MaaResourceGetNodeData(self.inner.handle.as_ptr(), c_name.as_ptr(), buffer.raw())
         };
         if ret != 0 {
             Ok(Some(buffer.to_string()))
@@ -157,7 +176,7 @@ impl Resource {
 
     pub fn node_list(&self) -> MaaResult<Vec<String>> {
         let buffer = crate::buffer::MaaStringListBuffer::new()?;
-        let ret = unsafe { sys::MaaResourceGetNodeList(self.handle.as_ptr(), buffer.raw()) };
+        let ret = unsafe { sys::MaaResourceGetNodeList(self.inner.handle.as_ptr(), buffer.raw()) };
         if ret != 0 {
             Ok(buffer.to_vec())
         } else {
@@ -167,7 +186,7 @@ impl Resource {
 
     pub fn hash(&self) -> MaaResult<String> {
         let buffer = crate::buffer::MaaStringBuffer::new()?;
-        let ret = unsafe { sys::MaaResourceGetHash(self.handle.as_ptr(), buffer.raw()) };
+        let ret = unsafe { sys::MaaResourceGetHash(self.inner.handle.as_ptr(), buffer.raw()) };
         if ret != 0 {
             Ok(buffer.to_string())
         } else {
@@ -181,7 +200,7 @@ impl Resource {
         let mut device: i32 = sys::MaaInferenceDeviceEnum_MaaInferenceDevice_CPU as i32;
         let ret = unsafe {
             sys::MaaResourceSetOption(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 sys::MaaResOptionEnum_MaaResOption_InferenceDevice as i32,
                 &mut device as *mut _ as *mut std::ffi::c_void,
                 std::mem::size_of::<i32>() as u64,
@@ -195,7 +214,7 @@ impl Resource {
             sys::MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_DirectML as i32;
         let ret1 = unsafe {
             sys::MaaResourceSetOption(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 sys::MaaResOptionEnum_MaaResOption_InferenceExecutionProvider as i32,
                 &mut ep as *mut _ as *mut std::ffi::c_void,
                 std::mem::size_of::<i32>() as u64,
@@ -206,7 +225,7 @@ impl Resource {
         let mut device = device_id;
         let ret2 = unsafe {
             sys::MaaResourceSetOption(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 sys::MaaResOptionEnum_MaaResOption_InferenceDevice as i32,
                 &mut device as *mut _ as *mut std::ffi::c_void,
                 std::mem::size_of::<i32>() as u64,
@@ -222,7 +241,7 @@ impl Resource {
         F: Fn(&str, &str) + Send + Sync + 'static,
     {
         let (cb_fn, cb_arg) = crate::callback::EventCallback::new(callback);
-        let sink_id = unsafe { sys::MaaResourceAddSink(self.handle.as_ptr(), cb_fn, cb_arg) };
+        let sink_id = unsafe { sys::MaaResourceAddSink(self.inner.handle.as_ptr(), cb_fn, cb_arg) };
         if sink_id != 0 {
             Ok(sink_id)
         } else {
@@ -232,11 +251,11 @@ impl Resource {
     }
 
     pub fn remove_sink(&self, sink_id: sys::MaaSinkId) {
-        unsafe { sys::MaaResourceRemoveSink(self.handle.as_ptr(), sink_id) }
+        unsafe { sys::MaaResourceRemoveSink(self.inner.handle.as_ptr(), sink_id) }
     }
 
     pub fn clear_sinks(&self) {
-        unsafe { sys::MaaResourceClearSinks(self.handle.as_ptr()) }
+        unsafe { sys::MaaResourceClearSinks(self.inner.handle.as_ptr()) }
     }
 
     // === Image override ===
@@ -253,7 +272,7 @@ impl Resource {
     ) -> MaaResult<()> {
         let c_name = CString::new(image_name)?;
         let ret = unsafe {
-            sys::MaaResourceOverrideImage(self.handle.as_ptr(), c_name.as_ptr(), image.raw())
+            sys::MaaResourceOverrideImage(self.inner.handle.as_ptr(), c_name.as_ptr(), image.raw())
         };
         common::check_bool(ret)
     }
@@ -266,7 +285,7 @@ impl Resource {
             sys::MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_Auto as i32;
         let ret1 = unsafe {
             sys::MaaResourceSetOption(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 sys::MaaResOptionEnum_MaaResOption_InferenceExecutionProvider as i32,
                 &mut ep as *mut _ as *mut std::ffi::c_void,
                 std::mem::size_of::<i32>() as u64,
@@ -277,7 +296,7 @@ impl Resource {
         let mut device: i32 = sys::MaaInferenceDeviceEnum_MaaInferenceDevice_Auto as i32;
         let ret2 = unsafe {
             sys::MaaResourceSetOption(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 sys::MaaResOptionEnum_MaaResOption_InferenceDevice as i32,
                 &mut device as *mut _ as *mut std::ffi::c_void,
                 std::mem::size_of::<i32>() as u64,
@@ -295,7 +314,7 @@ impl Resource {
             sys::MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_CoreML as i32;
         let ret1 = unsafe {
             sys::MaaResourceSetOption(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 sys::MaaResOptionEnum_MaaResOption_InferenceExecutionProvider as i32,
                 &mut ep as *mut _ as *mut std::ffi::c_void,
                 std::mem::size_of::<i32>() as u64,
@@ -306,7 +325,7 @@ impl Resource {
         let mut device = coreml_flag;
         let ret2 = unsafe {
             sys::MaaResourceSetOption(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 sys::MaaResOptionEnum_MaaResOption_InferenceDevice as i32,
                 &mut device as *mut _ as *mut std::ffi::c_void,
                 std::mem::size_of::<i32>() as u64,
@@ -324,7 +343,7 @@ impl Resource {
             sys::MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_CUDA as i32;
         let ret1 = unsafe {
             sys::MaaResourceSetOption(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 sys::MaaResOptionEnum_MaaResOption_InferenceExecutionProvider as i32,
                 &mut ep as *mut _ as *mut std::ffi::c_void,
                 std::mem::size_of::<i32>() as u64,
@@ -335,7 +354,7 @@ impl Resource {
         let mut device = nvidia_gpu_id;
         let ret2 = unsafe {
             sys::MaaResourceSetOption(
-                self.handle.as_ptr(),
+                self.inner.handle.as_ptr(),
                 sys::MaaResOptionEnum_MaaResOption_InferenceDevice as i32,
                 &mut device as *mut _ as *mut std::ffi::c_void,
                 std::mem::size_of::<i32>() as u64,
@@ -350,10 +369,10 @@ impl Resource {
     pub fn unregister_custom_recognition(&self, name: &str) -> MaaResult<()> {
         let c_name = CString::new(name)?;
         let ret = unsafe {
-            sys::MaaResourceUnregisterCustomRecognition(self.handle.as_ptr(), c_name.as_ptr())
+            sys::MaaResourceUnregisterCustomRecognition(self.inner.handle.as_ptr(), c_name.as_ptr())
         };
         if ret != 0 {
-            self.custom_recognitions.lock().unwrap().remove(name);
+            self.inner.custom_recognitions.lock().unwrap().remove(name);
         }
         common::check_bool(ret)
     }
@@ -362,10 +381,10 @@ impl Resource {
     pub fn unregister_custom_action(&self, name: &str) -> MaaResult<()> {
         let c_name = CString::new(name)?;
         let ret = unsafe {
-            sys::MaaResourceUnregisterCustomAction(self.handle.as_ptr(), c_name.as_ptr())
+            sys::MaaResourceUnregisterCustomAction(self.inner.handle.as_ptr(), c_name.as_ptr())
         };
         if ret != 0 {
-            self.custom_actions.lock().unwrap().remove(name);
+            self.inner.custom_actions.lock().unwrap().remove(name);
         }
         common::check_bool(ret)
     }
@@ -373,8 +392,9 @@ impl Resource {
     /// Get the list of registered custom recognitions.
     pub fn custom_recognition_list(&self) -> MaaResult<Vec<String>> {
         let buffer = crate::buffer::MaaStringListBuffer::new()?;
-        let ret =
-            unsafe { sys::MaaResourceGetCustomRecognitionList(self.handle.as_ptr(), buffer.raw()) };
+        let ret = unsafe {
+            sys::MaaResourceGetCustomRecognitionList(self.inner.handle.as_ptr(), buffer.raw())
+        };
         if ret != 0 {
             Ok(buffer.to_vec())
         } else {
@@ -385,8 +405,9 @@ impl Resource {
     /// Get the list of registered custom actions.
     pub fn custom_action_list(&self) -> MaaResult<Vec<String>> {
         let buffer = crate::buffer::MaaStringListBuffer::new()?;
-        let ret =
-            unsafe { sys::MaaResourceGetCustomActionList(self.handle.as_ptr(), buffer.raw()) };
+        let ret = unsafe {
+            sys::MaaResourceGetCustomActionList(self.inner.handle.as_ptr(), buffer.raw())
+        };
         if ret != 0 {
             Ok(buffer.to_vec())
         } else {
@@ -396,9 +417,9 @@ impl Resource {
 
     /// Clear all registered custom recognitions.
     pub fn clear_custom_recognition(&self) -> MaaResult<()> {
-        let ret = unsafe { sys::MaaResourceClearCustomRecognition(self.handle.as_ptr()) };
+        let ret = unsafe { sys::MaaResourceClearCustomRecognition(self.inner.handle.as_ptr()) };
         if ret != 0 {
-            let mut recos = self.custom_recognitions.lock().unwrap();
+            let mut recos = self.inner.custom_recognitions.lock().unwrap();
             for (_, ptr) in recos.drain() {
                 unsafe {
                     let _ = Box::from_raw(ptr as *mut Box<dyn crate::custom::CustomRecognition>);
@@ -410,9 +431,9 @@ impl Resource {
 
     /// Clear all registered custom actions.
     pub fn clear_custom_action(&self) -> MaaResult<()> {
-        let ret = unsafe { sys::MaaResourceClearCustomAction(self.handle.as_ptr()) };
+        let ret = unsafe { sys::MaaResourceClearCustomAction(self.inner.handle.as_ptr()) };
         if ret != 0 {
-            let mut actions = self.custom_actions.lock().unwrap();
+            let mut actions = self.inner.custom_actions.lock().unwrap();
             for (_, ptr) in actions.drain() {
                 unsafe {
                     let _ = Box::from_raw(ptr as *mut Box<dyn crate::custom::CustomAction>);
@@ -421,9 +442,20 @@ impl Resource {
         }
         common::check_bool(ret)
     }
+    pub(crate) fn custom_recognitions(
+        &self,
+    ) -> &std::sync::Mutex<std::collections::HashMap<String, usize>> {
+        &self.inner.custom_recognitions
+    }
+
+    pub(crate) fn custom_actions(
+        &self,
+    ) -> &std::sync::Mutex<std::collections::HashMap<String, usize>> {
+        &self.inner.custom_actions
+    }
 }
 
-impl Drop for Resource {
+impl Drop for ResourceInner {
     fn drop(&mut self) {
         unsafe {
             sys::MaaResourceClearSinks(self.handle.as_ptr());

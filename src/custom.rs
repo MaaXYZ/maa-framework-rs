@@ -375,7 +375,7 @@ impl Resource {
 
         unsafe {
             let ret = sys::MaaResourceRegisterCustomAction(
-                self.handle.as_ptr(),
+                self.raw(),
                 c_name.as_ptr(),
                 Some(custom_action_trampoline),
                 action_ptr_void,
@@ -386,7 +386,7 @@ impl Resource {
             }
         }
 
-        let mut map = self.custom_actions.lock().unwrap();
+        let mut map = self.custom_actions().lock().unwrap();
         if let Some(old_ptr) = map.insert(name.to_string(), action_ptr as usize) {
             unsafe {
                 let _ = Box::from_raw(old_ptr as *mut Box<dyn CustomAction>);
@@ -416,7 +416,7 @@ impl Resource {
 
         unsafe {
             let ret = sys::MaaResourceRegisterCustomRecognition(
-                self.handle.as_ptr(),
+                self.raw(),
                 c_name.as_ptr(),
                 Some(custom_recognition_trampoline),
                 reco_ptr_void,
@@ -427,7 +427,7 @@ impl Resource {
             }
         }
 
-        let mut map = self.custom_recognitions.lock().unwrap();
+        let mut map = self.custom_recognitions().lock().unwrap();
         if let Some(old_ptr) = map.insert(name.to_string(), reco_ptr as usize) {
             unsafe {
                 let _ = Box::from_raw(old_ptr as *mut Box<dyn CustomRecognition>);
