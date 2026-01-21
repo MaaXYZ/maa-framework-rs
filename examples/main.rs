@@ -408,7 +408,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 if let Ok(Some(detail)) = job.get(false) {
                     println!("    Entry: {}", detail.entry);
-                    println!("    Nodes executed: {}", detail.node_id_list.len());
+                    println!("    Nodes executed: {}", detail.nodes.len());
+
+                    for node_opt in detail.nodes {
+                        if let Some(node) = node_opt {
+                            if let Some(reco) = node.recognition {
+                                println!(
+                                    "      Node: {}, Algo: {:?}",
+                                    node.node_name, reco.algorithm
+                                );
+                            }
+                        }
+                    }
                 }
             }
             Err(e) => println!("    Task failed: {}", e),

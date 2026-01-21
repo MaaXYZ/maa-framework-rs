@@ -237,32 +237,7 @@ impl Context {
 
         let get_ptr = crate::job::SendSyncPtr::new(self.tasker_handle());
         let get_fn = move |tid: common::MaaId| -> MaaResult<Option<common::TaskDetail>> {
-            let entry_buf = crate::buffer::MaaStringBuffer::new()?;
-            let mut node_ids = [0i64; 128];
-            let mut node_count: u64 = 128;
-            let mut status: i32 = 0;
-
-            let ret = unsafe {
-                sys::MaaTaskerGetTaskDetail(
-                    get_ptr.get(),
-                    tid,
-                    entry_buf.raw(),
-                    node_ids.as_mut_ptr(),
-                    &mut node_count,
-                    &mut status,
-                )
-            };
-
-            if ret == 0 {
-                return Ok(None);
-            }
-
-            let node_id_list = node_ids[..node_count as usize].to_vec();
-            Ok(Some(common::TaskDetail {
-                entry: entry_buf.to_string(),
-                node_id_list,
-                status: common::MaaStatus(status),
-            }))
+            crate::tasker::Tasker::fetch_task_detail(get_ptr.get(), tid)
         };
 
         crate::job::JobWithResult::new(task_id, status_fn, wait_fn, get_fn)

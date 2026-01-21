@@ -309,8 +309,8 @@ bitflags::bitflags! {
 pub struct RecognitionDetail {
     /// Name of the node that performed recognition
     pub node_name: String,
-    /// Algorithm used (e.g., "TemplateMatch", "OCR")
-    pub algorithm: String,
+    /// Algorithm used
+    pub algorithm: AlgorithmEnum,
     /// Whether recognition was successful
     pub hit: bool,
     /// Bounding box of the recognized region
@@ -323,6 +323,9 @@ pub struct RecognitionDetail {
     /// Debug draw images (PNG encoded, only valid in debug mode)
     #[serde(skip)]
     pub draw_images: Vec<Vec<u8>>,
+    /// Sub-process recognition details (for And/Or combinators)
+    #[serde(default)]
+    pub sub_details: Vec<RecognitionDetail>,
 }
 
 impl RecognitionDetail {
@@ -356,8 +359,8 @@ impl RecognitionDetail {
 pub struct ActionDetail {
     /// Name of the node that performed the action
     pub node_name: String,
-    /// Action type (e.g., "Click", "Swipe")
-    pub action: String,
+    /// Action type
+    pub action: ActionEnum,
     /// Target bounding box
     pub box_rect: Rect,
     /// Whether action was successful
@@ -507,6 +510,12 @@ pub struct NodeDetail {
     pub reco_id: MaaId,
     /// ID of the action operation
     pub act_id: MaaId,
+    /// Detailed recognition result
+    #[serde(default)]
+    pub recognition: Option<RecognitionDetail>,
+    /// Detailed action result
+    #[serde(default)]
+    pub action: Option<ActionDetail>,
     /// Whether the node completed execution
     pub completed: bool,
 }
@@ -520,11 +529,14 @@ pub struct TaskDetail {
     pub node_id_list: Vec<MaaId>,
     /// Final status of the task
     pub status: MaaStatus,
+    /// Detailed node information (hydrated from node_id_list)
+    #[serde(default)]
+    pub nodes: Vec<Option<NodeDetail>>,
 }
 
 /// Recognition algorithm types.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "PascalCase")]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[serde(into = "String", from = "String")]
 pub enum AlgorithmEnum {
     DirectHit,
     TemplateMatch,
@@ -536,10 +548,47 @@ pub enum AlgorithmEnum {
     And,
     Or,
     Custom,
+    Other(String),
+}
+
+impl From<String> for AlgorithmEnum {
+    fn from(s: String) -> Self {
+        match s.as_str() {
+            "DirectHit" => Self::DirectHit,
+            "TemplateMatch" => Self::TemplateMatch,
+            "FeatureMatch" => Self::FeatureMatch,
+            "ColorMatch" => Self::ColorMatch,
+            "OCR" => Self::OCR,
+            "NeuralNetworkClassify" => Self::NeuralNetworkClassify,
+            "NeuralNetworkDetect" => Self::NeuralNetworkDetect,
+            "And" => Self::And,
+            "Or" => Self::Or,
+            "Custom" => Self::Custom,
+            _ => Self::Other(s),
+        }
+    }
+}
+
+impl From<AlgorithmEnum> for String {
+    fn from(algo: AlgorithmEnum) -> Self {
+        match algo {
+            AlgorithmEnum::DirectHit => "DirectHit".to_string(),
+            AlgorithmEnum::TemplateMatch => "TemplateMatch".to_string(),
+            AlgorithmEnum::FeatureMatch => "FeatureMatch".to_string(),
+            AlgorithmEnum::ColorMatch => "ColorMatch".to_string(),
+            AlgorithmEnum::OCR => "OCR".to_string(),
+            AlgorithmEnum::NeuralNetworkClassify => "NeuralNetworkClassify".to_string(),
+            AlgorithmEnum::NeuralNetworkDetect => "NeuralNetworkDetect".to_string(),
+            AlgorithmEnum::And => "And".to_string(),
+            AlgorithmEnum::Or => "Or".to_string(),
+            AlgorithmEnum::Custom => "Custom".to_string(),
+            AlgorithmEnum::Other(s) => s,
+        }
+    }
 }
 
 impl AlgorithmEnum {
-    pub fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &str {
         match self {
             Self::DirectHit => "DirectHit",
             Self::TemplateMatch => "TemplateMatch",
@@ -551,13 +600,14 @@ impl AlgorithmEnum {
             Self::And => "And",
             Self::Or => "Or",
             Self::Custom => "Custom",
+            Self::Other(s) => s.as_str(),
         }
     }
 }
 
 /// Action types.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "PascalCase")]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[serde(into = "String", from = "String")]
 pub enum ActionEnum {
     DoNothing,
     Click,
@@ -579,10 +629,67 @@ pub enum ActionEnum {
     Command,
     Shell,
     Custom,
+    Other(String),
+}
+
+impl From<String> for ActionEnum {
+    fn from(s: String) -> Self {
+        match s.as_str() {
+            "DoNothing" => Self::DoNothing,
+            "Click" => Self::Click,
+            "LongPress" => Self::LongPress,
+            "Swipe" => Self::Swipe,
+            "MultiSwipe" => Self::MultiSwipe,
+            "TouchDown" => Self::TouchDown,
+            "TouchMove" => Self::TouchMove,
+            "TouchUp" => Self::TouchUp,
+            "ClickKey" => Self::ClickKey,
+            "LongPressKey" => Self::LongPressKey,
+            "KeyDown" => Self::KeyDown,
+            "KeyUp" => Self::KeyUp,
+            "InputText" => Self::InputText,
+            "StartApp" => Self::StartApp,
+            "StopApp" => Self::StopApp,
+            "StopTask" => Self::StopTask,
+            "Scroll" => Self::Scroll,
+            "Command" => Self::Command,
+            "Shell" => Self::Shell,
+            "Custom" => Self::Custom,
+            _ => Self::Other(s),
+        }
+    }
+}
+
+impl From<ActionEnum> for String {
+    fn from(act: ActionEnum) -> Self {
+        match act {
+            ActionEnum::DoNothing => "DoNothing".to_string(),
+            ActionEnum::Click => "Click".to_string(),
+            ActionEnum::LongPress => "LongPress".to_string(),
+            ActionEnum::Swipe => "Swipe".to_string(),
+            ActionEnum::MultiSwipe => "MultiSwipe".to_string(),
+            ActionEnum::TouchDown => "TouchDown".to_string(),
+            ActionEnum::TouchMove => "TouchMove".to_string(),
+            ActionEnum::TouchUp => "TouchUp".to_string(),
+            ActionEnum::ClickKey => "ClickKey".to_string(),
+            ActionEnum::LongPressKey => "LongPressKey".to_string(),
+            ActionEnum::KeyDown => "KeyDown".to_string(),
+            ActionEnum::KeyUp => "KeyUp".to_string(),
+            ActionEnum::InputText => "InputText".to_string(),
+            ActionEnum::StartApp => "StartApp".to_string(),
+            ActionEnum::StopApp => "StopApp".to_string(),
+            ActionEnum::StopTask => "StopTask".to_string(),
+            ActionEnum::Scroll => "Scroll".to_string(),
+            ActionEnum::Command => "Command".to_string(),
+            ActionEnum::Shell => "Shell".to_string(),
+            ActionEnum::Custom => "Custom".to_string(),
+            ActionEnum::Other(s) => s,
+        }
+    }
 }
 
 impl ActionEnum {
-    pub fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &str {
         match self {
             Self::DoNothing => "DoNothing",
             Self::Click => "Click",
@@ -604,6 +711,7 @@ impl ActionEnum {
             Self::Command => "Command",
             Self::Shell => "Shell",
             Self::Custom => "Custom",
+            Self::Other(s) => s.as_str(),
         }
     }
 }

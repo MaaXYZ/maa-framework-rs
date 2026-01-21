@@ -936,45 +936,30 @@ fn test_tasker_api() {
         .expect("Detail should be Some");
     println!("  task detail entry: {}", detail.entry);
     println!("  task detail status: {:?}", detail.status);
-    println!("  node_id_list len: {}", detail.node_id_list.len());
+    println!("  nodes count: {}", detail.nodes.len());
 
-    assert!(!detail.node_id_list.is_empty(), "Task should execute nodes");
+    assert!(!detail.nodes.is_empty(), "Task should execute nodes");
 
-    for node_id in &detail.node_id_list {
-        let node_detail = tasker
-            .get_node_detail(*node_id)
-            .expect("Failed to get node detail")
-            .expect("Node detail should exist");
+    for node_opt in &detail.nodes {
+        let node_detail = node_opt.as_ref().expect("Node detail should exist");
 
         println!(
-            "    Node: {} (id: {}), completed: {}, reco: {}, act: {}",
-            node_detail.node_name,
-            *node_id,
-            node_detail.completed,
-            node_detail.reco_id,
-            node_detail.act_id
+            "    Node: {} (id: not exposed), completed: {}, reco_id: {}, act_id: {}",
+            node_detail.node_name, node_detail.completed, node_detail.reco_id, node_detail.act_id
         );
 
         // Verify Recognition Detail
-        if node_detail.reco_id > 0 {
-            let reco_detail = tasker
-                .get_recognition_detail(node_detail.reco_id)
-                .expect("Failed to get reco detail")
-                .expect("Reco detail should exist");
+        if let Some(reco_detail) = &node_detail.recognition {
             println!(
-                "      Reco: {} (algo: {}, hit: {})",
+                "      Reco: {} (algo: {:?}, hit: {})",
                 reco_detail.node_name, reco_detail.algorithm, reco_detail.hit
             );
         }
 
         // Verify Action Detail
-        if node_detail.act_id > 0 {
-            let act_detail = tasker
-                .get_action_detail(node_detail.act_id)
-                .expect("Failed to get action detail")
-                .expect("Action detail should exist");
+        if let Some(act_detail) = &node_detail.action {
             println!(
-                "      Action: {} (method: {}, success: {})",
+                "      Action: {} (method: {:?}, success: {})",
                 act_detail.node_name, act_detail.action, act_detail.success
             );
         }
