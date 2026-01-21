@@ -14,7 +14,7 @@ pub struct AdbDevice {
 
 #[derive(Debug, Clone)]
 pub struct DesktopWindow {
-    pub hwnd: *mut std::ffi::c_void,
+    pub hwnd: usize,
     pub class_name: String,
     pub window_name: String,
 }
@@ -88,8 +88,9 @@ impl Toolkit {
                     .to_string_lossy()
                     .into_owned();
 
-                let screencap_methods = sys::MaaToolkitAdbDeviceGetScreencapMethods(device_ptr);
-                let input_methods = sys::MaaToolkitAdbDeviceGetInputMethods(device_ptr);
+                let screencap_methods =
+                    sys::MaaToolkitAdbDeviceGetScreencapMethods(device_ptr) as u64;
+                let input_methods = sys::MaaToolkitAdbDeviceGetInputMethods(device_ptr) as u64;
 
                 let config_str =
                     CStr::from_ptr(sys::MaaToolkitAdbDeviceGetConfig(device_ptr)).to_string_lossy();
@@ -129,7 +130,7 @@ impl Toolkit {
                     continue;
                 }
 
-                let hwnd = sys::MaaToolkitDesktopWindowGetHandle(win_ptr);
+                let hwnd = sys::MaaToolkitDesktopWindowGetHandle(win_ptr) as usize;
 
                 let class_name = CStr::from_ptr(sys::MaaToolkitDesktopWindowGetClassName(win_ptr))
                     .to_string_lossy()
