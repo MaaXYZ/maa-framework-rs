@@ -417,6 +417,10 @@ pub struct App {
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct Scroll {
     #[serde(default)]
+    pub target: Target,
+    #[serde(default)]
+    pub target_offset: Rect,
+    #[serde(default)]
     pub dx: i32,
     #[serde(default)]
     pub dy: i32,

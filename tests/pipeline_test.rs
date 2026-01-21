@@ -802,6 +802,34 @@ fn test_action_types(context: &Context) -> MaaResult<()> {
         _ => panic!("Expected Shell"),
     }
 
+    // Scroll
+    new_ctx.override_pipeline(
+        r#"{
+        "ActScroll": {
+            "action": "Scroll",
+            "target": [100, 200, 50, 50],
+            "target_offset": [10, 10, 0, 0],
+            "dx": 0,
+            "dy": -360
+        }
+    }"#,
+    )?;
+
+    let obj = new_ctx.get_node_object("ActScroll")?.expect("node");
+    match obj.action {
+        Action::Scroll(s) => {
+            if let maa_framework::pipeline::Target::Rect(r) = s.target {
+                assert_eq!(r, (100, 200, 50, 50));
+            } else {
+                panic!("Expected Rect target, got {:?}", s.target);
+            }
+            assert_eq!(s.target_offset, (10, 10, 0, 0));
+            assert_eq!(s.dx, 0);
+            assert_eq!(s.dy, -360);
+        }
+        _ => panic!("Expected Scroll"),
+    }
+
     // Custom
     new_ctx.override_pipeline(
         r#"{
