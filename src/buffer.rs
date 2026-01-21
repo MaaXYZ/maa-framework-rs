@@ -11,8 +11,10 @@
 //! - [`MaaImageListBuffer`] - List of images
 //! - [`MaaRectBuffer`] - Rectangle coordinates
 
-use std::ffi::{CStr, CString};
+use std::ffi::CString;
 use std::ptr::NonNull;
+use std::slice;
+use std::str;
 
 use crate::{sys, MaaError, MaaResult};
 
@@ -22,16 +24,28 @@ use crate::{sys, MaaError, MaaResult};
 /// Automatically freed when dropped.
 pub struct MaaStringBuffer {
     handle: NonNull<sys::MaaStringBuffer>,
+    own: bool,
 }
 
 impl MaaStringBuffer {
     pub fn new() -> MaaResult<Self> {
         let handle = unsafe { sys::MaaStringBufferCreate() };
         if let Some(ptr) = NonNull::new(handle) {
-            Ok(Self { handle: ptr })
+            Ok(Self {
+                handle: ptr,
+                own: true,
+            })
         } else {
             Err(MaaError::NullPointer)
         }
+    }
+
+    /// Create from an existing handle (does not take ownership).
+    pub fn from_handle(handle: *mut sys::MaaStringBuffer) -> Option<Self> {
+        NonNull::new(handle).map(|ptr| Self {
+            handle: ptr,
+            own: false,
+        })
     }
 
     pub fn set(&mut self, content: &str) -> MaaResult<()> {
@@ -51,10 +65,13 @@ impl MaaStringBuffer {
     pub fn as_str(&self) -> &str {
         unsafe {
             let ptr = sys::MaaStringBufferGet(self.handle.as_ptr());
-            if ptr.is_null() {
+            let size = sys::MaaStringBufferSize(self.handle.as_ptr()) as usize;
+
+            if ptr.is_null() || size == 0 {
                 ""
             } else {
-                CStr::from_ptr(ptr).to_str().unwrap_or("")
+                let slice = slice::from_raw_parts(ptr as *const u8, size);
+                str::from_utf8(slice).unwrap_or("")
             }
         }
     }
@@ -82,7 +99,9 @@ impl MaaStringBuffer {
 
 impl Drop for MaaStringBuffer {
     fn drop(&mut self) {
-        unsafe { sys::MaaStringBufferDestroy(self.handle.as_ptr()) }
+        if self.own {
+            unsafe { sys::MaaStringBufferDestroy(self.handle.as_ptr()) }
+        }
     }
 }
 
@@ -116,6 +135,7 @@ impl From<&str> for MaaStringBuffer {
 /// ```
 pub struct MaaImageBuffer {
     handle: NonNull<sys::MaaImageBuffer>,
+    own: bool,
 }
 
 impl MaaImageBuffer {
@@ -123,10 +143,21 @@ impl MaaImageBuffer {
     pub fn new() -> MaaResult<Self> {
         let handle = unsafe { sys::MaaImageBufferCreate() };
         if let Some(ptr) = NonNull::new(handle) {
-            Ok(Self { handle: ptr })
+            Ok(Self {
+                handle: ptr,
+                own: true,
+            })
         } else {
             Err(MaaError::NullPointer)
         }
+    }
+
+    /// Create from an existing handle (does not take ownership).
+    pub fn from_handle(handle: *mut sys::MaaImageBuffer) -> Option<Self> {
+        NonNull::new(handle).map(|ptr| Self {
+            handle: ptr,
+            own: false,
+        })
     }
 
     /// Check if the buffer is empty (contains no image data).
@@ -173,7 +204,7 @@ impl MaaImageBuffer {
             let ptr = sys::MaaImageBufferGetEncoded(self.handle.as_ptr());
             let size = sys::MaaImageBufferGetEncodedSize(self.handle.as_ptr());
             if !ptr.is_null() && size > 0 {
-                let slice = std::slice::from_raw_parts(ptr, size as usize);
+                let slice = slice::from_raw_parts(ptr, size as usize);
                 Some(slice.to_vec())
             } else {
                 None
@@ -197,7 +228,7 @@ impl MaaImageBuffer {
             if w == 0 || h == 0 || c == 0 {
                 return None;
             }
-            Some(std::slice::from_raw_parts(ptr as *const u8, w * h * c))
+            Some(slice::from_raw_parts(ptr as *const u8, w * h * c))
         }
     }
 
@@ -225,6 +256,18 @@ impl MaaImageBuffer {
             )
         };
         crate::common::check_bool(ret)
+    }
+
+    /// Set the image from raw BGR data (assuming 3 channels, CV_8UC3).
+    ///
+    /// This is a convenience wrapper around `set_raw_data` that assumes standard BGR image data.
+    ///
+    /// # Arguments
+    /// * `data` - Raw pixel data in BGR format
+    /// * `width` - Image width
+    /// * `height` - Image height
+    pub fn set(&mut self, data: &[u8], width: i32, height: i32) -> MaaResult<()> {
+        self.set_raw_data(data, width, height, 16)
     }
 
     /// Set the image from encoded data (PNG/JPEG).
@@ -299,7 +342,9 @@ impl MaaImageBuffer {
 
 impl Drop for MaaImageBuffer {
     fn drop(&mut self) {
-        unsafe { sys::MaaImageBufferDestroy(self.handle.as_ptr()) }
+        if self.own {
+            unsafe { sys::MaaImageBufferDestroy(self.handle.as_ptr()) }
+        }
     }
 }
 
@@ -308,16 +353,28 @@ impl Drop for MaaImageBuffer {
 /// Used when APIs return multiple images (e.g., recognition draws).
 pub struct MaaImageListBuffer {
     handle: NonNull<sys::MaaImageListBuffer>,
+    own: bool,
 }
 
 impl MaaImageListBuffer {
     pub fn new() -> MaaResult<Self> {
         let handle = unsafe { sys::MaaImageListBufferCreate() };
         if let Some(ptr) = NonNull::new(handle) {
-            Ok(Self { handle: ptr })
+            Ok(Self {
+                handle: ptr,
+                own: true,
+            })
         } else {
             Err(MaaError::NullPointer)
         }
+    }
+
+    /// Create from an existing handle (does not take ownership).
+    pub fn from_handle(handle: *mut sys::MaaImageListBuffer) -> Option<Self> {
+        NonNull::new(handle).map(|ptr| Self {
+            handle: ptr,
+            own: false,
+        })
     }
 
     pub fn raw(&self) -> *mut sys::MaaImageListBuffer {
@@ -333,23 +390,26 @@ impl MaaImageListBuffer {
     }
 
     /// Get image at index. Returns None if index out of bounds.
-    /// Note: The returned buffer is a view into this list, do not destroy it separately.
-    pub fn at(&self, index: usize) -> Option<MaaImageBufferRef> {
+    /// Note: The returned buffer is a view into this list (non-owning), do not destroy it separately.
+    pub fn at(&self, index: usize) -> Option<MaaImageBuffer> {
         unsafe {
             let ptr = sys::MaaImageListBufferAt(self.handle.as_ptr(), index as u64);
-            if ptr.is_null() {
-                None
-            } else {
-                Some(MaaImageBufferRef {
-                    ptr: ptr as *mut sys::MaaImageBuffer,
-                })
-            }
+            MaaImageBuffer::from_handle(ptr as *mut sys::MaaImageBuffer)
         }
     }
 
     pub fn append(&self, image: &MaaImageBuffer) -> MaaResult<()> {
         let ret = unsafe { sys::MaaImageListBufferAppend(self.handle.as_ptr(), image.raw()) };
         crate::common::check_bool(ret)
+    }
+
+    /// Set the content of this list, replacing existing content.
+    pub fn set(&self, data: &[&MaaImageBuffer]) -> MaaResult<()> {
+        self.clear()?;
+        for img in data {
+            self.append(img)?;
+        }
+        Ok(())
     }
 
     pub fn remove(&self, index: usize) -> MaaResult<()> {
@@ -378,39 +438,8 @@ impl MaaImageListBuffer {
 
 impl Drop for MaaImageListBuffer {
     fn drop(&mut self) {
-        unsafe { sys::MaaImageListBufferDestroy(self.handle.as_ptr()) }
-    }
-}
-
-/// A borrowed reference to an image buffer within an image list.
-/// This does not own the buffer and should not be destroyed.
-pub struct MaaImageBufferRef {
-    ptr: *mut sys::MaaImageBuffer,
-}
-
-impl MaaImageBufferRef {
-    pub fn width(&self) -> i32 {
-        unsafe { sys::MaaImageBufferWidth(self.ptr) }
-    }
-
-    pub fn height(&self) -> i32 {
-        unsafe { sys::MaaImageBufferHeight(self.ptr) }
-    }
-
-    pub fn channels(&self) -> i32 {
-        unsafe { sys::MaaImageBufferChannels(self.ptr) }
-    }
-
-    pub fn to_vec(&self) -> Option<Vec<u8>> {
-        unsafe {
-            let ptr = sys::MaaImageBufferGetEncoded(self.ptr);
-            let size = sys::MaaImageBufferGetEncodedSize(self.ptr);
-            if !ptr.is_null() && size > 0 {
-                let slice = std::slice::from_raw_parts(ptr, size as usize);
-                Some(slice.to_vec())
-            } else {
-                None
-            }
+        if self.own {
+            unsafe { sys::MaaImageListBufferDestroy(self.handle.as_ptr()) }
         }
     }
 }
@@ -420,16 +449,28 @@ impl MaaImageBufferRef {
 /// Used for APIs that return or accept string lists (e.g., node lists).
 pub struct MaaStringListBuffer {
     handle: NonNull<sys::MaaStringListBuffer>,
+    own: bool,
 }
 
 impl MaaStringListBuffer {
     pub fn new() -> MaaResult<Self> {
         let handle = unsafe { sys::MaaStringListBufferCreate() };
         if let Some(ptr) = NonNull::new(handle) {
-            Ok(Self { handle: ptr })
+            Ok(Self {
+                handle: ptr,
+                own: true,
+            })
         } else {
             Err(MaaError::NullPointer)
         }
+    }
+
+    /// Create from an existing handle (does not take ownership).
+    pub fn from_handle(handle: *mut sys::MaaStringListBuffer) -> Option<Self> {
+        NonNull::new(handle).map(|ptr| Self {
+            handle: ptr,
+            own: false,
+        })
     }
 
     pub fn raw(&self) -> *mut sys::MaaStringListBuffer {
@@ -443,9 +484,10 @@ impl MaaStringListBuffer {
             for i in 0..size {
                 let ptr = sys::MaaStringListBufferAt(self.handle.as_ptr(), i);
                 if !ptr.is_null() {
-                    let c_str = sys::MaaStringBufferGet(ptr);
-                    if !c_str.is_null() {
-                        vec.push(CStr::from_ptr(c_str).to_string_lossy().into_owned());
+                    if let Some(buf) =
+                        MaaStringBuffer::from_handle(ptr as *mut sys::MaaStringBuffer)
+                    {
+                        vec.push(buf.as_str().to_string());
                     }
                 }
             }
@@ -472,6 +514,15 @@ impl MaaStringListBuffer {
         }
     }
 
+    /// Set the content of this list, replacing existing content.
+    pub fn set(&self, data: &[&str]) -> MaaResult<()> {
+        self.clear()?;
+        for s in data {
+            self.append(s)?;
+        }
+        Ok(())
+    }
+
     pub fn remove(&self, index: usize) -> MaaResult<()> {
         let ret = unsafe { sys::MaaStringListBufferRemove(self.handle.as_ptr(), index as u64) };
         crate::common::check_bool(ret)
@@ -485,7 +536,9 @@ impl MaaStringListBuffer {
 
 impl Drop for MaaStringListBuffer {
     fn drop(&mut self) {
-        unsafe { sys::MaaStringListBufferDestroy(self.handle.as_ptr()) }
+        if self.own {
+            unsafe { sys::MaaStringListBufferDestroy(self.handle.as_ptr()) }
+        }
     }
 }
 
