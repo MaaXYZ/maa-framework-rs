@@ -3,25 +3,50 @@ use std::ptr::NonNull;
 
 use crate::{common, sys, MaaError, MaaResult};
 
-/// Task execution context, internally held by Tasker.
+/// Represents the execution context of a task.
 ///
-/// Borrowed reference - no `MaaContextDestroy` in C API. Do not hold long-term.
+/// This struct provides an interface for interacting with the current task's runtime state.
+/// Capabilities include:
+/// - Executing sub-tasks.
+/// - Overriding pipeline configurations dynamically.
+/// - Performing direct recognition and actions.
+/// - Managing node hit counts and control flow anchors.
+///
+/// # Safety
+///
+/// `Context` is a wrapper around a non-owning pointer (`MaaContext`).
+/// The underlying resources are managed by the `Tasker`. Users must ensure the `Context`
+/// does not outlive the validity of the underlying task or callback scope.
 pub struct Context {
     handle: NonNull<sys::MaaContext>,
-    callbacks: std::sync::Mutex<std::collections::HashMap<sys::MaaSinkId, *mut std::ffi::c_void>>,
 }
 
 unsafe impl Send for Context {}
 unsafe impl Sync for Context {}
 
+impl std::fmt::Debug for Context {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Context")
+            .field("handle", &self.handle)
+            .finish()
+    }
+}
+
 impl Context {
     pub(crate) unsafe fn from_raw(ptr: *mut sys::MaaContext) -> Option<Self> {
-        NonNull::new(ptr).map(|handle| Self {
-            handle,
-            callbacks: std::sync::Mutex::new(std::collections::HashMap::new()),
-        })
+        NonNull::new(ptr).map(|handle| Self { handle })
     }
 
+    /// Submits a new task for execution.
+    ///
+    /// # Arguments
+    ///
+    /// * `entry` - The name of the task entry point.
+    /// * `pipeline_override` - A JSON string specifying pipeline parameter overrides.
+    ///
+    /// # Returns
+    ///
+    /// Returns the job ID (`MaaId`) associated with the submitted task.
     pub fn run_task(&self, entry: &str, pipeline_override: &str) -> MaaResult<i64> {
         let c_entry = CString::new(entry)?;
         let c_pipeline = CString::new(pipeline_override)?;
@@ -31,16 +56,33 @@ impl Context {
         Ok(id)
     }
 
+    /// Overrides pipeline parameters for the current context.
+    ///
+    /// # Arguments
+    ///
+    /// * `override_json` - A JSON string containing the parameters to override.
     pub fn override_pipeline(&self, override_json: &str) -> MaaResult<()> {
         let c_json = CString::new(override_json)?;
         let ret = unsafe { sys::MaaContextOverridePipeline(self.handle.as_ptr(), c_json.as_ptr()) };
         common::check_bool(ret)
     }
 
+    /// Returns the underlying raw `MaaContext` pointer.
     pub fn raw(&self) -> *mut sys::MaaContext {
         self.handle.as_ptr()
     }
 
+    /// Runs a specific recognition task with an input image.
+    ///
+    /// # Arguments
+    ///
+    /// * `entry` - The task entry name.
+    /// * `pipeline_override` - A JSON string for parameter overrides.
+    /// * `image` - The input image buffer.
+    ///
+    /// # Returns
+    ///
+    /// Returns the job ID associated with the recognition task.
     pub fn run_recognition(
         &self,
         entry: &str,
@@ -54,23 +96,26 @@ impl Context {
                 self.handle.as_ptr(),
                 c_entry.as_ptr(),
                 c_pipeline.as_ptr(),
-                image.raw(),
+                image.as_ptr(),
             )
         };
         Ok(id)
     }
 
-    /// Synchronously execute recognition directly.
+    /// Performs a direct recognition operation.
     ///
-    /// Executes recognition using the given type and parameters directly, without requiring a pipeline entry.
+    /// This executes a specific recognition algorithm immediately, bypassing the pipeline structure.
     ///
     /// # Arguments
-    /// * `reco_type` - Recognition type (e.g. "TemplateMatch", "OCR")
-    /// * `reco_param` - Recognition parameters as JSON string
-    /// * `image` - The image to perform recognition on
+    ///
+    /// * `reco_type` - The specific recognition algorithm type (e.g., "TemplateMatch", "OCR").
+    /// * `reco_param` - A JSON string containing the recognition parameters.
+    /// * `image` - The image buffer to perform recognition on.
     ///
     /// # Returns
-    /// * `Option<RecognitionDetail>` - The result of the recognition. Returns None if the process failed to start.
+    ///
+    /// Returns `Some(RecognitionDetail)` if successful, or `None` if the operation failed
+    /// to initiate or yielded no result.
     pub fn run_recognition_direct(
         &self,
         reco_type: &str,
@@ -84,7 +129,7 @@ impl Context {
                 self.handle.as_ptr(),
                 c_type.as_ptr(),
                 c_param.as_ptr(),
-                image.raw(),
+                image.as_ptr(),
             )
         };
 
@@ -96,6 +141,18 @@ impl Context {
         crate::tasker::Tasker::fetch_recognition_detail(tasker_ptr, id)
     }
 
+    /// Runs a specific action with context parameters.
+    ///
+    /// # Arguments
+    ///
+    /// * `entry` - The task entry name.
+    /// * `pipeline_override` - A JSON string for parameter overrides.
+    /// * `box_rect` - The target region for the action.
+    /// * `reco_detail` - A string containing details from a previous recognition step.
+    ///
+    /// # Returns
+    ///
+    /// Returns the job ID associated with the action.
     pub fn run_action(
         &self,
         entry: &str,
@@ -124,18 +181,20 @@ impl Context {
         Ok(id)
     }
 
-    /// Synchronously execute action directly.
+    /// Performs a direct action operation.
     ///
-    /// Executes action using the given type and parameters directly, without requiring a pipeline entry.
+    /// This executes a specific action immediately, bypassing the pipeline structure.
     ///
     /// # Arguments
-    /// * `action_type` - Action type (e.g. "Click", "Swipe")
-    /// * `action_param` - Action parameters as JSON string
-    /// * `box_rect` - Target rectangle for the action (e.g. from previous recognition)
-    /// * `reco_detail` - Previous recognition details (can be empty)
+    ///
+    /// * `action_type` - The type of action to perform (e.g., "Click", "Swipe").
+    /// * `action_param` - A JSON string containing the action parameters.
+    /// * `box_rect` - The target region for the action (e.g., derived from recognition results).
+    /// * `reco_detail` - Contextual details from a previous recognition step.
     ///
     /// # Returns
-    /// * `Option<ActionDetail>` - The result of the action. Returns None if the process failed to start.
+    ///
+    /// Returns `Some(ActionDetail)` on success, or `None` if the operation failed.
     pub fn run_action_direct(
         &self,
         action_type: &str,
@@ -171,30 +230,43 @@ impl Context {
         crate::tasker::Tasker::fetch_action_detail(tasker_ptr, id)
     }
 
-    /// Override the next list for a node.
+    /// Overrides the execution list for a specific node.
     ///
     /// # Arguments
-    /// * `node_name` - Name of the node to modify
-    /// * `next_list` - New next list, supports prefixes like `[JumpBack]` and `[Anchor]`
     ///
-    /// Returns true if successful, false otherwise.
+    /// * `node_name` - The name of the target node.
+    /// * `next_list` - A slice of strings representing the new next list.
+    ///   Supports special signals like `[JumpBack]` and `[Anchor]`.
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(true)` if the override was successful.
+    /// * `Ok(false)` if the operation failed.
     pub fn override_next(&self, node_name: &str, next_list: &[&str]) -> MaaResult<bool> {
         let c_name = CString::new(node_name)?;
         let list_buf = crate::buffer::MaaStringListBuffer::new()?;
-        for item in next_list {
-            list_buf.append(item)?;
-        }
+        list_buf.set(next_list)?;
+
         let ret = unsafe {
-            sys::MaaContextOverrideNext(self.handle.as_ptr(), c_name.as_ptr(), list_buf.raw())
+            sys::MaaContextOverrideNext(self.handle.as_ptr(), c_name.as_ptr(), list_buf.as_ptr())
         };
         Ok(ret != 0)
     }
 
+    /// Retrieves data associated with a specific node.
+    ///
+    /// # Arguments
+    ///
+    /// * `node_name` - The name of the node.
+    ///
+    /// # Returns
+    ///
+    /// Returns the node data as a `String` if available, or `None` otherwise.
     pub fn get_node_data(&self, node_name: &str) -> MaaResult<Option<String>> {
         let c_name = CString::new(node_name)?;
         let buffer = crate::buffer::MaaStringBuffer::new()?;
         let ret = unsafe {
-            sys::MaaContextGetNodeData(self.handle.as_ptr(), c_name.as_ptr(), buffer.raw())
+            sys::MaaContextGetNodeData(self.handle.as_ptr(), c_name.as_ptr(), buffer.as_ptr())
         };
         if ret != 0 {
             Ok(Some(buffer.to_string()))
@@ -203,6 +275,17 @@ impl Context {
         }
     }
 
+    /// Retrieves and deserializes the object associated with a node.
+    ///
+    /// This is a convenience wrapper around `get_node_data` that parses the result into `PipelineData`.
+    ///
+    /// # Arguments
+    ///
+    /// * `node_name` - The name of the node.
+    ///
+    /// # Errors
+    ///
+    /// Returns `MaaError::InvalidConfig` if the data cannot be parsed.
     pub fn get_node_object(
         &self,
         node_name: &str,
@@ -218,10 +301,17 @@ impl Context {
         }
     }
 
+    /// Returns the ID of the current task.
     pub fn task_id(&self) -> common::MaaId {
         unsafe { sys::MaaContextGetTaskId(self.handle.as_ptr()) }
     }
 
+    /// Associates an anchor with a specific node.
+    ///
+    /// # Arguments
+    ///
+    /// * `anchor_name` - The name of the anchor.
+    /// * `node_name` - The name of the target node.
     pub fn set_anchor(&self, anchor_name: &str, node_name: &str) -> MaaResult<()> {
         let c_anchor = CString::new(anchor_name)?;
         let c_node = CString::new(node_name)?;
@@ -231,11 +321,20 @@ impl Context {
         common::check_bool(ret)
     }
 
+    /// Retrieves the node name associated with an anchor.
+    ///
+    /// # Arguments
+    ///
+    /// * `anchor_name` - The name of the anchor.
+    ///
+    /// # Returns
+    ///
+    /// Returns the node name as a `String` if the anchor exists.
     pub fn get_anchor(&self, anchor_name: &str) -> MaaResult<Option<String>> {
         let c_anchor = CString::new(anchor_name)?;
         let buffer = crate::buffer::MaaStringBuffer::new()?;
         let ret = unsafe {
-            sys::MaaContextGetAnchor(self.handle.as_ptr(), c_anchor.as_ptr(), buffer.raw())
+            sys::MaaContextGetAnchor(self.handle.as_ptr(), c_anchor.as_ptr(), buffer.as_ptr())
         };
         if ret != 0 {
             Ok(Some(buffer.to_string()))
@@ -244,6 +343,7 @@ impl Context {
         }
     }
 
+    /// Retrieves the hit count for a specific node.
     pub fn get_hit_count(&self, node_name: &str) -> MaaResult<u64> {
         let c_name = CString::new(node_name)?;
         let mut count: u64 = 0;
@@ -257,39 +357,40 @@ impl Context {
         }
     }
 
+    /// Resets the hit count for a specific node to zero.
     pub fn clear_hit_count(&self, node_name: &str) -> MaaResult<()> {
         let c_name = CString::new(node_name)?;
         let ret = unsafe { sys::MaaContextClearHitCount(self.handle.as_ptr(), c_name.as_ptr()) };
         common::check_bool(ret)
     }
 
-    /// Clone the context for independent execution.
+    /// Creates a clone of the current context.
     ///
-    /// The cloned context can be used to run tasks independently without
-    /// affecting the original context's state.
+    /// The new context can be used for independent execution threads, preventing
+    /// state interference with the original context.
     pub fn clone_context(&self) -> MaaResult<Self> {
         let cloned = unsafe { sys::MaaContextClone(self.handle.as_ptr()) };
         NonNull::new(cloned)
-            .map(|handle| Self {
-                handle,
-                callbacks: std::sync::Mutex::new(std::collections::HashMap::new()),
-            })
+            .map(|handle| Self { handle })
             .ok_or(crate::MaaError::NullPointer)
     }
 
-    /// Get the associated Tasker handle.
+    /// Returns the raw handle to the associated `Tasker` instance.
     ///
-    /// Returns a raw pointer to the tasker. The caller should not destroy this handle
-    /// as it is owned by the framework.
+    /// # Safety
+    ///
+    /// The returned pointer is owned by the framework. The caller must not
+    /// attempt to destroy or free it.
     pub fn tasker_handle(&self) -> *mut sys::MaaTasker {
         unsafe { sys::MaaContextGetTasker(self.handle.as_ptr()) }
     }
 
-    /// Override an image resource at runtime.
+    /// Overrides a global image resource with a provided buffer.
     ///
     /// # Arguments
-    /// * `image_name` - The name of the image to override
-    /// * `image` - The new image buffer to use
+    ///
+    /// * `image_name` - The identifier of the image to override.
+    /// * `image` - The new image data buffer.
     pub fn override_image(
         &self,
         image_name: &str,
@@ -297,15 +398,14 @@ impl Context {
     ) -> MaaResult<()> {
         let c_name = CString::new(image_name)?;
         let ret = unsafe {
-            sys::MaaContextOverrideImage(self.handle.as_ptr(), c_name.as_ptr(), image.raw())
+            sys::MaaContextOverrideImage(self.handle.as_ptr(), c_name.as_ptr(), image.as_ptr())
         };
         common::check_bool(ret)
     }
 
-    /// Get a job handle for the current task.
+    /// Retrieves a job handle representing the current task's execution state.
     ///
-    /// Returns a `JobWithResult` that can be used to wait for and retrieve
-    /// the task result.
+    /// This allows the caller to query the task's status or wait for its completion details.
     pub fn get_task_job(&self) -> crate::job::JobWithResult<common::TaskDetail> {
         let task_id = self.task_id();
         let tasker_ptr = crate::job::SendSyncPtr::new(self.tasker_handle());
@@ -326,22 +426,9 @@ impl Context {
         crate::job::JobWithResult::new(task_id, status_fn, wait_fn, get_fn)
     }
 
-    /// Clear hit counts for all nodes.
-    ///
-    /// This resets all node hit counters in this context to zero.
+    /// Resets hit counts for all nodes in the context.
     pub fn clear_all_hit_counts(&self) -> MaaResult<()> {
         let ret = unsafe { sys::MaaContextClearHitCount(self.handle.as_ptr(), std::ptr::null()) };
         common::check_bool(ret)
-    }
-}
-
-impl Drop for Context {
-    fn drop(&mut self) {
-        // Context is a borrowed reference - cleanup of callbacks is managed by Tasker
-        // via add_context_sink/clear_context_sinks, not by Context itself.
-        let mut callbacks = self.callbacks.lock().unwrap();
-        for (_, ptr) in callbacks.drain() {
-            unsafe { crate::callback::EventCallback::drop_callback(ptr) };
-        }
     }
 }
