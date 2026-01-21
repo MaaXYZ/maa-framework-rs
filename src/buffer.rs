@@ -422,13 +422,53 @@ impl MaaImageListBuffer {
         crate::common::check_bool(ret)
     }
 
-    /// Get all images as a vector of encoded byte vectors (PNG format).
+    /// Get all images as a vector of `MaaImageBuffer` handles.
+    ///
+    /// This is the most flexible way to access the list content, allowing
+    /// subsequent choices between raw or encoded data for each image.
+    pub fn to_vec(&self) -> Vec<MaaImageBuffer> {
+        let mut result = Vec::with_capacity(self.len());
+        for i in 0..self.len() {
+            if let Some(img) = self.at(i) {
+                result.push(img);
+            }
+        }
+        result
+    }
+
+    /// Get all images as a vector of encoded byte vectors (PNG/JPEG format).
+    ///
+    /// **Note**: This attempts to retrieve encoded data. If the images are raw pixel data
+    /// and the backend does not perform automatic encoding, this may return empty vectors
+    /// or fewer elements than the list length.
     pub fn to_vec_of_vec(&self) -> Vec<Vec<u8>> {
         let mut result = Vec::with_capacity(self.len());
         for i in 0..self.len() {
             if let Some(img) = self.at(i) {
                 if let Some(data) = img.to_vec() {
                     result.push(data);
+                }
+            }
+        }
+        result
+    }
+
+    /// Get all images as raw BGR data vectors + metadata.
+    ///
+    /// Returns a vector of tuples: `(data, width, height, channels, type)`.
+    /// This aligns more closely with Python's `get()` which returns raw pixel data (as ndarrays).
+    pub fn to_raw_vecs(&self) -> Vec<(Vec<u8>, i32, i32, i32, i32)> {
+        let mut result = Vec::with_capacity(self.len());
+        for i in 0..self.len() {
+            if let Some(img) = self.at(i) {
+                if let Some(data) = img.raw_data() {
+                    result.push((
+                        data.to_vec(),
+                        img.width(),
+                        img.height(),
+                        img.channels(),
+                        img.image_type(),
+                    ));
                 }
             }
         }
