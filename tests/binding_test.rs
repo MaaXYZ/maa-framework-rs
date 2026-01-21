@@ -80,6 +80,15 @@ impl CustomRecognition for MyRecognition {
         if let Ok(img) = dummy_img {
             let reco_detail = context.run_recognition("ColorMatch", ppover, &img);
             println!("  run_recognition result: {:?}", reco_detail);
+
+            // Verify run_recognition_direct
+            let reco_direct =
+                context.run_recognition_direct("OCR", "{\"expected\": \"test\"}", &img);
+            println!("  run_recognition_direct result: {:?}", reco_direct);
+
+            // Verify run_action_direct
+            let action_direct = context.run_action_direct("Click", "{}", &rect, "");
+            println!("  run_action_direct result: {:?}", action_direct);
         }
 
         // Verify context cloning and dynamic pipeline overrides
@@ -624,6 +633,22 @@ fn test_resource_node_operations() {
         .override_image("TestImage", &image_buf)
         .expect("override_image MUST succeed");
     println!("  override_image: OK");
+
+    // Verify getting default parameters
+    let ocr_default = resource
+        .get_default_recognition_param("OCR")
+        .expect("get_default_recognition_param failed");
+    println!("  ocr_default: {:?}", ocr_default);
+    assert!(ocr_default.is_some(), "OCR default parameters should exist");
+
+    let click_default = resource
+        .get_default_action_param("Click")
+        .expect("get_default_action_param failed");
+    println!("  click_default: {:?}", click_default);
+    assert!(
+        click_default.is_some(),
+        "Click default parameters should exist"
+    );
 
     println!("  PASS: node operations (STRICT)");
 }

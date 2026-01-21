@@ -60,6 +60,42 @@ impl Context {
         Ok(id)
     }
 
+    /// Synchronously execute recognition directly.
+    ///
+    /// Executes recognition using the given type and parameters directly, without requiring a pipeline entry.
+    ///
+    /// # Arguments
+    /// * `reco_type` - Recognition type (e.g. "TemplateMatch", "OCR")
+    /// * `reco_param` - Recognition parameters as JSON string
+    /// * `image` - The image to perform recognition on
+    ///
+    /// # Returns
+    /// * `Option<RecognitionDetail>` - The result of the recognition. Returns None if the process failed to start.
+    pub fn run_recognition_direct(
+        &self,
+        reco_type: &str,
+        reco_param: &str,
+        image: &crate::buffer::MaaImageBuffer,
+    ) -> MaaResult<Option<crate::common::RecognitionDetail>> {
+        let c_type = CString::new(reco_type)?;
+        let c_param = CString::new(reco_param)?;
+        let id = unsafe {
+            sys::MaaContextRunRecognitionDirect(
+                self.handle.as_ptr(),
+                c_type.as_ptr(),
+                c_param.as_ptr(),
+                image.raw(),
+            )
+        };
+
+        if id == 0 {
+            return Ok(None);
+        }
+
+        let tasker_ptr = self.tasker_handle();
+        crate::tasker::Tasker::fetch_recognition_detail(tasker_ptr, id)
+    }
+
     pub fn run_action(
         &self,
         entry: &str,
@@ -86,6 +122,53 @@ impl Context {
             )
         };
         Ok(id)
+    }
+
+    /// Synchronously execute action directly.
+    ///
+    /// Executes action using the given type and parameters directly, without requiring a pipeline entry.
+    ///
+    /// # Arguments
+    /// * `action_type` - Action type (e.g. "Click", "Swipe")
+    /// * `action_param` - Action parameters as JSON string
+    /// * `box_rect` - Target rectangle for the action (e.g. from previous recognition)
+    /// * `reco_detail` - Previous recognition details (can be empty)
+    ///
+    /// # Returns
+    /// * `Option<ActionDetail>` - The result of the action. Returns None if the process failed to start.
+    pub fn run_action_direct(
+        &self,
+        action_type: &str,
+        action_param: &str,
+        box_rect: &common::Rect,
+        reco_detail: &str,
+    ) -> MaaResult<Option<crate::common::ActionDetail>> {
+        let c_type = CString::new(action_type)?;
+        let c_param = CString::new(action_param)?;
+        let c_detail = CString::new(reco_detail)?;
+        let maa_rect = sys::MaaRect {
+            x: box_rect.x,
+            y: box_rect.y,
+            width: box_rect.width,
+            height: box_rect.height,
+        };
+
+        let id = unsafe {
+            sys::MaaContextRunActionDirect(
+                self.handle.as_ptr(),
+                c_type.as_ptr(),
+                c_param.as_ptr(),
+                &maa_rect,
+                c_detail.as_ptr(),
+            )
+        };
+
+        if id == 0 {
+            return Ok(None);
+        }
+
+        let tasker_ptr = self.tasker_handle();
+        crate::tasker::Tasker::fetch_action_detail(tasker_ptr, id)
     }
 
     /// Override the next list for a node.

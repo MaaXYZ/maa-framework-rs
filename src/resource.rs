@@ -219,6 +219,62 @@ impl Resource {
         }
     }
 
+    /// Get valid default parameters for a recognition type as JSON.
+    ///
+    /// # Arguments
+    /// * `reco_type` - The recognition type (e.g. "TemplateMatch", "OCR").
+    pub fn get_default_recognition_param(
+        &self,
+        reco_type: &str,
+    ) -> MaaResult<Option<serde_json::Value>> {
+        let c_type = CString::new(reco_type)?;
+        let buffer = crate::buffer::MaaStringBuffer::new()?;
+        let ret = unsafe {
+            sys::MaaResourceGetDefaultRecognitionParam(
+                self.inner.handle.as_ptr(),
+                c_type.as_ptr(),
+                buffer.raw(),
+            )
+        };
+        if ret != 0 {
+            let json_str = buffer.to_string();
+            let val: serde_json::Value = serde_json::from_str(&json_str).map_err(|e| {
+                MaaError::InvalidConfig(format!("Failed to parse default params: {}", e))
+            })?;
+            Ok(Some(val))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Get valid default parameters for an action type as JSON.
+    ///
+    /// # Arguments
+    /// * `action_type` - The action type (e.g. "Click", "Swipe").
+    pub fn get_default_action_param(
+        &self,
+        action_type: &str,
+    ) -> MaaResult<Option<serde_json::Value>> {
+        let c_type = CString::new(action_type)?;
+        let buffer = crate::buffer::MaaStringBuffer::new()?;
+        let ret = unsafe {
+            sys::MaaResourceGetDefaultActionParam(
+                self.inner.handle.as_ptr(),
+                c_type.as_ptr(),
+                buffer.raw(),
+            )
+        };
+        if ret != 0 {
+            let json_str = buffer.to_string();
+            let val: serde_json::Value = serde_json::from_str(&json_str).map_err(|e| {
+                MaaError::InvalidConfig(format!("Failed to parse default params: {}", e))
+            })?;
+            Ok(Some(val))
+        } else {
+            Ok(None)
+        }
+    }
+
     // === Inference device ===
 
     pub fn use_cpu(&self) -> MaaResult<()> {
@@ -628,6 +684,48 @@ impl<'a> ResourceRef<'a> {
             Ok(buffer.to_string())
         } else {
             Err(MaaError::FrameworkError(0))
+        }
+    }
+
+    /// Get valid default parameters for a recognition type as JSON.
+    pub fn get_default_recognition_param(
+        &self,
+        reco_type: &str,
+    ) -> MaaResult<Option<serde_json::Value>> {
+        let c_type = std::ffi::CString::new(reco_type)?;
+        let buffer = crate::buffer::MaaStringBuffer::new()?;
+        let ret = unsafe {
+            sys::MaaResourceGetDefaultRecognitionParam(self.handle, c_type.as_ptr(), buffer.raw())
+        };
+        if ret != 0 {
+            let json_str = buffer.to_string();
+            let val: serde_json::Value = serde_json::from_str(&json_str).map_err(|e| {
+                MaaError::InvalidConfig(format!("Failed to parse default params: {}", e))
+            })?;
+            Ok(Some(val))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Get valid default parameters for an action type as JSON.
+    pub fn get_default_action_param(
+        &self,
+        action_type: &str,
+    ) -> MaaResult<Option<serde_json::Value>> {
+        let c_type = std::ffi::CString::new(action_type)?;
+        let buffer = crate::buffer::MaaStringBuffer::new()?;
+        let ret = unsafe {
+            sys::MaaResourceGetDefaultActionParam(self.handle, c_type.as_ptr(), buffer.raw())
+        };
+        if ret != 0 {
+            let json_str = buffer.to_string();
+            let val: serde_json::Value = serde_json::from_str(&json_str).map_err(|e| {
+                MaaError::InvalidConfig(format!("Failed to parse default params: {}", e))
+            })?;
+            Ok(Some(val))
+        } else {
+            Ok(None)
         }
     }
 
