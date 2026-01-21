@@ -12,11 +12,90 @@
 //! - [`MaaRectBuffer`] - Rectangle coordinates
 
 use std::ffi::CString;
+
 use std::ptr::NonNull;
 use std::slice;
 use std::str;
 
 use crate::{sys, MaaError, MaaResult};
+
+/// Macro to implement common lifecycle methods for buffers.
+macro_rules! impl_buffer_lifecycle {
+    ($name:ident, $sys_type:ty, $create_fn:path, $destroy_fn:path) => {
+        unsafe impl Send for $name {}
+
+        impl $name {
+            /// Create a new buffer.
+            pub fn new() -> MaaResult<Self> {
+                let handle = unsafe { $create_fn() };
+                NonNull::new(handle)
+                    .map(|ptr| Self {
+                        handle: ptr,
+                        own: true,
+                    })
+                    .ok_or(MaaError::NullPointer)
+            }
+
+            /// Create from an existing handle.
+            ///
+            /// # Safety
+            ///
+            /// This function assumes the handle is valid. The returned buffer will
+            /// NOT take ownership of the handle (it won't be destroyed on drop).
+            /// Use this when you are borrowing a handle from the C API.
+            pub unsafe fn from_raw(handle: *mut $sys_type) -> Self {
+                Self {
+                    handle: NonNull::new_unchecked(handle),
+                    own: false,
+                }
+            }
+
+            /// Create from an existing handle safely (checks for null).
+            /// Returns `None` if handle is null.
+            pub fn from_handle(handle: *mut $sys_type) -> Option<Self> {
+                NonNull::new(handle).map(|ptr| Self {
+                    handle: ptr,
+                    own: false,
+                })
+            }
+
+            /// Get the underlying raw handle.
+            #[inline]
+            pub fn as_ptr(&self) -> *mut $sys_type {
+                self.handle.as_ptr()
+            }
+
+            /// Get the underlying raw handle (alias for `as_ptr`).
+            #[inline]
+            pub fn raw(&self) -> *mut $sys_type {
+                self.handle.as_ptr()
+            }
+        }
+
+        impl Drop for $name {
+            fn drop(&mut self) {
+                if self.own {
+                    unsafe { $destroy_fn(self.handle.as_ptr()) }
+                }
+            }
+        }
+
+        impl Default for $name {
+            fn default() -> Self {
+                Self::new().expect(concat!("Failed to create ", stringify!($name)))
+            }
+        }
+
+        impl std::fmt::Debug for $name {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.debug_struct(stringify!($name))
+                    .field("handle", &self.handle)
+                    .field("own", &self.own)
+                    .finish()
+            }
+        }
+    };
+}
 
 /// A string buffer for UTF-8 text data.
 ///
@@ -27,51 +106,58 @@ pub struct MaaStringBuffer {
     own: bool,
 }
 
+impl_buffer_lifecycle!(
+    MaaStringBuffer,
+    sys::MaaStringBuffer,
+    sys::MaaStringBufferCreate,
+    sys::MaaStringBufferDestroy
+);
+
 impl MaaStringBuffer {
-    pub fn new() -> MaaResult<Self> {
-        let handle = unsafe { sys::MaaStringBufferCreate() };
-        if let Some(ptr) = NonNull::new(handle) {
-            Ok(Self {
-                handle: ptr,
-                own: true,
-            })
-        } else {
-            Err(MaaError::NullPointer)
-        }
-    }
-
-    /// Create from an existing handle (does not take ownership).
-    pub fn from_handle(handle: *mut sys::MaaStringBuffer) -> Option<Self> {
-        NonNull::new(handle).map(|ptr| Self {
-            handle: ptr,
-            own: false,
-        })
-    }
-
-    pub fn set(&mut self, content: &str) -> MaaResult<()> {
-        let c_str = CString::new(content)?;
+    /// Set the buffer content from a string.
+    pub fn set<S: AsRef<str>>(&mut self, content: S) -> MaaResult<()> {
+        let s = content.as_ref();
+        let c_str = CString::new(s)?;
         let ret = unsafe { sys::MaaStringBufferSet(self.handle.as_ptr(), c_str.as_ptr()) };
         crate::common::check_bool(ret)
     }
 
-    pub fn set_ex(&mut self, content: &str) -> MaaResult<()> {
-        let c_str = CString::new(content)?;
+    /// Set the buffer content from raw bytes (zero-copy if possible).
+    ///
+    /// This uses `MaaStringBufferSetEx` which accepts a length, allowing
+    /// passing bytes without explicit null termination if the API supports it.
+    pub fn set_ex<B: AsRef<[u8]>>(&mut self, content: B) -> MaaResult<()> {
+        let bytes = content.as_ref();
         let ret = unsafe {
-            sys::MaaStringBufferSetEx(self.handle.as_ptr(), c_str.as_ptr(), content.len() as u64)
+            sys::MaaStringBufferSetEx(
+                self.handle.as_ptr(),
+                bytes.as_ptr() as *const _,
+                bytes.len() as u64,
+            )
         };
         crate::common::check_bool(ret)
     }
 
+    /// Get the buffer content as a string slice.
     pub fn as_str(&self) -> &str {
+        let bytes = self.as_bytes();
+        if bytes.is_empty() {
+            ""
+        } else {
+            str::from_utf8(bytes).unwrap_or("")
+        }
+    }
+
+    /// Get the buffer content as a byte slice.
+    pub fn as_bytes(&self) -> &[u8] {
         unsafe {
             let ptr = sys::MaaStringBufferGet(self.handle.as_ptr());
             let size = sys::MaaStringBufferSize(self.handle.as_ptr()) as usize;
 
             if ptr.is_null() || size == 0 {
-                ""
+                &[]
             } else {
-                let slice = slice::from_raw_parts(ptr as *const u8, size);
-                str::from_utf8(slice).unwrap_or("")
+                slice::from_raw_parts(ptr as *const u8, size)
             }
         }
     }
@@ -91,23 +177,11 @@ impl MaaStringBuffer {
     pub fn len(&self) -> usize {
         unsafe { sys::MaaStringBufferSize(self.handle.as_ptr()) as usize }
     }
-
-    pub fn raw(&self) -> *mut sys::MaaStringBuffer {
-        self.handle.as_ptr()
-    }
 }
 
-impl Drop for MaaStringBuffer {
-    fn drop(&mut self) {
-        if self.own {
-            unsafe { sys::MaaStringBufferDestroy(self.handle.as_ptr()) }
-        }
-    }
-}
-
-impl ToString for MaaStringBuffer {
-    fn to_string(&self) -> String {
-        self.as_str().to_string()
+impl std::fmt::Display for MaaStringBuffer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
     }
 }
 
@@ -119,47 +193,26 @@ impl From<&str> for MaaStringBuffer {
     }
 }
 
+impl AsRef<str> for MaaStringBuffer {
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
 /// Image buffer for storing and manipulating image data.
-///
-/// `MaaImageBuffer` wraps the C API's image buffer, providing safe access to
-/// image data including dimensions, pixel format, and encoded bytes.
-///
-/// # Example
-/// ```ignore
-/// let buffer = MaaImageBuffer::new()?;
-/// let width = buffer.width();
-/// let height = buffer.height();
-/// if let Some(bytes) = buffer.to_vec() {
-///     // Process PNG/JPEG encoded bytes
-/// }
-/// ```
 pub struct MaaImageBuffer {
     handle: NonNull<sys::MaaImageBuffer>,
     own: bool,
 }
 
+impl_buffer_lifecycle!(
+    MaaImageBuffer,
+    sys::MaaImageBuffer,
+    sys::MaaImageBufferCreate,
+    sys::MaaImageBufferDestroy
+);
+
 impl MaaImageBuffer {
-    /// Create a new empty image buffer.
-    pub fn new() -> MaaResult<Self> {
-        let handle = unsafe { sys::MaaImageBufferCreate() };
-        if let Some(ptr) = NonNull::new(handle) {
-            Ok(Self {
-                handle: ptr,
-                own: true,
-            })
-        } else {
-            Err(MaaError::NullPointer)
-        }
-    }
-
-    /// Create from an existing handle (does not take ownership).
-    pub fn from_handle(handle: *mut sys::MaaImageBuffer) -> Option<Self> {
-        NonNull::new(handle).map(|ptr| Self {
-            handle: ptr,
-            own: false,
-        })
-    }
-
     /// Check if the buffer is empty (contains no image data).
     pub fn is_empty(&self) -> bool {
         unsafe { sys::MaaImageBufferIsEmpty(self.handle.as_ptr()) != 0 }
@@ -169,11 +222,6 @@ impl MaaImageBuffer {
     pub fn clear(&mut self) -> MaaResult<()> {
         let ret = unsafe { sys::MaaImageBufferClear(self.handle.as_ptr()) };
         crate::common::check_bool(ret)
-    }
-
-    /// Get the raw pointer to the underlying C buffer.
-    pub fn raw(&self) -> *mut sys::MaaImageBuffer {
-        self.handle.as_ptr()
     }
 
     /// Get the image width in pixels.
@@ -197,8 +245,6 @@ impl MaaImageBuffer {
     }
 
     /// Get the encoded image data as a byte vector (PNG format).
-    ///
-    /// Returns `None` if the buffer is empty or encoding fails.
     pub fn to_vec(&self) -> Option<Vec<u8>> {
         unsafe {
             let ptr = sys::MaaImageBufferGetEncoded(self.handle.as_ptr());
@@ -213,9 +259,6 @@ impl MaaImageBuffer {
     }
 
     /// Get the raw image data (BGR format, row-major).
-    ///
-    /// Returns the raw pixel data as used by OpenCV. The format is typically
-    /// BGR with 3 channels, stored row by row.
     pub fn raw_data(&self) -> Option<&[u8]> {
         unsafe {
             let ptr = sys::MaaImageBufferGetRawData(self.handle.as_ptr());
@@ -233,12 +276,6 @@ impl MaaImageBuffer {
     }
 
     /// Set the image from raw BGR data.
-    ///
-    /// # Arguments
-    /// * `data` - Raw pixel data in BGR format
-    /// * `width` - Image width
-    /// * `height` - Image height
-    /// * `img_type` - OpenCV image type (e.g., CV_8UC3 = 16)
     pub fn set_raw_data(
         &mut self,
         data: &[u8],
@@ -259,21 +296,11 @@ impl MaaImageBuffer {
     }
 
     /// Set the image from raw BGR data (assuming 3 channels, CV_8UC3).
-    ///
-    /// This is a convenience wrapper around `set_raw_data` that assumes standard BGR image data.
-    ///
-    /// # Arguments
-    /// * `data` - Raw pixel data in BGR format
-    /// * `width` - Image width
-    /// * `height` - Image height
     pub fn set(&mut self, data: &[u8], width: i32, height: i32) -> MaaResult<()> {
         self.set_raw_data(data, width, height, 16)
     }
 
     /// Set the image from encoded data (PNG/JPEG).
-    ///
-    /// # Arguments
-    /// * `data` - Encoded image bytes (PNG or JPEG format)
     pub fn set_encoded(&mut self, data: &[u8]) -> MaaResult<()> {
         let ret = unsafe {
             sys::MaaImageBufferSetEncoded(
@@ -286,15 +313,6 @@ impl MaaImageBuffer {
     }
 
     /// Convert to `image` crate's `DynamicImage`.
-    ///
-    /// This method requires the `image` feature to be enabled.
-    ///
-    /// # Example
-    /// ```ignore
-    /// let buffer = controller.cached_image()?;
-    /// let img = buffer.to_dynamic_image()?;
-    /// img.save("screenshot.png")?;
-    /// ```
     #[cfg(feature = "image")]
     pub fn to_dynamic_image(&self) -> MaaResult<image::DynamicImage> {
         let encoded = self.to_vec().ok_or(MaaError::ImageConversionError)?;
@@ -302,14 +320,6 @@ impl MaaImageBuffer {
     }
 
     /// Create an image buffer from `image` crate's `DynamicImage`.
-    ///
-    /// This method requires the `image` feature to be enabled.
-    ///
-    /// # Example
-    /// ```ignore
-    /// let img = image::open("template.png")?;
-    /// let buffer = MaaImageBuffer::from_dynamic_image(&img)?;
-    /// ```
     #[cfg(feature = "image")]
     pub fn from_dynamic_image(img: &image::DynamicImage) -> MaaResult<Self> {
         use std::io::Cursor;
@@ -324,63 +334,32 @@ impl MaaImageBuffer {
     }
 
     /// Create an image buffer from an RGB image.
-    ///
-    /// This method requires the `image` feature to be enabled.
     #[cfg(feature = "image")]
     pub fn from_rgb_image(img: &image::RgbImage) -> MaaResult<Self> {
         Self::from_dynamic_image(&image::DynamicImage::ImageRgb8(img.clone()))
     }
 
     /// Create an image buffer from an RGBA image.
-    ///
-    /// This method requires the `image` feature to be enabled.
     #[cfg(feature = "image")]
     pub fn from_rgba_image(img: &image::RgbaImage) -> MaaResult<Self> {
         Self::from_dynamic_image(&image::DynamicImage::ImageRgba8(img.clone()))
     }
 }
 
-impl Drop for MaaImageBuffer {
-    fn drop(&mut self) {
-        if self.own {
-            unsafe { sys::MaaImageBufferDestroy(self.handle.as_ptr()) }
-        }
-    }
-}
-
 /// A list buffer for storing multiple images.
-///
-/// Used when APIs return multiple images (e.g., recognition draws).
 pub struct MaaImageListBuffer {
     handle: NonNull<sys::MaaImageListBuffer>,
     own: bool,
 }
 
+impl_buffer_lifecycle!(
+    MaaImageListBuffer,
+    sys::MaaImageListBuffer,
+    sys::MaaImageListBufferCreate,
+    sys::MaaImageListBufferDestroy
+);
+
 impl MaaImageListBuffer {
-    pub fn new() -> MaaResult<Self> {
-        let handle = unsafe { sys::MaaImageListBufferCreate() };
-        if let Some(ptr) = NonNull::new(handle) {
-            Ok(Self {
-                handle: ptr,
-                own: true,
-            })
-        } else {
-            Err(MaaError::NullPointer)
-        }
-    }
-
-    /// Create from an existing handle (does not take ownership).
-    pub fn from_handle(handle: *mut sys::MaaImageListBuffer) -> Option<Self> {
-        NonNull::new(handle).map(|ptr| Self {
-            handle: ptr,
-            own: false,
-        })
-    }
-
-    pub fn raw(&self) -> *mut sys::MaaImageListBuffer {
-        self.handle.as_ptr()
-    }
-
     pub fn len(&self) -> usize {
         unsafe { sys::MaaImageListBufferSize(self.handle.as_ptr()) as usize }
     }
@@ -390,7 +369,7 @@ impl MaaImageListBuffer {
     }
 
     /// Get image at index. Returns None if index out of bounds.
-    /// Note: The returned buffer is a view into this list (non-owning), do not destroy it separately.
+    /// Note: The returned buffer is a view into this list (non-owning).
     pub fn at(&self, index: usize) -> Option<MaaImageBuffer> {
         unsafe {
             let ptr = sys::MaaImageListBufferAt(self.handle.as_ptr(), index as u64);
@@ -399,7 +378,7 @@ impl MaaImageListBuffer {
     }
 
     pub fn append(&self, image: &MaaImageBuffer) -> MaaResult<()> {
-        let ret = unsafe { sys::MaaImageListBufferAppend(self.handle.as_ptr(), image.raw()) };
+        let ret = unsafe { sys::MaaImageListBufferAppend(self.handle.as_ptr(), image.as_ptr()) };
         crate::common::check_bool(ret)
     }
 
@@ -423,118 +402,52 @@ impl MaaImageListBuffer {
     }
 
     /// Get all images as a vector of `MaaImageBuffer` handles.
-    ///
-    /// This is the most flexible way to access the list content, allowing
-    /// subsequent choices between raw or encoded data for each image.
     pub fn to_vec(&self) -> Vec<MaaImageBuffer> {
-        let mut result = Vec::with_capacity(self.len());
-        for i in 0..self.len() {
-            if let Some(img) = self.at(i) {
-                result.push(img);
-            }
-        }
-        result
+        (0..self.len()).filter_map(|i| self.at(i)).collect()
     }
 
-    /// Get all images as a vector of encoded byte vectors (PNG/JPEG format).
-    ///
-    /// **Note**: This attempts to retrieve encoded data. If the images are raw pixel data
-    /// and the backend does not perform automatic encoding, this may return empty vectors
-    /// or fewer elements than the list length.
+    /// Get an iterator over the images in the list.
+    pub fn iter(&self) -> impl Iterator<Item = MaaImageBuffer> + '_ {
+        (0..self.len()).filter_map(move |i| self.at(i))
+    }
+
+    /// Get all images as a vector of encoded byte vectors.
     pub fn to_vec_of_vec(&self) -> Vec<Vec<u8>> {
-        let mut result = Vec::with_capacity(self.len());
-        for i in 0..self.len() {
-            if let Some(img) = self.at(i) {
-                if let Some(data) = img.to_vec() {
-                    result.push(data);
-                }
-            }
-        }
-        result
+        self.iter().filter_map(|img| img.to_vec()).collect()
     }
 
     /// Get all images as raw BGR data vectors + metadata.
-    ///
-    /// Returns a vector of tuples: `(data, width, height, channels, type)`.
-    /// This aligns more closely with Python's `get()` which returns raw pixel data (as ndarrays).
     pub fn to_raw_vecs(&self) -> Vec<(Vec<u8>, i32, i32, i32, i32)> {
-        let mut result = Vec::with_capacity(self.len());
-        for i in 0..self.len() {
-            if let Some(img) = self.at(i) {
-                if let Some(data) = img.raw_data() {
-                    result.push((
+        self.iter()
+            .filter_map(|img| {
+                img.raw_data().map(|data| {
+                    (
                         data.to_vec(),
                         img.width(),
                         img.height(),
                         img.channels(),
                         img.image_type(),
-                    ));
-                }
-            }
-        }
-        result
-    }
-}
-
-impl Drop for MaaImageListBuffer {
-    fn drop(&mut self) {
-        if self.own {
-            unsafe { sys::MaaImageListBufferDestroy(self.handle.as_ptr()) }
-        }
+                    )
+                })
+            })
+            .collect()
     }
 }
 
 /// A list buffer for storing multiple strings.
-///
-/// Used for APIs that return or accept string lists (e.g., node lists).
 pub struct MaaStringListBuffer {
     handle: NonNull<sys::MaaStringListBuffer>,
     own: bool,
 }
 
+impl_buffer_lifecycle!(
+    MaaStringListBuffer,
+    sys::MaaStringListBuffer,
+    sys::MaaStringListBufferCreate,
+    sys::MaaStringListBufferDestroy
+);
+
 impl MaaStringListBuffer {
-    pub fn new() -> MaaResult<Self> {
-        let handle = unsafe { sys::MaaStringListBufferCreate() };
-        if let Some(ptr) = NonNull::new(handle) {
-            Ok(Self {
-                handle: ptr,
-                own: true,
-            })
-        } else {
-            Err(MaaError::NullPointer)
-        }
-    }
-
-    /// Create from an existing handle (does not take ownership).
-    pub fn from_handle(handle: *mut sys::MaaStringListBuffer) -> Option<Self> {
-        NonNull::new(handle).map(|ptr| Self {
-            handle: ptr,
-            own: false,
-        })
-    }
-
-    pub fn raw(&self) -> *mut sys::MaaStringListBuffer {
-        self.handle.as_ptr()
-    }
-
-    pub fn to_vec(&self) -> Vec<String> {
-        unsafe {
-            let size = sys::MaaStringListBufferSize(self.handle.as_ptr());
-            let mut vec = Vec::with_capacity(size as usize);
-            for i in 0..size {
-                let ptr = sys::MaaStringListBufferAt(self.handle.as_ptr(), i);
-                if !ptr.is_null() {
-                    if let Some(buf) =
-                        MaaStringBuffer::from_handle(ptr as *mut sys::MaaStringBuffer)
-                    {
-                        vec.push(buf.as_str().to_string());
-                    }
-                }
-            }
-            vec
-        }
-    }
-
     pub fn len(&self) -> usize {
         unsafe { sys::MaaStringListBufferSize(self.handle.as_ptr()) as usize }
     }
@@ -546,19 +459,15 @@ impl MaaStringListBuffer {
     pub fn append(&self, s: &str) -> MaaResult<()> {
         let mut str_buf = MaaStringBuffer::new()?;
         str_buf.set(s)?;
-        let ret = unsafe { sys::MaaStringListBufferAppend(self.handle.as_ptr(), str_buf.raw()) };
-        if ret != 0 {
-            Ok(())
-        } else {
-            Err(crate::MaaError::FrameworkError(0))
-        }
+        let ret = unsafe { sys::MaaStringListBufferAppend(self.handle.as_ptr(), str_buf.as_ptr()) };
+        crate::common::check_bool(ret)
     }
 
     /// Set the content of this list, replacing existing content.
-    pub fn set(&self, data: &[&str]) -> MaaResult<()> {
+    pub fn set<S: AsRef<str>>(&self, data: &[S]) -> MaaResult<()> {
         self.clear()?;
         for s in data {
-            self.append(s)?;
+            self.append(s.as_ref())?;
         }
         Ok(())
     }
@@ -572,13 +481,31 @@ impl MaaStringListBuffer {
         let ret = unsafe { sys::MaaStringListBufferClear(self.handle.as_ptr()) };
         crate::common::check_bool(ret)
     }
-}
 
-impl Drop for MaaStringListBuffer {
-    fn drop(&mut self) {
-        if self.own {
-            unsafe { sys::MaaStringListBufferDestroy(self.handle.as_ptr()) }
-        }
+    /// Get an iterator over the strings in the list.
+    ///
+    /// The iterator yields `&str` slices borrowing from the buffer.
+    /// This is zero-cost and safe.
+    pub fn iter(&self) -> impl Iterator<Item = &str> + '_ {
+        (0..self.len()).map(move |i| unsafe {
+            let ptr = sys::MaaStringListBufferAt(self.handle.as_ptr(), i as u64);
+            // ptr is MaaStringBufferHandle (not null usually if index is valid)
+            if ptr.is_null() {
+                return "";
+            }
+            let str_ptr = sys::MaaStringBufferGet(ptr as *mut sys::MaaStringBuffer);
+            let size = sys::MaaStringBufferSize(ptr as *mut sys::MaaStringBuffer) as usize;
+            if str_ptr.is_null() || size == 0 {
+                ""
+            } else {
+                let slice = slice::from_raw_parts(str_ptr as *const u8, size);
+                str::from_utf8(slice).unwrap_or("")
+            }
+        })
+    }
+
+    pub fn to_vec(&self) -> Vec<String> {
+        self.iter().map(|s| s.to_string()).collect()
     }
 }
 
@@ -588,32 +515,14 @@ pub struct MaaRectBuffer {
     own: bool,
 }
 
+impl_buffer_lifecycle!(
+    MaaRectBuffer,
+    sys::MaaRect,
+    sys::MaaRectCreate,
+    sys::MaaRectDestroy
+);
+
 impl MaaRectBuffer {
-    /// Create a new rect buffer.
-    pub fn new() -> MaaResult<Self> {
-        let handle = unsafe { sys::MaaRectCreate() };
-        if let Some(ptr) = NonNull::new(handle) {
-            Ok(Self {
-                handle: ptr,
-                own: true,
-            })
-        } else {
-            Err(MaaError::NullPointer)
-        }
-    }
-
-    /// Create from an existing handle (does not take ownership).
-    pub fn from_handle(handle: *mut sys::MaaRect) -> Option<Self> {
-        NonNull::new(handle).map(|ptr| Self {
-            handle: ptr,
-            own: false,
-        })
-    }
-
-    pub fn raw(&self) -> *mut sys::MaaRect {
-        self.handle.as_ptr()
-    }
-
     /// Get the rect values.
     pub fn get(&self) -> crate::common::Rect {
         unsafe {
@@ -641,10 +550,22 @@ impl MaaRectBuffer {
     }
 }
 
-impl Drop for MaaRectBuffer {
-    fn drop(&mut self) {
-        if self.own {
-            unsafe { sys::MaaRectDestroy(self.handle.as_ptr()) }
-        }
+impl From<crate::common::Rect> for MaaRectBuffer {
+    fn from(rect: crate::common::Rect) -> Self {
+        let mut buf = Self::new().expect("Failed to create MaaRectBuffer");
+        buf.set(&rect).expect("Failed to set rect buffer");
+        buf
+    }
+}
+
+impl From<MaaRectBuffer> for crate::common::Rect {
+    fn from(buf: MaaRectBuffer) -> Self {
+        buf.get()
+    }
+}
+
+impl From<&MaaRectBuffer> for crate::common::Rect {
+    fn from(buf: &MaaRectBuffer) -> Self {
+        buf.get()
     }
 }
