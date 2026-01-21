@@ -175,6 +175,44 @@ impl<T> JobWithResult<T> {
     }
 }
 
+pub type OverridePipelineFn = Box<dyn Fn(MaaId, &str) -> MaaResult<bool> + Send + Sync>;
+
+/// Task job handle with extended capabilities.
+///
+/// Inherits from [`JobWithResult`], additionally providing task-specific operations.
+pub struct TaskJob<T> {
+    job: JobWithResult<T>,
+    override_fn: OverridePipelineFn,
+}
+
+impl<T> Deref for TaskJob<T> {
+    type Target = JobWithResult<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.job
+    }
+}
+
+impl<T> TaskJob<T> {
+    /// Create a new TaskJob.
+    pub fn new(job: JobWithResult<T>, override_fn: OverridePipelineFn) -> Self {
+        Self { job, override_fn }
+    }
+
+    /// Override the pipeline for this task.
+    ///
+    /// Dynamically modifies the pipeline configuration during task execution.
+    ///
+    /// # Arguments
+    /// * `pipeline_override` - The JSON string for overriding.
+    ///
+    /// # Returns
+    /// * `true` if successful.
+    pub fn override_pipeline(&self, pipeline_override: &str) -> MaaResult<bool> {
+        (self.override_fn)(self.job.id, pipeline_override)
+    }
+}
+
 // === Type Aliases for Specialized Jobs ===
 
 /// Controller operation job.

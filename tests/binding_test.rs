@@ -974,6 +974,15 @@ fn test_tasker_api() {
         "MyAction.run should be called"
     );
 
+    // Test clear_cache
+    tasker.clear_cache().expect("Failed to clear cache");
+
+    // Test override_pipeline (via job object)
+    let override_result = task_job
+        .override_pipeline(r#"{"Entry": {"next": []}}"#)
+        .expect("Failed to override pipeline");
+    println!("  task_job.override_pipeline result: {}", override_result);
+
     println!("  PASS: tasker api (STRICT)");
 }
 

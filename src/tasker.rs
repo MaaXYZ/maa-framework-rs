@@ -343,7 +343,7 @@ impl Tasker {
         &self,
         entry: &str,
         pipeline_override: &str,
-    ) -> MaaResult<crate::job::JobWithResult<crate::common::TaskDetail>> {
+    ) -> MaaResult<crate::job::TaskJob<crate::common::TaskDetail>> {
         let c_entry = std::ffi::CString::new(entry)?;
         let c_pipeline = std::ffi::CString::new(pipeline_override)?;
         let id = unsafe {
@@ -370,8 +370,19 @@ impl Tasker {
                 Tasker::fetch_task_detail(inner.handle.as_ptr(), task_id)
             };
 
-        Ok(crate::job::JobWithResult::new(
-            id, status_fn, wait_fn, get_fn,
+        // Prepare override function for TaskJob
+        let inner = self.inner.clone();
+        let override_fn: crate::job::OverridePipelineFn = Box::new(move |job_id, pipeline| {
+            let c_pipeline = std::ffi::CString::new(pipeline)?;
+            let ret = unsafe {
+                sys::MaaTaskerOverridePipeline(inner.handle.as_ptr(), job_id, c_pipeline.as_ptr())
+            };
+            Ok(ret != 0)
+        });
+
+        Ok(crate::job::TaskJob::new(
+            crate::job::JobWithResult::new(id, status_fn, wait_fn, get_fn),
+            override_fn,
         ))
     }
 
@@ -390,7 +401,7 @@ impl Tasker {
         &self,
         entry: &str,
         pipeline_override: &serde_json::Value,
-    ) -> MaaResult<crate::job::JobWithResult<crate::common::TaskDetail>> {
+    ) -> MaaResult<crate::job::TaskJob<crate::common::TaskDetail>> {
         self.post_task(entry, &pipeline_override.to_string())
     }
 
@@ -591,6 +602,23 @@ impl Tasker {
         crate::common::check_bool(ret)
     }
 
+    /// Override pipeline configuration for a specific task.
+    ///
+    /// # Arguments
+    /// * `task_id` - The ID of the task to update.
+    /// * `pipeline_override` - The JSON string containing the new configuration.
+    pub fn override_pipeline(
+        &self,
+        task_id: crate::common::MaaId,
+        pipeline_override: &str,
+    ) -> MaaResult<bool> {
+        let c_pipeline = std::ffi::CString::new(pipeline_override)?;
+        let ret = unsafe {
+            sys::MaaTaskerOverridePipeline(self.inner.handle.as_ptr(), task_id, c_pipeline.as_ptr())
+        };
+        Ok(ret != 0)
+    }
+
     pub fn get_latest_node(&self, node_name: &str) -> MaaResult<Option<crate::common::MaaId>> {
         let c_name = std::ffi::CString::new(node_name)?;
         let mut node_id: crate::common::MaaId = 0;
@@ -669,7 +697,7 @@ impl Tasker {
         reco_type: &str,
         reco_param: &str,
         image: &crate::buffer::MaaImageBuffer,
-    ) -> MaaResult<crate::job::JobWithResult<crate::common::RecognitionDetail>> {
+    ) -> MaaResult<crate::job::TaskJob<crate::common::RecognitionDetail>> {
         let c_type = std::ffi::CString::new(reco_type)?;
         let c_param = std::ffi::CString::new(reco_param)?;
         let id = unsafe {
@@ -696,8 +724,19 @@ impl Tasker {
             Tasker::fetch_recognition_detail(inner.handle.as_ptr(), reco_id)
         };
 
-        Ok(crate::job::JobWithResult::new(
-            id, status_fn, wait_fn, get_fn,
+        // Prepare override function for TaskJob
+        let inner = self.inner.clone();
+        let override_fn: crate::job::OverridePipelineFn = Box::new(move |job_id, pipeline| {
+            let c_pipeline = std::ffi::CString::new(pipeline)?;
+            let ret = unsafe {
+                sys::MaaTaskerOverridePipeline(inner.handle.as_ptr(), job_id, c_pipeline.as_ptr())
+            };
+            Ok(ret != 0)
+        });
+
+        Ok(crate::job::TaskJob::new(
+            crate::job::JobWithResult::new(id, status_fn, wait_fn, get_fn),
+            override_fn,
         ))
     }
 
@@ -714,7 +753,7 @@ impl Tasker {
         action_param: &str,
         box_rect: &common::Rect,
         reco_detail: &str,
-    ) -> MaaResult<crate::job::JobWithResult<crate::common::ActionDetail>> {
+    ) -> MaaResult<crate::job::TaskJob<crate::common::ActionDetail>> {
         let c_type = std::ffi::CString::new(action_type)?;
         let c_param = std::ffi::CString::new(action_param)?;
         let c_detail = std::ffi::CString::new(reco_detail)?;
@@ -750,8 +789,19 @@ impl Tasker {
             Tasker::fetch_action_detail(inner.handle.as_ptr(), act_id)
         };
 
-        Ok(crate::job::JobWithResult::new(
-            id, status_fn, wait_fn, get_fn,
+        // Prepare override function for TaskJob
+        let inner = self.inner.clone();
+        let override_fn: crate::job::OverridePipelineFn = Box::new(move |job_id, pipeline| {
+            let c_pipeline = std::ffi::CString::new(pipeline)?;
+            let ret = unsafe {
+                sys::MaaTaskerOverridePipeline(inner.handle.as_ptr(), job_id, c_pipeline.as_ptr())
+            };
+            Ok(ret != 0)
+        });
+
+        Ok(crate::job::TaskJob::new(
+            crate::job::JobWithResult::new(id, status_fn, wait_fn, get_fn),
+            override_fn,
         ))
     }
 
