@@ -15,6 +15,9 @@ use std::ptr::NonNull;
 /// execution to a separate process.
 pub struct AgentClient {
     handle: NonNull<sys::MaaAgentClient>,
+    _resource_guard: Option<Resource>,
+    _controller_guard: Option<Controller>,
+    _tasker_guard: Option<Tasker>,
 }
 
 unsafe impl Send for AgentClient {}
@@ -44,7 +47,12 @@ impl AgentClient {
         };
 
         NonNull::new(handle)
-            .map(|ptr| Self { handle: ptr })
+            .map(|ptr| Self {
+                handle: ptr,
+                _resource_guard: None,
+                _controller_guard: None,
+                _tasker_guard: None,
+            })
             .ok_or(MaaError::FrameworkError(-1))
     }
 
@@ -60,40 +68,51 @@ impl AgentClient {
     }
 
     /// Bind a resource to receive custom recognitions and actions from AgentServer.
-    pub fn bind(&self, resource: &Resource) -> MaaResult<()> {
+    ///
+    /// Takes ownership of the Resource to ensure it stays alive while bound.
+    pub fn bind(&mut self, resource: Resource) -> MaaResult<()> {
         let ret = unsafe { sys::MaaAgentClientBindResource(self.handle.as_ptr(), resource.raw()) };
-        common::check_bool(ret)
+        common::check_bool(ret)?;
+
+        self._resource_guard = Some(resource);
+        Ok(())
     }
 
     /// Register resource event sink to forward events to AgentServer.
-    pub fn register_resource_sink(&self, resource: &Resource) -> MaaResult<()> {
+    pub fn register_resource_sink(&mut self, resource: Resource) -> MaaResult<()> {
         let ret = unsafe {
             sys::MaaAgentClientRegisterResourceSink(self.handle.as_ptr(), resource.raw())
         };
-        common::check_bool(ret)
+        common::check_bool(ret)?;
+        self._resource_guard = Some(resource);
+        Ok(())
     }
 
     /// Register controller event sink to forward events to AgentServer.
-    pub fn register_controller_sink(&self, controller: &Controller) -> MaaResult<()> {
+    pub fn register_controller_sink(&mut self, controller: Controller) -> MaaResult<()> {
         let ret = unsafe {
             sys::MaaAgentClientRegisterControllerSink(self.handle.as_ptr(), controller.raw())
         };
-        common::check_bool(ret)
+        common::check_bool(ret)?;
+        self._controller_guard = Some(controller);
+        Ok(())
     }
 
     /// Register tasker event sink to forward events to AgentServer.
-    pub fn register_tasker_sink(&self, tasker: &Tasker) -> MaaResult<()> {
+    pub fn register_tasker_sink(&mut self, tasker: Tasker) -> MaaResult<()> {
         let ret =
             unsafe { sys::MaaAgentClientRegisterTaskerSink(self.handle.as_ptr(), tasker.raw()) };
-        common::check_bool(ret)
+        common::check_bool(ret)?;
+        self._tasker_guard = Some(tasker);
+        Ok(())
     }
 
     /// Register all event sinks (resource, controller, tasker) at once.
     pub fn register_sinks(
-        &self,
-        resource: &Resource,
-        controller: &Controller,
-        tasker: &Tasker,
+        &mut self,
+        resource: Resource,
+        controller: Controller,
+        tasker: Tasker,
     ) -> MaaResult<()> {
         self.register_resource_sink(resource)?;
         self.register_controller_sink(controller)?;

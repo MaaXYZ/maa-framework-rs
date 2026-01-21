@@ -166,7 +166,7 @@ fn test_agent_full_integration() {
 
     let identifier = "MaaAgentTest_MultiProcess";
 
-    let client = AgentClient::new(Some(identifier)).expect("Failed to create AgentClient");
+    let mut client = AgentClient::new(Some(identifier)).expect("Failed to create AgentClient");
 
     let res_dir = get_test_resources_dir();
     let resource_dir = res_dir.join("resource");
@@ -178,7 +178,9 @@ fn test_agent_full_integration() {
         .post_bundle(resource_dir.to_str().unwrap())
         .unwrap()
         .wait();
-    client.bind(&resource).expect("Failed to bind resource");
+    client
+        .bind(resource.clone())
+        .expect("Failed to bind resource");
 
     let img_ctrl = ImageController::new(screenshot_dir);
     let controller = Controller::new_custom(img_ctrl).unwrap();
