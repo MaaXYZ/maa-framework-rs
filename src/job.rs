@@ -7,42 +7,12 @@ use crate::{
     sys, MaaResult,
 };
 
-/// Thread-safe pointer wrapper for FFI closures.
-pub struct SendSyncPtr<T>(pub *mut T);
-unsafe impl<T> Send for SendSyncPtr<T> {}
-unsafe impl<T> Sync for SendSyncPtr<T> {}
-
-impl<T> SendSyncPtr<T> {
-    pub fn new(ptr: *mut T) -> Self {
-        Self(ptr)
-    }
-    pub fn get(&self) -> *mut T {
-        self.0
-    }
-}
-
-impl<T> Clone for SendSyncPtr<T> {
-    fn clone(&self) -> Self {
-        Self(self.0)
-    }
-}
-impl<T> Copy for SendSyncPtr<T> {}
-
 pub type StatusFn = Box<dyn Fn(MaaId) -> MaaStatus + Send + Sync>;
 pub type WaitFn = Box<dyn Fn(MaaId) -> MaaStatus + Send + Sync>;
 
 /// An asynchronous operation handle.
 ///
 /// Use this to track the status of controller, resource, and tasker operations.
-///
-/// # Example
-/// ```ignore
-/// let job = controller.post_click(100, 200)?;
-/// let status = job.wait(); // Blocks until complete
-/// if status.succeeded() {
-///     println!("Click successful.");
-/// }
-/// ```
 pub struct Job {
     pub id: MaaId,
     status_fn: StatusFn,
@@ -213,7 +183,7 @@ impl<T> TaskJob<T> {
     }
 }
 
-// === Type Aliases for Specialized Jobs ===
+// === Type Aliases ===
 
 /// Controller operation job.
 ///
@@ -239,7 +209,3 @@ pub type RecoJobWithResult = JobWithResult<crate::common::RecognitionDetail>;
 ///
 /// Returned by `Tasker::post_action()`.
 pub type ActionJobWithResult = JobWithResult<crate::common::ActionDetail>;
-
-pub fn tasker_ptr(ptr: *mut sys::MaaTasker) -> SendSyncPtr<sys::MaaTasker> {
-    SendSyncPtr::new(ptr)
-}

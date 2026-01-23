@@ -408,19 +408,21 @@ impl Context {
     /// This allows the caller to query the task's status or wait for its completion details.
     pub fn get_task_job(&self) -> crate::job::JobWithResult<common::TaskDetail> {
         let task_id = self.task_id();
-        let tasker_ptr = crate::job::SendSyncPtr::new(self.tasker_handle());
+        let tasker_raw = self.tasker_handle() as usize;
 
         let status_fn: crate::job::StatusFn = Box::new(move |job_id| {
-            common::MaaStatus(unsafe { sys::MaaTaskerStatus(tasker_ptr.get(), job_id) })
+            let ptr = tasker_raw as *mut sys::MaaTasker;
+            common::MaaStatus(unsafe { sys::MaaTaskerStatus(ptr, job_id) })
         });
 
         let wait_fn: crate::job::WaitFn = Box::new(move |job_id| {
-            common::MaaStatus(unsafe { sys::MaaTaskerWait(tasker_ptr.get(), job_id) })
+            let ptr = tasker_raw as *mut sys::MaaTasker;
+            common::MaaStatus(unsafe { sys::MaaTaskerWait(ptr, job_id) })
         });
 
-        let get_ptr = crate::job::SendSyncPtr::new(self.tasker_handle());
         let get_fn = move |tid: common::MaaId| -> MaaResult<Option<common::TaskDetail>> {
-            crate::tasker::Tasker::fetch_task_detail(get_ptr.get(), tid)
+            let ptr = tasker_raw as *mut sys::MaaTasker;
+            crate::tasker::Tasker::fetch_task_detail(ptr, tid)
         };
 
         crate::job::JobWithResult::new(task_id, status_fn, wait_fn, get_fn)
