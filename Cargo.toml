@@ -11,11 +11,9 @@ keywords = ["maa", "automation", "framework", "binding"]
 categories = ["api-bindings", "development-tools"]
 
 [dependencies]
-derive_builder = "0.20.0"
 serde = { version = "^1.0", features = ["derive"] }
 serde_json = "^1.0"
 thiserror = "^1.0"
-log = "0.4"
 bitflags = "2.4"
 image = { version = "0.25", optional = true }
 
