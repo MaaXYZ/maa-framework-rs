@@ -375,7 +375,7 @@ pub struct Touch {
     pub target: Target,
     #[serde(default)]
     pub target_offset: Rect,
-    #[serde(default = "default_pressure")]
+    #[serde(default)]
     pub pressure: i32,
 }
 
