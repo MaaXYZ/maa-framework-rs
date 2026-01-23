@@ -41,9 +41,9 @@ impl CustomRecognition for MyRecognition {
         node_name: &str,
         custom_recognition_name: &str,
         custom_recognition_param: &str,
-        _image: *const sys::MaaImageBuffer,
-        _roi: &sys::MaaRect,
-    ) -> Option<(sys::MaaRect, String)> {
+        _image: &maa_framework::buffer::MaaImageBuffer,
+        _roi: &maa_framework::common::Rect,
+    ) -> Option<(maa_framework::common::Rect, String)> {
         println!(
             "[MyRecognition] analyze called: node={}, name={}, param={}",
             node_name, custom_recognition_name, custom_recognition_param
@@ -83,7 +83,7 @@ impl CustomRecognition for MyRecognition {
             if is_stopping {
                 println!("  Task is stopping, returning early!");
                 return Some((
-                    sys::MaaRect {
+                    common::Rect {
                         x: 0,
                         y: 0,
                         width: 0,
@@ -137,7 +137,7 @@ impl CustomRecognition for MyRecognition {
 
         // Return recognition result: bounding box + detail JSON
         Some((
-            sys::MaaRect {
+            common::Rect {
                 x: 0,
                 y: 0,
                 width: 100,
@@ -166,7 +166,7 @@ impl CustomAction for MyAction {
         custom_action_name: &str,
         custom_action_param: &str,
         reco_id: sys::MaaRecoId,
-        box_rect: &sys::MaaRect,
+        box_rect: &maa_framework::common::Rect,
     ) -> bool {
         println!(
             "[MyAction] run called: node={}, name={}, param={}",

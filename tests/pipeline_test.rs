@@ -44,9 +44,9 @@ impl CustomRecognition for PipelineTestRecognition {
         _node_name: &str,
         _custom_recognition_name: &str,
         _custom_recognition_param: &str,
-        _image: *const sys::MaaImageBuffer,
-        _roi: &sys::MaaRect,
-    ) -> Option<(sys::MaaRect, String)> {
+        _image: &maa_framework::buffer::MaaImageBuffer,
+        _roi: &maa_framework::common::Rect,
+    ) -> Option<(maa_framework::common::Rect, String)> {
         println!("\n=== PipelineTestRecognition.analyze ===");
 
         // Run all Context-level tests
@@ -59,7 +59,7 @@ impl CustomRecognition for PipelineTestRecognition {
         }
 
         Some((
-            sys::MaaRect {
+            maa_framework::common::Rect {
                 x: 0,
                 y: 0,
                 width: 100,
@@ -81,7 +81,7 @@ impl CustomAction for PipelineTestAction {
         _custom_action_name: &str,
         _custom_action_param: &str,
         _reco_id: sys::MaaRecoId,
-        _box_rect: &sys::MaaRect,
+        _box_rect: &maa_framework::common::Rect,
     ) -> bool {
         true
     }

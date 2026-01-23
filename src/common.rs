@@ -103,6 +103,17 @@ impl From<sys::MaaRect> for Rect {
     }
 }
 
+impl Default for Rect {
+    fn default() -> Self {
+        Self {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+        }
+    }
+}
+
 /// A point representing a location on screen.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
 pub struct Point {

@@ -29,9 +29,9 @@ impl CustomRecognition for ServerRecognition {
         node_name: &str,
         custom_recognition_name: &str,
         _custom_recognition_param: &str,
-        _image: *const sys::MaaImageBuffer,
-        _roi: &sys::MaaRect,
-    ) -> Option<(sys::MaaRect, String)> {
+        _image: &maa_framework::buffer::MaaImageBuffer,
+        _roi: &maa_framework::common::Rect,
+    ) -> Option<(maa_framework::common::Rect, String)> {
         println!(
             "[Server] MyRecognition analyze called! node: {}, reco: {}",
             node_name, custom_recognition_name
@@ -95,7 +95,7 @@ impl CustomRecognition for ServerRecognition {
         println!("  [Server] context.task_id: {}", task_id);
 
         Some((
-            sys::MaaRect {
+            maa_framework::common::Rect {
                 x: 10,
                 y: 20,
                 width: 100,
@@ -117,7 +117,7 @@ impl CustomAction for ServerAction {
         _custom_action_name: &str,
         _custom_action_param: &str,
         _reco_id: sys::MaaRecoId,
-        _box_rect: &sys::MaaRect,
+        _box_rect: &maa_framework::common::Rect,
     ) -> bool {
         println!("[Server] MyAction run called!");
         true

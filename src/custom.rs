@@ -8,21 +8,6 @@
 //! 1. Implement [`CustomRecognition`] or [`CustomAction`] trait
 //! 2. Register with [`Resource::register_custom_recognition`] or [`Resource::register_custom_action`]
 //! 3. Reference in pipeline JSON via `"recognition": "Custom"` or `"action": "Custom"`
-//!
-//! # Example
-//!
-//! ```ignore
-//! struct MyRecognizer;
-//!
-//! impl CustomRecognition for MyRecognizer {
-//!     fn analyze(&self, context: &Context, ...) -> Option<(MaaRect, String)> {
-//!         // Your recognition logic
-//!         Some((rect, "{}" .to_string()))
-//!     }
-//! }
-//!
-//! resource.register_custom_recognition("MyReco", Box::new(MyRecognizer))?;
-//! ```
 
 use crate::context::Context;
 use crate::resource::Resource;
@@ -30,74 +15,7 @@ use crate::{common, sys, MaaError, MaaResult};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 
-// === Structured Arguments ===
-
-/// Arguments passed to custom action's run method.
-#[derive(Debug, Clone)]
-pub struct RunArg {
-    /// The current task ID.
-    pub task_id: common::MaaId,
-    /// Name of the current node in the pipeline.
-    pub node_name: String,
-    /// Name of the custom action.
-    pub action_name: String,
-    /// JSON parameters for the action.
-    pub action_param: String,
-    /// Recognition ID from the preceding recognition.
-    pub reco_id: common::MaaId,
-    /// Bounding box from the recognition result.
-    pub box_rect: common::Rect,
-}
-
-/// Arguments passed to custom recognition's analyze method.
-#[derive(Debug, Clone)]
-pub struct AnalyzeArg {
-    /// The current task ID.
-    pub task_id: common::MaaId,
-    /// Name of the current node in the pipeline.
-    pub node_name: String,
-    /// Name of the custom recognition.
-    pub reco_name: String,
-    /// JSON parameters for the recognition.
-    pub reco_param: String,
-    /// Region of interest to analyze.
-    pub roi: common::Rect,
-}
-
-/// Result returned from custom action's run method.
-#[derive(Debug, Clone, Default)]
-pub struct RunResult {
-    /// Whether the action succeeded.
-    pub success: bool,
-}
-
-impl RunResult {
-    pub fn success() -> Self {
-        Self { success: true }
-    }
-
-    pub fn failure() -> Self {
-        Self { success: false }
-    }
-}
-
-/// Result returned from custom recognition's analyze method.
-#[derive(Debug, Clone)]
-pub struct AnalyzeResult {
-    /// The bounding box of the detected target.
-    pub box_rect: common::Rect,
-    /// JSON detail string to be passed to subsequent actions.
-    pub detail: String,
-}
-
-impl AnalyzeResult {
-    pub fn new(box_rect: common::Rect, detail: impl Into<String>) -> Self {
-        Self {
-            box_rect,
-            detail: detail.into(),
-        }
-    }
-}
+// === Trait Definitions ===
 
 /// Trait for implementing custom actions.
 ///
@@ -106,17 +24,26 @@ impl AnalyzeResult {
 pub trait CustomAction: Send + Sync {
     /// Execute the custom action.
     ///
+    /// # Arguments
+    /// * `context` - The current execution context
+    /// * `task_id` - ID of the current task
+    /// * `node_name` - Name of the current node
+    /// * `custom_action_name` - Name of this action (as registered)
+    /// * `custom_action_param` - JSON parameters for this action
+    /// * `reco_id` - ID of the preceding recognition result
+    /// * `box_rect` - Target region found by recognition
+    ///
     /// # Returns
     /// `true` if the action succeeded, `false` otherwise
     fn run(
         &self,
         context: &Context,
-        task_id: sys::MaaTaskId,
+        task_id: common::MaaId,
         node_name: &str,
         custom_action_name: &str,
         custom_action_param: &str,
-        reco_id: sys::MaaRecoId,
-        box_rect: &sys::MaaRect,
+        reco_id: common::MaaId,
+        box_rect: &common::Rect,
     ) -> bool;
 }
 
@@ -126,133 +53,142 @@ pub trait CustomAction: Send + Sync {
 pub trait CustomRecognition: Send + Sync {
     /// Analyze an image to find the target.
     ///
+    /// # Arguments
+    /// * `context` - The current execution context
+    /// * `task_id` - ID of the current task
+    /// * `node_name` - Name of the current node
+    /// * `custom_recognition_name` - Name of this recognizer
+    /// * `custom_recognition_param` - JSON parameters for this recognizer
+    /// * `image` - The image to analyze
+    /// * `roi` - Region of Interest to restrict analysis
+    ///
     /// # Returns
     /// `Some((rect, detail))` if target found, `None` otherwise
     fn analyze(
         &self,
         context: &Context,
-        task_id: sys::MaaTaskId,
+        task_id: common::MaaId,
         node_name: &str,
         custom_recognition_name: &str,
         custom_recognition_param: &str,
-        image: *const sys::MaaImageBuffer,
-        roi: &sys::MaaRect,
-    ) -> Option<(sys::MaaRect, String)>;
-}
-
-// === Enhanced Traits (Alternative API) ===
-
-/// Enhanced custom action trait with structured arguments.
-pub trait CustomActionV2: Send + Sync {
-    /// Run the custom action with structured arguments.
-    fn run(&self, context: &Context, arg: &RunArg) -> RunResult;
-}
-
-/// Enhanced custom recognition trait with structured arguments.
-pub trait CustomRecognitionV2: Send + Sync {
-    /// Analyze the image with structured arguments.
-    /// Returns None if recognition failed, Some(result) if target found.
-    fn analyze(
-        &self,
-        context: &Context,
-        arg: &AnalyzeArg,
         image: &crate::buffer::MaaImageBuffer,
-    ) -> Option<AnalyzeResult>;
+        roi: &common::Rect,
+    ) -> Option<(common::Rect, String)>;
 }
 
-// === Function Wrappers ===
+// === Function Wrapper for Recognition ===
 
 /// Wrapper to use a closure as a custom recognition.
 ///
 /// This allows using a simple closure instead of implementing a full trait.
-///
-/// # Example
-/// ```ignore
-/// use maa_framework::custom::{FnRecognition, AnalyzeArg, AnalyzeResult};
-///
-/// let my_reco = FnRecognition::new(|ctx, arg, img| {
-///     // Custom recognition logic
-///     Some(AnalyzeResult::new(
-///         crate::common::Rect { x: 100, y: 100, width: 50, height: 50 },
-///         "{}",
-///     ))
-/// });
-/// ```
 pub struct FnRecognition<F>
 where
-    F: Fn(&Context, &AnalyzeArg, &crate::buffer::MaaImageBuffer) -> Option<AnalyzeResult>
-        + Send
-        + Sync,
+    F: Fn(&Context, &RecognitionArgs) -> Option<(common::Rect, String)> + Send + Sync,
 {
     func: F,
+}
+
+/// Arguments bundle for custom recognition closure.
+pub struct RecognitionArgs<'a> {
+    pub task_id: common::MaaId,
+    pub node_name: &'a str,
+    pub name: &'a str,
+    pub param: &'a str,
+    pub image: &'a crate::buffer::MaaImageBuffer,
+    pub roi: &'a common::Rect,
 }
 
 impl<F> FnRecognition<F>
 where
-    F: Fn(&Context, &AnalyzeArg, &crate::buffer::MaaImageBuffer) -> Option<AnalyzeResult>
-        + Send
-        + Sync,
+    F: Fn(&Context, &RecognitionArgs) -> Option<(common::Rect, String)> + Send + Sync,
 {
-    /// Create a new FnRecognition from a closure.
     pub fn new(func: F) -> Self {
         Self { func }
     }
 }
 
-impl<F> CustomRecognitionV2 for FnRecognition<F>
+impl<F> CustomRecognition for FnRecognition<F>
 where
-    F: Fn(&Context, &AnalyzeArg, &crate::buffer::MaaImageBuffer) -> Option<AnalyzeResult>
-        + Send
-        + Sync,
+    F: Fn(&Context, &RecognitionArgs) -> Option<(common::Rect, String)> + Send + Sync,
 {
     fn analyze(
         &self,
         context: &Context,
-        arg: &AnalyzeArg,
+        task_id: common::MaaId,
+        node_name: &str,
+        custom_recognition_name: &str,
+        custom_recognition_param: &str,
         image: &crate::buffer::MaaImageBuffer,
-    ) -> Option<AnalyzeResult> {
-        (self.func)(context, arg, image)
+        roi: &common::Rect,
+    ) -> Option<(common::Rect, String)> {
+        let args = RecognitionArgs {
+            task_id,
+            node_name,
+            name: custom_recognition_name,
+            param: custom_recognition_param,
+            image,
+            roi,
+        };
+        (self.func)(context, &args)
     }
 }
 
+// === Function Wrapper for Action ===
+
 /// Wrapper to use a closure as a custom action.
-///
-/// This allows using a simple closure instead of implementing a full trait.
-///
-/// # Example
-/// ```ignore
-/// use maa_framework::custom::{FnAction, RunArg, RunResult};
-///
-/// let my_action = FnAction::new(|ctx, arg| {
-///     println!("Running action on node: {}", arg.node_name);
-///     RunResult::success()
-/// });
-/// ```
 pub struct FnAction<F>
 where
-    F: Fn(&Context, &RunArg) -> RunResult + Send + Sync,
+    F: Fn(&Context, &ActionArgs) -> bool + Send + Sync,
 {
     func: F,
 }
 
+/// Arguments bundle for custom action closure.
+pub struct ActionArgs<'a> {
+    pub task_id: common::MaaId,
+    pub node_name: &'a str,
+    pub name: &'a str,
+    pub param: &'a str,
+    pub reco_id: common::MaaId,
+    pub box_rect: &'a common::Rect,
+}
+
 impl<F> FnAction<F>
 where
-    F: Fn(&Context, &RunArg) -> RunResult + Send + Sync,
+    F: Fn(&Context, &ActionArgs) -> bool + Send + Sync,
 {
-    /// Create a new FnAction from a closure.
     pub fn new(func: F) -> Self {
         Self { func }
     }
 }
 
-impl<F> CustomActionV2 for FnAction<F>
+impl<F> CustomAction for FnAction<F>
 where
-    F: Fn(&Context, &RunArg) -> RunResult + Send + Sync,
+    F: Fn(&Context, &ActionArgs) -> bool + Send + Sync,
 {
-    fn run(&self, context: &Context, arg: &RunArg) -> RunResult {
-        (self.func)(context, arg)
+    fn run(
+        &self,
+        context: &Context,
+        task_id: common::MaaId,
+        node_name: &str,
+        custom_action_name: &str,
+        custom_action_param: &str,
+        reco_id: common::MaaId,
+        box_rect: &common::Rect,
+    ) -> bool {
+        let args = ActionArgs {
+            task_id,
+            node_name,
+            name: custom_action_name,
+            param: custom_action_param,
+            reco_id,
+            box_rect,
+        };
+        (self.func)(context, &args)
     }
 }
+
+// === Trampolines ===
 
 pub(crate) unsafe extern "C" fn custom_action_trampoline(
     context: *mut sys::MaaContext,
@@ -265,33 +201,37 @@ pub(crate) unsafe extern "C" fn custom_action_trampoline(
     trans_arg: *mut std::os::raw::c_void,
 ) -> sys::MaaBool {
     if trans_arg.is_null() {
-        return sys::MaaStatusEnum_MaaStatus_Failed as sys::MaaBool;
+        return 0; // Failure
     }
 
-    let action_box = trans_arg as *mut Box<dyn CustomAction>;
-    let action = &**action_box;
+    let action = &*(trans_arg as *mut Box<dyn CustomAction>);
 
     let ctx = match Context::from_raw(context) {
         Some(c) => c,
         None => return 0,
     };
 
-    let c_node = CStr::from_ptr(node_name).to_string_lossy();
-    let c_name = CStr::from_ptr(custom_action_name).to_string_lossy();
-    let c_param = CStr::from_ptr(custom_action_param).to_string_lossy();
-
-    let rect = if !box_.is_null() {
-        *box_
-    } else {
-        sys::MaaRect {
-            x: 0,
-            y: 0,
-            width: 0,
-            height: 0,
+    let get_str = |ptr: *const std::os::raw::c_char| -> &str {
+        if ptr.is_null() {
+            ""
+        } else {
+            CStr::from_ptr(ptr).to_str().unwrap_or("")
         }
     };
 
-    let result = action.run(&ctx, task_id, &c_node, &c_name, &c_param, reco_id, &rect);
+    let node = get_str(node_name);
+    let name = get_str(custom_action_name);
+    let param = get_str(custom_action_param);
+
+    let rect = if !box_.is_null() {
+        crate::buffer::MaaRectBuffer::from_handle(box_ as *mut sys::MaaRect)
+            .map(|buf| buf.get())
+            .unwrap_or(common::Rect::default())
+    } else {
+        common::Rect::default()
+    };
+
+    let result = action.run(&ctx, task_id, node, name, param, reco_id, &rect);
 
     if result {
         1
@@ -315,38 +255,54 @@ pub(crate) unsafe extern "C" fn custom_recognition_trampoline(
     if trans_arg.is_null() {
         return 0;
     }
-    let reco_box = trans_arg as *mut Box<dyn CustomRecognition>;
-    let reco = &**reco_box;
+    let reco = &*(trans_arg as *mut Box<dyn CustomRecognition>);
 
     let ctx = match Context::from_raw(context) {
         Some(c) => c,
         None => return 0,
     };
 
-    let c_node = CStr::from_ptr(node_name).to_string_lossy();
-    let c_name = CStr::from_ptr(custom_recognition_name).to_string_lossy();
-    let c_param = CStr::from_ptr(custom_recognition_param).to_string_lossy();
-
-    let rect = if !roi.is_null() {
-        *roi
-    } else {
-        sys::MaaRect {
-            x: 0,
-            y: 0,
-            width: 0,
-            height: 0,
+    let get_str = |ptr: *const std::os::raw::c_char| -> &str {
+        if ptr.is_null() {
+            ""
+        } else {
+            CStr::from_ptr(ptr).to_str().unwrap_or("")
         }
     };
 
-    let result = reco.analyze(&ctx, task_id, &c_node, &c_name, &c_param, image, &rect);
+    let node = get_str(node_name);
+    let name = get_str(custom_recognition_name);
+    let param = get_str(custom_recognition_param);
+
+    // Image logic: the pointer passed by C is valid for the duration of the call.
+    // We wrap it safely without taking ownership.
+    let img_buf = crate::buffer::MaaImageBuffer::from_handle(image as *mut sys::MaaImageBuffer);
+    if img_buf.is_none() {
+        return 0;
+    }
+    let img_buf = img_buf.unwrap();
+
+    // Rect logic
+    let roi_rect = if !roi.is_null() {
+        crate::buffer::MaaRectBuffer::from_handle(roi as *mut sys::MaaRect)
+            .map(|buf| buf.get())
+            .unwrap_or(common::Rect::default())
+    } else {
+        common::Rect::default()
+    };
+
+    let result = reco.analyze(&ctx, task_id, node, name, param, &img_buf, &roi_rect);
 
     if let Some((res_rect, res_detail)) = result {
         if !out_box.is_null() {
-            *out_box = res_rect;
+            if let Some(mut out_rect_buf) = crate::buffer::MaaRectBuffer::from_handle(out_box) {
+                let _ = out_rect_buf.set(&res_rect);
+            }
         }
         if !out_detail.is_null() {
-            let c_detail = CString::new(res_detail).unwrap_or_default();
-            sys::MaaStringBufferSet(out_detail, c_detail.as_ptr());
+            if let Some(mut out_str_buf) = crate::buffer::MaaStringBuffer::from_handle(out_detail) {
+                let _ = out_str_buf.set(&res_detail);
+            }
         }
         1
     } else {
@@ -354,16 +310,13 @@ pub(crate) unsafe extern "C" fn custom_recognition_trampoline(
     }
 }
 
+// === Resource Extension impls ===
+
 impl Resource {
-    /// Register a custom action with the resource.
+    /// Register a custom action implementation.
     ///
-    /// After registration, the action can be referenced in pipeline JSON:
-    /// ```json
-    /// {
-    ///     "action": "Custom",
-    ///     "custom_action": "MyAction"
-    /// }
-    /// ```
+    /// The action will be kept alive as long as it is registered in the Resource.
+    /// Re-registering with the same name will drop the previous implementation.
     pub fn register_custom_action(
         &self,
         name: &str,
@@ -396,15 +349,10 @@ impl Resource {
         Ok(())
     }
 
-    /// Register a custom recognition with the resource.
+    /// Register a custom recognition implementation.
     ///
-    /// After registration, the recognizer can be referenced in pipeline JSON:
-    /// ```json
-    /// {
-    ///     "recognition": "Custom",
-    ///     "custom_recognition": "MyReco"
-    /// }
-    /// ```
+    /// The recognizer will be kept alive as long as it is registered in the Resource.
+    /// Re-registering with the same name will drop the previous implementation.
     pub fn register_custom_recognition(
         &self,
         name: &str,
