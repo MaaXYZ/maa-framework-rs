@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::ffi::CString;
 use std::os::raw::c_void;
 use std::ptr::NonNull;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 /// Device controller interface.
 ///
@@ -12,7 +12,12 @@ use std::sync::Mutex;
 /// - Screen capture
 /// - App management (start/stop)
 /// - Connection management
-use std::sync::Arc;
+///
+/// See also: [`AdbControllerBuilder`] for advanced ADB configuration.
+#[derive(Clone)]
+pub struct Controller {
+    inner: Arc<ControllerInner>,
+}
 
 struct ControllerInner {
     handle: NonNull<sys::MaaController>,
@@ -23,20 +28,17 @@ struct ControllerInner {
 unsafe impl Send for ControllerInner {}
 unsafe impl Sync for ControllerInner {}
 
-/// Device controller interface.
-///
-/// Handles interaction with the target device, including:
-/// - Input events (click, swipe, key press)
-/// - Screen capture
-/// - App management (start/stop)
-/// - Connection management
-#[derive(Clone)]
-pub struct Controller {
-    inner: Arc<ControllerInner>,
-}
-
+// Controller is Send/Sync because it holds Arc<ControllerInner> which is Send/Sync
 unsafe impl Send for Controller {}
 unsafe impl Sync for Controller {}
+
+impl std::fmt::Debug for Controller {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Controller")
+            .field("handle", &self.inner.handle)
+            .finish()
+    }
+}
 
 impl Controller {
     /// Create a new ADB controller for Android device control.
@@ -46,20 +48,29 @@ impl Controller {
     /// * `address` - Device address (e.g., "127.0.0.1:5555" or "emulator-5554")
     /// * `config` - JSON configuration string for advanced options
     /// * `agent_path` - Optional path to MaaAgentBinary
-    ///
-    /// # Example
-    /// ```ignore
-    /// let controller = Controller::new_adb(
-    ///     "adb",
-    ///     "127.0.0.1:5555",
-    ///     "{}",
-    ///     None
-    /// )?;
-    /// ```
     #[cfg(feature = "adb")]
     pub fn new_adb(
         adb_path: &str,
         address: &str,
+        config: &str,
+        agent_path: Option<&str>,
+    ) -> MaaResult<Self> {
+        Self::create_adb(
+            adb_path,
+            address,
+            sys::MaaAdbScreencapMethod_Default as sys::MaaAdbScreencapMethod,
+            sys::MaaAdbInputMethod_Default as sys::MaaAdbInputMethod,
+            config,
+            agent_path,
+        )
+    }
+
+    #[cfg(feature = "adb")]
+    pub(crate) fn create_adb(
+        adb_path: &str,
+        address: &str,
+        screencap_method: sys::MaaAdbScreencapMethod,
+        input_method: sys::MaaAdbInputMethod,
         config: &str,
         agent_path: Option<&str>,
     ) -> MaaResult<Self> {
@@ -76,8 +87,8 @@ impl Controller {
             sys::MaaAdbControllerCreate(
                 c_adb.as_ptr(),
                 c_addr.as_ptr(),
-                sys::MaaAdbScreencapMethod_Default as sys::MaaAdbScreencapMethod,
-                sys::MaaAdbInputMethod_Default as sys::MaaAdbInputMethod,
+                screencap_method,
+                input_method,
                 c_cfg.as_ptr(),
                 agent_ptr,
             )
@@ -97,12 +108,6 @@ impl Controller {
     }
 
     /// Create a new Win32 controller for Windows window control.
-    ///
-    /// # Arguments
-    /// * `hwnd` - Window handle (HWND)
-    /// * `screencap_method` - Screenshot capture method
-    /// * `mouse_method` - Mouse input method
-    /// * `keyboard_method` - Keyboard input method
     #[cfg(feature = "win32")]
     pub fn new_win32(
         hwnd: *mut c_void,
@@ -114,46 +119,20 @@ impl Controller {
             sys::MaaWin32ControllerCreate(hwnd, screencap_method, mouse_method, keyboard_method)
         };
 
-        if let Some(ptr) = NonNull::new(handle) {
-            Ok(Self {
-                inner: Arc::new(ControllerInner {
-                    handle: ptr,
-                    callbacks: Mutex::new(HashMap::new()),
-                    event_sinks: Mutex::new(HashMap::new()),
-                }),
-            })
-        } else {
-            Err(MaaError::FrameworkError(-1))
-        }
+        Self::from_handle(handle)
     }
 
     /// Create a new PlayCover controller for iOS app control on macOS.
-    ///
-    /// # Arguments
-    /// * `address` - PlayCover connection address
-    /// * `uuid` - Device UUID
+
     pub fn new_playcover(address: &str, uuid: &str) -> MaaResult<Self> {
         let c_addr = CString::new(address)?;
         let c_uuid = CString::new(uuid)?;
         let handle = unsafe { sys::MaaPlayCoverControllerCreate(c_addr.as_ptr(), c_uuid.as_ptr()) };
 
-        if let Some(ptr) = NonNull::new(handle) {
-            Ok(Self {
-                inner: Arc::new(ControllerInner {
-                    handle: ptr,
-                    callbacks: Mutex::new(HashMap::new()),
-                    event_sinks: Mutex::new(HashMap::new()),
-                }),
-            })
-        } else {
-            Err(MaaError::FrameworkError(-1))
-        }
+        Self::from_handle(handle)
     }
 
     /// Create a custom controller with user-defined callbacks.
-    ///
-    /// # Arguments
-    /// * `callback` - Implementation of `CustomControllerCallback` trait
     #[cfg(feature = "custom")]
     pub fn new_custom<T: crate::custom_controller::CustomControllerCallback + 'static>(
         callback: T,
@@ -164,6 +143,7 @@ impl Controller {
         let callbacks = crate::custom_controller::get_callbacks();
         let handle =
             unsafe { sys::MaaCustomControllerCreate(callbacks as *const _ as *mut _, cb_ptr) };
+
         NonNull::new(handle)
             .map(|ptr| Self {
                 inner: Arc::new(ControllerInner {
@@ -182,17 +162,28 @@ impl Controller {
             })
     }
 
+    /// Helper to create controller from raw handle.
+    fn from_handle(handle: *mut sys::MaaController) -> MaaResult<Self> {
+        if let Some(ptr) = NonNull::new(handle) {
+            Ok(Self {
+                inner: Arc::new(ControllerInner {
+                    handle: ptr,
+                    callbacks: Mutex::new(HashMap::new()),
+                    event_sinks: Mutex::new(HashMap::new()),
+                }),
+            })
+        } else {
+            Err(MaaError::FrameworkError(-1))
+        }
+    }
+
     /// Post a click action at the specified coordinates.
-    ///
-    /// Returns immediately with an operation ID. Use `wait()` to block until complete.
     pub fn post_click(&self, x: i32, y: i32) -> MaaResult<common::MaaId> {
         let id = unsafe { sys::MaaControllerPostClick(self.inner.handle.as_ptr(), x, y) };
         Ok(id)
     }
 
     /// Post a screenshot capture request.
-    ///
-    /// Returns immediately. After completion, use `cached_image()` to retrieve the result.
     pub fn post_screencap(&self) -> MaaResult<common::MaaId> {
         let id = unsafe { sys::MaaControllerPostScreencap(self.inner.handle.as_ptr()) };
         Ok(id)
@@ -297,7 +288,7 @@ impl Controller {
 
     pub fn uuid(&self) -> MaaResult<String> {
         let buffer = crate::buffer::MaaStringBuffer::new()?;
-        let ret = unsafe { sys::MaaControllerGetUuid(self.inner.handle.as_ptr(), buffer.raw()) };
+        let ret = unsafe { sys::MaaControllerGetUuid(self.inner.handle.as_ptr(), buffer.as_ptr()) };
         if ret != 0 {
             Ok(buffer.to_string())
         } else {
@@ -386,7 +377,7 @@ impl Controller {
     pub fn cached_image(&self) -> MaaResult<crate::buffer::MaaImageBuffer> {
         let buffer = crate::buffer::MaaImageBuffer::new()?;
         let ret =
-            unsafe { sys::MaaControllerCachedImage(self.inner.handle.as_ptr(), buffer.raw()) };
+            unsafe { sys::MaaControllerCachedImage(self.inner.handle.as_ptr(), buffer.as_ptr()) };
         if ret != 0 {
             Ok(buffer)
         } else {
@@ -398,8 +389,9 @@ impl Controller {
 
     pub fn shell_output(&self) -> MaaResult<String> {
         let buffer = crate::buffer::MaaStringBuffer::new()?;
-        let ret =
-            unsafe { sys::MaaControllerGetShellOutput(self.inner.handle.as_ptr(), buffer.raw()) };
+        let ret = unsafe {
+            sys::MaaControllerGetShellOutput(self.inner.handle.as_ptr(), buffer.as_ptr())
+        };
         if ret != 0 {
             Ok(buffer.to_string())
         } else {
@@ -475,47 +467,10 @@ impl Controller {
         let handle = unsafe {
             sys::MaaDbgControllerCreate(c_read.as_ptr(), c_write.as_ptr(), dbg_type, c_cfg.as_ptr())
         };
-        NonNull::new(handle)
-            .map(|ptr| Self {
-                inner: Arc::new(ControllerInner {
-                    handle: ptr,
-                    callbacks: Mutex::new(HashMap::new()),
-                    event_sinks: Mutex::new(HashMap::new()),
-                }),
-            })
-            .ok_or(MaaError::FrameworkError(-1))
+        Self::from_handle(handle)
     }
 
     /// Create a virtual gamepad controller (Windows only).
-    ///
-    /// Emulates Xbox 360 or DualShock 4 gamepad via ViGEm for controlling
-    /// games that require gamepad input.
-    ///
-    /// Requires ViGEm Bus Driver: <https://github.com/ViGEm/ViGEmBus/releases>
-    ///
-    /// # Gamepad Operation Mapping
-    ///
-    /// - `post_click_key`/`post_key_down`/`post_key_up`: Digital buttons (use `GamepadButton` values)
-    /// - `post_touch_down`/`post_touch_move`/`post_touch_up`: Analog sticks and triggers
-    ///   - `GamepadContact::LeftStick`: Left stick (x, y: -32768~32767)
-    ///   - `GamepadContact::RightStick`: Right stick (x, y: -32768~32767)
-    ///   - `GamepadContact::LeftTrigger`: Left trigger (pressure: 0~255)
-    ///   - `GamepadContact::RightTrigger`: Right trigger (pressure: 0~255)
-    ///
-    /// # Arguments
-    /// * `hwnd` - Window handle for screencap (can be null if screencap not needed)
-    /// * `gamepad_type` - Gamepad type (`GamepadType::Xbox360` or `GamepadType::DualShock4`)
-    /// * `screencap_method` - Screenshot method for the window
-    ///
-    /// # Example
-    /// ```ignore
-    /// use maa_framework::common::{GamepadType, Win32ScreencapMethod};
-    /// let controller = Controller::new_gamepad(
-    ///     hwnd,
-    ///     GamepadType::Xbox360,
-    ///     Win32ScreencapMethod::FRAME_POOL,
-    /// )?;
-    /// ```
     #[cfg(feature = "win32")]
     pub fn new_gamepad(
         hwnd: *mut c_void,
@@ -525,15 +480,7 @@ impl Controller {
         let handle = unsafe {
             sys::MaaGamepadControllerCreate(hwnd, gamepad_type as u64, screencap_method.bits())
         };
-        NonNull::new(handle)
-            .map(|ptr| Self {
-                inner: Arc::new(ControllerInner {
-                    handle: ptr,
-                    callbacks: Mutex::new(HashMap::new()),
-                    event_sinks: Mutex::new(HashMap::new()),
-                }),
-            })
-            .ok_or(MaaError::FrameworkError(-1))
+        Self::from_handle(handle)
     }
 
     // === EventSink ===
@@ -632,16 +579,6 @@ impl Drop for ControllerInner {
 /// Builder for ADB controller configuration.
 ///
 /// Provides a fluent API for configuring ADB controllers with sensible defaults.
-///
-/// # Example
-/// ```ignore
-/// let controller = AdbControllerBuilder::new("adb", "127.0.0.1:5555")
-///     .screencap_methods(MaaAdbScreencapMethod_Default)
-///     .input_methods(MaaAdbInputMethod_Default)
-///     .config(r#"{"adb_delay": 100}"#)
-///     .agent_path("/path/to/agent")
-///     .build()?;
-/// ```
 #[cfg(feature = "adb")]
 pub struct AdbControllerBuilder {
     adb_path: String,
@@ -667,32 +604,24 @@ impl AdbControllerBuilder {
     }
 
     /// Set the screencap methods to use.
-    ///
-    /// Default: `MaaAdbScreencapMethod_Default`
     pub fn screencap_methods(mut self, methods: sys::MaaAdbScreencapMethod) -> Self {
         self.screencap_methods = methods;
         self
     }
 
     /// Set the input methods to use.
-    ///
-    /// Default: `MaaAdbInputMethod_Default`
     pub fn input_methods(mut self, methods: sys::MaaAdbInputMethod) -> Self {
         self.input_methods = methods;
         self
     }
 
     /// Set additional configuration as JSON.
-    ///
-    /// Default: `"{}"`
     pub fn config(mut self, config: &str) -> Self {
         self.config = config.to_string();
         self
     }
 
     /// Set the path to MaaAgentBinary.
-    ///
-    /// If not set, the framework will use the default agent path.
     pub fn agent_path(mut self, path: &str) -> Self {
         self.agent_path = Some(path.to_string());
         self
@@ -700,9 +629,12 @@ impl AdbControllerBuilder {
 
     /// Build the controller with the configured options.
     pub fn build(self) -> MaaResult<Controller> {
-        Controller::new_adb(
+        // Fix: Use create_adb directly to ensure options are used
+        Controller::create_adb(
             &self.adb_path,
             &self.address,
+            self.screencap_methods,
+            self.input_methods,
             &self.config,
             self.agent_path.as_deref(),
         )
@@ -714,11 +646,17 @@ impl AdbControllerBuilder {
 /// This is a non-owning view that can be used for read-only operations.
 /// It does NOT call destroy when dropped and should only be used while
 /// the underlying Controller is still alive.
-///
-/// Obtained from `Tasker::controller()`.
 pub struct ControllerRef<'a> {
     handle: *mut sys::MaaController,
     _marker: std::marker::PhantomData<&'a ()>,
+}
+
+impl<'a> std::fmt::Debug for ControllerRef<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ControllerRef")
+            .field("handle", &self.handle)
+            .finish()
+    }
 }
 
 impl<'a> ControllerRef<'a> {
@@ -741,7 +679,7 @@ impl<'a> ControllerRef<'a> {
     /// Get device UUID.
     pub fn uuid(&self) -> MaaResult<String> {
         let buffer = crate::buffer::MaaStringBuffer::new()?;
-        let ret = unsafe { sys::MaaControllerGetUuid(self.handle, buffer.raw()) };
+        let ret = unsafe { sys::MaaControllerGetUuid(self.handle, buffer.as_ptr()) };
         if ret != 0 {
             Ok(buffer.to_string())
         } else {
@@ -776,7 +714,7 @@ impl<'a> ControllerRef<'a> {
     /// Get cached screenshot.
     pub fn cached_image(&self) -> MaaResult<crate::buffer::MaaImageBuffer> {
         let buffer = crate::buffer::MaaImageBuffer::new()?;
-        let ret = unsafe { sys::MaaControllerCachedImage(self.handle, buffer.raw()) };
+        let ret = unsafe { sys::MaaControllerCachedImage(self.handle, buffer.as_ptr()) };
         if ret != 0 {
             Ok(buffer)
         } else {
