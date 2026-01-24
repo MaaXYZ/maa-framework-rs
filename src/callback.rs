@@ -1,3 +1,5 @@
+//! Internal callback infrastructure for FFI event handling.
+
 use crate::sys;
 use std::ffi::CStr;
 use std::os::raw::c_void;

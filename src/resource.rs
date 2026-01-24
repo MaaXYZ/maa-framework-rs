@@ -1,3 +1,5 @@
+//! Resource management for pipelines, models, and images.
+
 use std::ffi::CString;
 use std::ptr::NonNull;
 
@@ -110,6 +112,7 @@ impl Resource {
 
     // === Additional resource loading ===
 
+    /// Load an OCR model from the specified directory.
     pub fn post_ocr_model(&self, path: &str) -> MaaResult<crate::job::Job> {
         let c_path = CString::new(path)?;
         let id =
@@ -117,6 +120,7 @@ impl Resource {
         Ok(crate::job::Job::for_resource(self, id))
     }
 
+    /// Load additional pipeline definitions from the specified directory.
     pub fn post_pipeline(&self, path: &str) -> MaaResult<crate::job::Job> {
         let c_path = CString::new(path)?;
         let id =
@@ -124,6 +128,7 @@ impl Resource {
         Ok(crate::job::Job::for_resource(self, id))
     }
 
+    /// Load image resources from the specified directory.
     pub fn post_image(&self, path: &str) -> MaaResult<crate::job::Job> {
         let c_path = CString::new(path)?;
         let id = unsafe { sys::MaaResourcePostImage(self.inner.handle.as_ptr(), c_path.as_ptr()) };
@@ -132,6 +137,7 @@ impl Resource {
 
     // === Pipeline operations ===
 
+    /// Override pipeline parameters with a JSON string.
     pub fn override_pipeline(&self, pipeline_override: &str) -> MaaResult<()> {
         let c_json = CString::new(pipeline_override)?;
         let ret = unsafe {
@@ -155,6 +161,11 @@ impl Resource {
         self.override_pipeline(&pipeline_override.to_string())
     }
 
+    /// Override the next node list for a specific node.
+    ///
+    /// # Arguments
+    /// * `node_name` - The name of the node to modify
+    /// * `next_list` - The new list of next nodes
     pub fn override_next(&self, node_name: &str, next_list: &[&str]) -> MaaResult<()> {
         let c_name = CString::new(node_name)?;
         let list_buf = crate::buffer::MaaStringListBuffer::new()?;
@@ -171,6 +182,7 @@ impl Resource {
         common::check_bool(ret)
     }
 
+    /// Get node data as a JSON string.
     pub fn get_node_data(&self, node_name: &str) -> MaaResult<Option<String>> {
         let c_name = CString::new(node_name)?;
         let buffer = crate::buffer::MaaStringBuffer::new()?;
@@ -184,6 +196,7 @@ impl Resource {
         }
     }
 
+    /// Get node data as a deserialized `PipelineData` object.
     pub fn get_node_object(
         &self,
         node_name: &str,
@@ -199,6 +212,7 @@ impl Resource {
         }
     }
 
+    /// Get a list of all node names in the loaded pipelines.
     pub fn node_list(&self) -> MaaResult<Vec<String>> {
         let buffer = crate::buffer::MaaStringListBuffer::new()?;
         let ret = unsafe { sys::MaaResourceGetNodeList(self.inner.handle.as_ptr(), buffer.raw()) };
@@ -209,6 +223,7 @@ impl Resource {
         }
     }
 
+    /// Get a hash of the loaded resources for cache validation.
     pub fn hash(&self) -> MaaResult<String> {
         let buffer = crate::buffer::MaaStringBuffer::new()?;
         let ret = unsafe { sys::MaaResourceGetHash(self.inner.handle.as_ptr(), buffer.raw()) };
@@ -277,6 +292,7 @@ impl Resource {
 
     // === Inference device ===
 
+    /// Use CPU for inference (default).
     pub fn use_cpu(&self) -> MaaResult<()> {
         let mut ep: i32 =
             sys::MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_CPU as i32;
@@ -302,6 +318,10 @@ impl Resource {
         common::check_bool(ret2)
     }
 
+    /// Use DirectML for GPU-accelerated inference (Windows only).
+    ///
+    /// # Arguments
+    /// * `device_id` - GPU device index (0 for first GPU)
     pub fn use_directml(&self, device_id: i32) -> MaaResult<()> {
         let mut ep: i32 =
             sys::MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_DirectML as i32;
@@ -329,6 +349,9 @@ impl Resource {
 
     // === EventSink ===
 
+    /// Register a raw callback to receive events.
+    ///
+    /// The callback receives event type and details as JSON strings.
     pub fn add_sink<F>(&self, callback: F) -> MaaResult<sys::MaaSinkId>
     where
         F: Fn(&str, &str) + Send + Sync + 'static,
@@ -379,6 +402,7 @@ impl Resource {
         }
     }
 
+    /// Remove a previously registered event sink.
     pub fn remove_sink(&self, sink_id: sys::MaaSinkId) {
         unsafe { sys::MaaResourceRemoveSink(self.inner.handle.as_ptr(), sink_id) }
         if let Some(ptr) = self.inner.callbacks.lock().unwrap().remove(&sink_id) {
@@ -388,6 +412,7 @@ impl Resource {
         }
     }
 
+    /// Remove all registered event sinks.
     pub fn clear_sinks(&self) {
         unsafe { sys::MaaResourceClearSinks(self.inner.handle.as_ptr()) }
         let mut callbacks = self.inner.callbacks.lock().unwrap();

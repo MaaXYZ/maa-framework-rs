@@ -1,3 +1,5 @@
+//! Error types and result aliases for the MAA framework.
+
 use std::ffi::NulError;
 use std::str::Utf8Error;
 use thiserror::Error;

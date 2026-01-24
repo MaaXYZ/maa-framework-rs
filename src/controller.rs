@@ -1,3 +1,5 @@
+//! Device controller for input, screen capture, and app management.
+
 use crate::{common, sys, MaaError, MaaResult};
 use std::collections::HashMap;
 use std::ffi::CString;
@@ -189,6 +191,12 @@ impl Controller {
         Ok(id)
     }
 
+    /// Post a click action with contact and pressure parameters.
+    ///
+    /// # Arguments
+    /// * `x`, `y` - Click coordinates
+    /// * `contact` - Contact/finger index (for multi-touch)
+    /// * `pressure` - Touch pressure (1 = normal)
     pub fn post_click_v2(
         &self,
         x: i32,
@@ -202,6 +210,12 @@ impl Controller {
         Ok(id)
     }
 
+    /// Post a swipe action from one point to another.
+    ///
+    /// # Arguments
+    /// * `x1`, `y1` - Start coordinates
+    /// * `x2`, `y2` - End coordinates
+    /// * `duration` - Swipe duration in milliseconds
     pub fn post_swipe(
         &self,
         x1: i32,
@@ -216,15 +230,25 @@ impl Controller {
         Ok(id)
     }
 
+    /// Post a key click action.
+    ///
+    /// # Arguments
+    /// * `keycode` - Virtual key code (ADB keycode for Android, VK for Win32)
     pub fn post_click_key(&self, keycode: i32) -> MaaResult<common::MaaId> {
         let id = unsafe { sys::MaaControllerPostClickKey(self.inner.handle.as_ptr(), keycode) };
         Ok(id)
     }
 
+    /// Alias for [`post_click_key`](Self::post_click_key).
+    #[deprecated(note = "Use post_click_key instead")]
     pub fn post_press(&self, keycode: i32) -> MaaResult<common::MaaId> {
         self.post_click_key(keycode)
     }
 
+    /// Post a text input action.
+    ///
+    /// # Arguments
+    /// * `text` - Text to input
     pub fn post_input_text(&self, text: &str) -> MaaResult<common::MaaId> {
         let c_text = CString::new(text)?;
         let id =
@@ -232,6 +256,11 @@ impl Controller {
         Ok(id)
     }
 
+    /// Post a shell command execution (ADB only).
+    ///
+    /// # Arguments
+    /// * `cmd` - Shell command to execute
+    /// * `timeout` - Timeout in milliseconds
     pub fn post_shell(&self, cmd: &str, timeout: i64) -> MaaResult<common::MaaId> {
         let c_cmd = CString::new(cmd)?;
         let id = unsafe {
@@ -240,6 +269,12 @@ impl Controller {
         Ok(id)
     }
 
+    /// Post a touch down event.
+    ///
+    /// # Arguments
+    /// * `contact` - Contact/finger index
+    /// * `x`, `y` - Touch coordinates
+    /// * `pressure` - Touch pressure
     pub fn post_touch_down(
         &self,
         contact: i32,
@@ -253,6 +288,12 @@ impl Controller {
         Ok(id)
     }
 
+    /// Post a touch move event.
+    ///
+    /// # Arguments
+    /// * `contact` - Contact/finger index
+    /// * `x`, `y` - New touch coordinates
+    /// * `pressure` - Touch pressure
     pub fn post_touch_move(
         &self,
         contact: i32,
@@ -266,26 +307,37 @@ impl Controller {
         Ok(id)
     }
 
+    /// Post a touch up event.
+    ///
+    /// # Arguments
+    /// * `contact` - Contact/finger index to release
     pub fn post_touch_up(&self, contact: i32) -> MaaResult<common::MaaId> {
         let id = unsafe { sys::MaaControllerPostTouchUp(self.inner.handle.as_ptr(), contact) };
         Ok(id)
     }
 
+    /// Returns the underlying raw controller handle.
+    #[inline]
     pub fn raw(&self) -> *mut sys::MaaController {
         self.inner.handle.as_ptr()
     }
 
     // === Connection ===
 
+    /// Post a connection request to the device.
+    ///
+    /// Returns a job ID that can be used with [`wait`](Self::wait) to block until connected.
     pub fn post_connection(&self) -> MaaResult<common::MaaId> {
         let id = unsafe { sys::MaaControllerPostConnection(self.inner.handle.as_ptr()) };
         Ok(id)
     }
 
+    /// Returns `true` if the controller is connected to the device.
     pub fn connected(&self) -> bool {
         unsafe { sys::MaaControllerConnected(self.inner.handle.as_ptr()) != 0 }
     }
 
+    /// Gets the unique identifier (UUID) of the connected device.
     pub fn uuid(&self) -> MaaResult<String> {
         let buffer = crate::buffer::MaaStringBuffer::new()?;
         let ret = unsafe { sys::MaaControllerGetUuid(self.inner.handle.as_ptr(), buffer.as_ptr()) };
@@ -296,6 +348,7 @@ impl Controller {
         }
     }
 
+    /// Gets the device screen resolution as (width, height).
     pub fn resolution(&self) -> MaaResult<(i32, i32)> {
         let mut width: i32 = 0;
         let mut height: i32 = 0;
@@ -311,6 +364,14 @@ impl Controller {
 
     // === Swipe V2 ===
 
+    /// Post a swipe action with contact and pressure parameters.
+    ///
+    /// # Arguments
+    /// * `x1`, `y1` - Start coordinates
+    /// * `x2`, `y2` - End coordinates
+    /// * `duration` - Swipe duration in milliseconds
+    /// * `contact` - Contact/finger index
+    /// * `pressure` - Touch pressure
     pub fn post_swipe_v2(
         &self,
         x1: i32,
@@ -338,11 +399,13 @@ impl Controller {
 
     // === Key control ===
 
+    /// Post a key down event.
     pub fn post_key_down(&self, keycode: i32) -> MaaResult<common::MaaId> {
         let id = unsafe { sys::MaaControllerPostKeyDown(self.inner.handle.as_ptr(), keycode) };
         Ok(id)
     }
 
+    /// Post a key up event.
     pub fn post_key_up(&self, keycode: i32) -> MaaResult<common::MaaId> {
         let id = unsafe { sys::MaaControllerPostKeyUp(self.inner.handle.as_ptr(), keycode) };
         Ok(id)
@@ -350,6 +413,10 @@ impl Controller {
 
     // === App control ===
 
+    /// Start an application.
+    ///
+    /// # Arguments
+    /// * `intent` - Package name or activity (ADB), app identifier (Win32)
     pub fn post_start_app(&self, intent: &str) -> MaaResult<common::MaaId> {
         let c_intent = CString::new(intent)?;
         let id = unsafe {
@@ -358,6 +425,10 @@ impl Controller {
         Ok(id)
     }
 
+    /// Stop an application.
+    ///
+    /// # Arguments
+    /// * `intent` - Package name (ADB)
     pub fn post_stop_app(&self, intent: &str) -> MaaResult<common::MaaId> {
         let c_intent = CString::new(intent)?;
         let id =
@@ -367,6 +438,11 @@ impl Controller {
 
     // === Scroll ===
 
+    /// Post a scroll action (Win32 only).
+    ///
+    /// # Arguments
+    /// * `dx` - Horizontal scroll delta (positive = right)
+    /// * `dy` - Vertical scroll delta (positive = down)
     pub fn post_scroll(&self, dx: i32, dy: i32) -> MaaResult<common::MaaId> {
         let id = unsafe { sys::MaaControllerPostScroll(self.inner.handle.as_ptr(), dx, dy) };
         Ok(id)
@@ -374,6 +450,7 @@ impl Controller {
 
     // === Image ===
 
+    /// Gets the most recently captured screenshot.
     pub fn cached_image(&self) -> MaaResult<crate::buffer::MaaImageBuffer> {
         let buffer = crate::buffer::MaaImageBuffer::new()?;
         let ret =
@@ -387,6 +464,7 @@ impl Controller {
 
     // === Shell output ===
 
+    /// Gets the output from the most recent shell command (ADB only).
     pub fn shell_output(&self) -> MaaResult<String> {
         let buffer = crate::buffer::MaaStringBuffer::new()?;
         let ret = unsafe {
@@ -401,11 +479,13 @@ impl Controller {
 
     // === Status ===
 
+    /// Gets the status of a controller operation.
     pub fn status(&self, ctrl_id: common::MaaId) -> common::MaaStatus {
         let s = unsafe { sys::MaaControllerStatus(self.inner.handle.as_ptr(), ctrl_id) };
         common::MaaStatus(s)
     }
 
+    /// Blocks until a controller operation completes.
     pub fn wait(&self, ctrl_id: common::MaaId) -> common::MaaStatus {
         let s = unsafe { sys::MaaControllerWait(self.inner.handle.as_ptr(), ctrl_id) };
         common::MaaStatus(s)
@@ -413,6 +493,7 @@ impl Controller {
 
     // === Screenshot options ===
 
+    /// Sets the target long side for screenshot scaling.
     pub fn set_screenshot_target_long_side(&self, long_side: i32) -> MaaResult<()> {
         let mut val = long_side;
         let ret = unsafe {
@@ -426,6 +507,7 @@ impl Controller {
         common::check_bool(ret)
     }
 
+    /// Sets the target short side for screenshot scaling.
     pub fn set_screenshot_target_short_side(&self, short_side: i32) -> MaaResult<()> {
         let mut val = short_side;
         let ret = unsafe {
@@ -439,6 +521,7 @@ impl Controller {
         common::check_bool(ret)
     }
 
+    /// Sets whether to use raw (unscaled) screenshot resolution.
     pub fn set_screenshot_use_raw_size(&self, enable: bool) -> MaaResult<()> {
         let mut val: u8 = if enable { 1 } else { 0 };
         let ret = unsafe {

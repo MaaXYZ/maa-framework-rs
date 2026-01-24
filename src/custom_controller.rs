@@ -1,3 +1,5 @@
+//! Custom controller implementation for user-defined device control.
+
 use crate::common::ControllerFeature;
 use crate::sys;
 use std::ffi::CStr;

@@ -1,3 +1,5 @@
+//! Task execution and pipeline management.
+
 use crate::resource::Resource;
 use crate::{common, sys, MaaError, MaaResult};
 use std::ptr::NonNull;
@@ -43,6 +45,7 @@ unsafe impl Send for Tasker {}
 unsafe impl Sync for Tasker {}
 
 impl Tasker {
+    /// Create a new Tasker instance.
     pub fn new() -> MaaResult<Self> {
         let handle = unsafe { sys::MaaTaskerCreate() };
         if let Some(ptr) = NonNull::new(handle) {
@@ -83,6 +86,7 @@ impl Tasker {
         }
     }
 
+    /// Bind a resource to this tasker.
     pub fn bind_resource(&self, res: &Resource) -> MaaResult<()> {
         let ret = unsafe { sys::MaaTaskerBindResource(self.inner.handle.as_ptr(), res.raw()) };
         common::check_bool(ret)?;
@@ -90,6 +94,7 @@ impl Tasker {
         Ok(())
     }
 
+    /// Bind a controller to this tasker.
     pub fn bind_controller(&self, ctrl: &crate::controller::Controller) -> MaaResult<()> {
         let ret = unsafe { sys::MaaTaskerBindController(self.inner.handle.as_ptr(), ctrl.raw()) };
         common::check_bool(ret)?;
@@ -97,6 +102,7 @@ impl Tasker {
         Ok(())
     }
 
+    /// Get recognition details by ID.
     pub fn get_recognition_detail(
         &self,
         reco_id: crate::common::MaaId,
@@ -104,6 +110,7 @@ impl Tasker {
         Self::fetch_recognition_detail(self.inner.handle.as_ptr(), reco_id)
     }
 
+    /// Get action details by ID.
     pub fn get_action_detail(
         &self,
         act_id: crate::common::MaaId,
@@ -111,6 +118,7 @@ impl Tasker {
         Self::fetch_action_detail(self.inner.handle.as_ptr(), act_id)
     }
 
+    /// Get node details by ID.
     pub fn get_node_detail(
         &self,
         node_id: crate::common::MaaId,
@@ -118,6 +126,7 @@ impl Tasker {
         Self::fetch_node_detail(self.inner.handle.as_ptr(), node_id)
     }
 
+    /// Get task details by ID.
     pub fn get_task_detail(
         &self,
         task_id: crate::common::MaaId,
@@ -339,6 +348,14 @@ impl Tasker {
         }))
     }
 
+    /// Post a task for execution.
+    ///
+    /// # Arguments
+    /// * `entry` - The task entry point name
+    /// * `pipeline_override` - JSON string for parameter overrides
+    ///
+    /// # Returns
+    /// A `TaskJob` that can be used to wait for completion and get results.
     pub fn post_task(
         &self,
         entry: &str,
@@ -405,10 +422,13 @@ impl Tasker {
         self.post_task(entry, &pipeline_override.to_string())
     }
 
+    /// Check if the tasker has been initialized (resource and controller bound).
     pub fn inited(&self) -> bool {
         unsafe { sys::MaaTaskerInited(self.inner.handle.as_ptr()) != 0 }
     }
 
+    /// Get the underlying raw tasker handle.
+    #[inline]
     pub fn raw(&self) -> *mut sys::MaaTasker {
         self.inner.handle.as_ptr()
     }
@@ -507,6 +527,7 @@ impl Tasker {
         self.add_sink(callback)
     }
 
+    /// Request the tasker to stop all running tasks.
     pub fn post_stop(&self) -> MaaResult<crate::common::MaaId> {
         unsafe {
             let id = sys::MaaTaskerPostStop(self.inner.handle.as_ptr());
@@ -597,6 +618,7 @@ impl Tasker {
         // Note: callbacks registered via add_context_sink will be cleaned up
     }
 
+    /// Clear all cached data.
     pub fn clear_cache(&self) -> MaaResult<()> {
         let ret = unsafe { sys::MaaTaskerClearCache(self.inner.handle.as_ptr()) };
         crate::common::check_bool(ret)
@@ -619,6 +641,7 @@ impl Tasker {
         Ok(ret != 0)
     }
 
+    /// Get the latest node ID for a given node name.
     pub fn get_latest_node(&self, node_name: &str) -> MaaResult<Option<crate::common::MaaId>> {
         let c_name = std::ffi::CString::new(node_name)?;
         let mut node_id: crate::common::MaaId = 0;

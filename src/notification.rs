@@ -6,18 +6,22 @@
 //!
 //! # Example
 //!
-//! ```ignore
-//! use maa_framework::notification::{self, NotificationType, msg};
+//! ```
+//! use maa_framework::notification::{self, NotificationType};
+//! use maa_framework::tasker::Tasker;
 //!
-//! tasker.add_sink(|message, details| {
-//!     let noti_type = notification::parse_type(message);
-//!     
-//!     if message.starts_with("Resource.Loading") {
-//!         if let Some(detail) = notification::parse_resource_loading(details) {
-//!             println!("Resource {} loading: {:?}", detail.res_id, noti_type);
+//! fn example(tasker: &Tasker) -> maa_framework::error::MaaResult<()> {
+//!     tasker.add_sink(|message, details| {
+//!         let noti_type = notification::parse_type(message);
+//!         
+//!         if message.starts_with("Resource.Loading") {
+//!             if let Some(detail) = notification::parse_resource_loading(details) {
+//!                 println!("Resource {} loading: {:?}", detail.res_id, noti_type);
+//!             }
 //!         }
-//!     }
-//! })?;
+//!     })?;
+//!     Ok(())
+//! }
 //! ```
 
 use serde::{Deserialize, Serialize};
@@ -241,7 +245,9 @@ pub mod msg {
 /// Parse notification type from message string.
 ///
 /// # Example
-/// ```ignore
+/// ```
+/// use maa_framework::notification::{self, NotificationType};
+///
 /// let noti_type = notification::parse_type("Resource.Loading.Succeeded");
 /// assert_eq!(noti_type, NotificationType::Succeeded);
 /// ```

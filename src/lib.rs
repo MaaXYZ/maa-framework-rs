@@ -1,25 +1,40 @@
 //! # MaaFramework Rust Bindings
 //!
-//! High-performance, safe Rust bindings for [MaaFramework](https://github.com/MaaAssistantArknights/MaaFramework),
+//! High-performance, safe Rust bindings for [MaaFramework](https://github.com/MaaXYZ/MaaFramework),
 //! a game automation framework based on image recognition.
 //!
 //! ## Quick Start
 //!
-//! ```ignore
-//! use maa_framework::{Tasker, Resource, Controller, Toolkit};
+//! ```no_run
+//! use maa_framework::toolkit::Toolkit;
+//! use maa_framework::controller::Controller;
+//! use maa_framework::resource::Resource;
+//! use maa_framework::tasker::Tasker;
 //!
-//! // 1. Find devices
-//! let devices = Toolkit::find_adb_devices()?;
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     // 1. Find devices
+//!     let devices = Toolkit::find_adb_devices()?;
+//!     let device = devices.first().expect("No device found");
 //!
-//! // 2. Create components
-//! let tasker = Tasker::new()?;
-//! let resource = Resource::new()?;
-//! let controller = Controller::new_adb(&adb_path, &address, "{}", None)?;
+//!     // 2. Create controller
+//!     let controller = Controller::new_adb(
+//!         device.adb_path.to_str().unwrap(),
+//!         &device.address,
+//!         "{}",
+//!         None,
+//!     )?;
 //!
-//! // 3. Bind and run
-//! tasker.bind(&resource, &controller)?;
-//! let job = tasker.post_task("StartTask", "{}")?;
-//! let result = job.get(true)?;
+//!     // 3. Create resource and tasker
+//!     let resource = Resource::new()?;
+//!     let tasker = Tasker::new()?;
+//!
+//!     // 4. Bind and run
+//!     tasker.bind(&resource, &controller)?;
+//!     let job = tasker.post_task("StartTask", "{}")?;
+//!     job.wait();
+//!
+//!     Ok(())
+//! }
 //! ```
 //!
 //! ## Core Modules
@@ -31,9 +46,16 @@
 //! | [`controller`] | Device control (ADB, Win32, PlayCover) |
 //! | [`context`] | Task execution context for custom components |
 //! | [`toolkit`] | Device discovery utilities |
+//! | [`pipeline`] | Pipeline configuration types |
+//! | [`job`] | Asynchronous job management |
+//! | [`event_sink`] | Event sink system for typed callbacks |
 //! | [`buffer`] | Safe data buffers for FFI |
 //! | [`custom`] | Custom recognizer and action traits |
+//! | [`custom_controller`] | Custom controller implementation |
 //! | [`notification`] | Structured event notification parsing |
+//! | [`common`] | Common types and data structures |
+//! | [`error`] | Error types and handling |
+//! | [`util`] | Miscellaneous utility functions |
 //! | [`agent_client`] | Remote custom component client |
 //! | [`agent_server`] | Remote custom component server |
 //!
@@ -78,7 +100,7 @@ use std::ffi::CString;
 /// Get the MaaFramework version string.
 ///
 /// # Example
-/// ```ignore
+/// ```no_run
 /// println!("MaaFramework version: {}", maa_framework::maa_version());
 /// ```
 pub fn maa_version() -> &'static str {

@@ -1,3 +1,5 @@
+//! Miscellaneous utility functions.
+
 use crate::{common, sys, MaaResult};
 use std::ffi::{CStr, CString};
 

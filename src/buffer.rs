@@ -200,6 +200,9 @@ impl AsRef<str> for MaaStringBuffer {
 }
 
 /// Image buffer for storing and manipulating image data.
+///
+/// Supports raw BGR data and encoded formats (PNG/JPEG).
+/// Compatible with OpenCV image types.
 pub struct MaaImageBuffer {
     handle: NonNull<sys::MaaImageBuffer>,
     own: bool,
@@ -347,6 +350,8 @@ impl MaaImageBuffer {
 }
 
 /// A list buffer for storing multiple images.
+///
+/// Provides indexed access and iteration over a collection of [`MaaImageBuffer`]s.
 pub struct MaaImageListBuffer {
     handle: NonNull<sys::MaaImageListBuffer>,
     own: bool,
@@ -360,10 +365,12 @@ impl_buffer_lifecycle!(
 );
 
 impl MaaImageListBuffer {
+    /// Returns the number of images in the list.
     pub fn len(&self) -> usize {
         unsafe { sys::MaaImageListBufferSize(self.handle.as_ptr()) as usize }
     }
 
+    /// Returns `true` if the list contains no images.
     pub fn is_empty(&self) -> bool {
         unsafe { sys::MaaImageListBufferIsEmpty(self.handle.as_ptr()) != 0 }
     }
@@ -377,6 +384,7 @@ impl MaaImageListBuffer {
         }
     }
 
+    /// Appends an image to the end of the list.
     pub fn append(&self, image: &MaaImageBuffer) -> MaaResult<()> {
         let ret = unsafe { sys::MaaImageListBufferAppend(self.handle.as_ptr(), image.as_ptr()) };
         crate::common::check_bool(ret)
@@ -391,11 +399,13 @@ impl MaaImageListBuffer {
         Ok(())
     }
 
+    /// Removes the image at the specified index.
     pub fn remove(&self, index: usize) -> MaaResult<()> {
         let ret = unsafe { sys::MaaImageListBufferRemove(self.handle.as_ptr(), index as u64) };
         crate::common::check_bool(ret)
     }
 
+    /// Removes all images from the list.
     pub fn clear(&self) -> MaaResult<()> {
         let ret = unsafe { sys::MaaImageListBufferClear(self.handle.as_ptr()) };
         crate::common::check_bool(ret)
@@ -435,6 +445,8 @@ impl MaaImageListBuffer {
 }
 
 /// A list buffer for storing multiple strings.
+///
+/// Provides indexed access and iteration over a collection of UTF-8 strings.
 pub struct MaaStringListBuffer {
     handle: NonNull<sys::MaaStringListBuffer>,
     own: bool,
@@ -448,14 +460,17 @@ impl_buffer_lifecycle!(
 );
 
 impl MaaStringListBuffer {
+    /// Returns the number of strings in the list.
     pub fn len(&self) -> usize {
         unsafe { sys::MaaStringListBufferSize(self.handle.as_ptr()) as usize }
     }
 
+    /// Returns `true` if the list contains no strings.
     pub fn is_empty(&self) -> bool {
         unsafe { sys::MaaStringListBufferIsEmpty(self.handle.as_ptr()) != 0 }
     }
 
+    /// Appends a string to the end of the list.
     pub fn append(&self, s: &str) -> MaaResult<()> {
         let mut str_buf = MaaStringBuffer::new()?;
         str_buf.set(s)?;
@@ -472,11 +487,13 @@ impl MaaStringListBuffer {
         Ok(())
     }
 
+    /// Removes the string at the specified index.
     pub fn remove(&self, index: usize) -> MaaResult<()> {
         let ret = unsafe { sys::MaaStringListBufferRemove(self.handle.as_ptr(), index as u64) };
         crate::common::check_bool(ret)
     }
 
+    /// Removes all strings from the list.
     pub fn clear(&self) -> MaaResult<()> {
         let ret = unsafe { sys::MaaStringListBufferClear(self.handle.as_ptr()) };
         crate::common::check_bool(ret)
@@ -504,12 +521,15 @@ impl MaaStringListBuffer {
         })
     }
 
+    /// Collects all strings into a `Vec<String>`.
     pub fn to_vec(&self) -> Vec<String> {
         self.iter().map(|s| s.to_string()).collect()
     }
 }
 
-/// Rect buffer for coordinate passing between Rust and C API.
+/// Rect buffer for passing rectangle coordinates between Rust and C API.
+///
+/// Stores x, y position and width, height dimensions.
 pub struct MaaRectBuffer {
     handle: NonNull<sys::MaaRect>,
     own: bool,

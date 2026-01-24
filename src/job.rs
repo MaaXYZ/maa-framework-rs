@@ -29,6 +29,7 @@ impl Job {
         }
     }
 
+    /// Create a Job for a Tasker operation.
     pub fn for_tasker(tasker: &crate::tasker::Tasker, id: MaaId) -> Self {
         let tasker1 = tasker.clone();
         let tasker2 = tasker.clone();
@@ -43,6 +44,7 @@ impl Job {
         }
     }
 
+    /// Create a Job for a Controller operation.
     pub fn for_controller(controller: &crate::controller::Controller, id: MaaId) -> Self {
         let controller1 = controller.clone();
         let controller2 = controller.clone();
@@ -57,6 +59,7 @@ impl Job {
         }
     }
 
+    /// Create a Job for a Resource operation.
     pub fn for_resource(resource: &crate::resource::Resource, id: MaaId) -> Self {
         let resource1 = resource.clone();
         let resource2 = resource.clone();
@@ -81,22 +84,27 @@ impl Job {
         (self.status_fn)(self.id)
     }
 
+    /// Returns `true` if the operation succeeded.
     pub fn succeeded(&self) -> bool {
         self.status() == MaaStatus::SUCCEEDED
     }
 
+    /// Returns `true` if the operation failed.
     pub fn failed(&self) -> bool {
         self.status() == MaaStatus::FAILED
     }
 
+    /// Returns `true` if the operation is running.
     pub fn running(&self) -> bool {
         self.status() == MaaStatus::RUNNING
     }
 
+    /// Returns `true` if the operation is pending.
     pub fn pending(&self) -> bool {
         self.status() == MaaStatus::PENDING
     }
 
+    /// Returns `true` if the operation has completed (success or failure).
     pub fn done(&self) -> bool {
         let s = self.status();
         s == MaaStatus::SUCCEEDED || s == MaaStatus::FAILED

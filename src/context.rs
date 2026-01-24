@@ -1,3 +1,5 @@
+//! Task execution context for pipeline runtime operations.
+
 use std::ffi::CString;
 use std::ptr::NonNull;
 
@@ -68,6 +70,9 @@ impl Context {
     }
 
     /// Returns the underlying raw `MaaContext` pointer.
+    ///
+    /// Useful for advanced FFI interop scenarios.
+    #[inline]
     pub fn raw(&self) -> *mut sys::MaaContext {
         self.handle.as_ptr()
     }
@@ -344,6 +349,16 @@ impl Context {
     }
 
     /// Retrieves the hit count for a specific node.
+    ///
+    /// Hit count tracks how many times a node has been executed.
+    ///
+    /// # Arguments
+    ///
+    /// * `node_name` - The name of the node to query.
+    ///
+    /// # Returns
+    ///
+    /// The number of times the node has been executed, or 0 if not found.
     pub fn get_hit_count(&self, node_name: &str) -> MaaResult<u64> {
         let c_name = CString::new(node_name)?;
         let mut count: u64 = 0;
@@ -358,6 +373,10 @@ impl Context {
     }
 
     /// Resets the hit count for a specific node to zero.
+    ///
+    /// # Arguments
+    ///
+    /// * `node_name` - The name of the node to reset.
     pub fn clear_hit_count(&self, node_name: &str) -> MaaResult<()> {
         let c_name = CString::new(node_name)?;
         let ret = unsafe { sys::MaaContextClearHitCount(self.handle.as_ptr(), c_name.as_ptr()) };
@@ -429,6 +448,8 @@ impl Context {
     }
 
     /// Resets hit counts for all nodes in the context.
+    ///
+    /// This clears the execution history for all nodes, resetting their hit counts to zero.
     pub fn clear_all_hit_counts(&self) -> MaaResult<()> {
         let ret = unsafe { sys::MaaContextClearHitCount(self.handle.as_ptr(), std::ptr::null()) };
         common::check_bool(ret)

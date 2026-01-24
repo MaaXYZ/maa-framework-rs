@@ -1,27 +1,46 @@
+//! Device discovery and configuration utilities.
+
 use crate::{common, sys, MaaError, MaaResult};
 use std::ffi::{CStr, CString};
 use std::path::PathBuf;
 
+/// Information about a connected ADB device.
 #[derive(Debug, Clone)]
 pub struct AdbDevice {
+    /// Device display name.
     pub name: String,
+    /// Path to the ADB executable.
     pub adb_path: PathBuf,
+    /// Device address (e.g., "127.0.0.1:5555").
     pub address: String,
+    /// Supported screencap methods (bitflags).
     pub screencap_methods: u64,
+    /// Supported input methods (bitflags).
     pub input_methods: u64,
+    /// Device configuration as JSON.
     pub config: serde_json::Value,
 }
 
+/// Information about a desktop window (Win32).
 #[derive(Debug, Clone)]
 pub struct DesktopWindow {
+    /// Window handle (HWND).
     pub hwnd: usize,
+    /// Window class name.
     pub class_name: String,
+    /// Window title.
     pub window_name: String,
 }
 
+/// Toolkit utilities for device discovery and configuration.
 pub struct Toolkit;
 
 impl Toolkit {
+    /// Initialize MAA framework options.
+    ///
+    /// # Arguments
+    /// * `user_path` - Path to user data directory
+    /// * `default_config` - Default configuration JSON string
     pub fn init_option(user_path: &str, default_config: &str) -> MaaResult<()> {
         let c_path = CString::new(user_path)?;
         let c_config = CString::new(default_config)?;
@@ -109,6 +128,10 @@ impl Toolkit {
         }
     }
 
+    /// Find all desktop windows (Win32 only).
+    ///
+    /// # Returns
+    /// List of visible desktop windows.
     pub fn find_desktop_windows() -> MaaResult<Vec<DesktopWindow>> {
         let list = unsafe { sys::MaaToolkitDesktopWindowListCreate() };
         if list.is_null() {
