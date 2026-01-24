@@ -212,10 +212,20 @@ impl GamepadButton {
 
 bitflags::bitflags! {
     /// Controller feature flags for CustomController.
+    ///
+    /// These flags indicate which input methods the controller supports/prefers.
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
     pub struct ControllerFeature: u64 {
+        /// Controller prefers touch_down/touch_move/touch_up instead of click/swipe.
+        /// When set, ControllerAgent will use touch_down/touch_up to simulate click,
+        /// and touch_down/touch_move/touch_up to simulate swipe.
         const USE_MOUSE_DOWN_UP_INSTEAD_OF_CLICK = 1;
+        /// Controller prefers key_down/key_up instead of click_key.
+        /// When set, ControllerAgent will use key_down + key_up to simulate click_key.
         const USE_KEY_DOWN_UP_INSTEAD_OF_CLICK = 1 << 1;
+        /// Controller does not scale touch points automatically.
+        /// When set, ControllerAgent will skip coordinate scaling for touch operations.
+        const NO_SCALING_TOUCH_POINTS = 1 << 2;
     }
 }
 

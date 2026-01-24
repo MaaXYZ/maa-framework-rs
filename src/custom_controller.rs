@@ -1,3 +1,4 @@
+use crate::common::ControllerFeature;
 use crate::sys;
 use std::ffi::CStr;
 use std::os::raw::c_void;
@@ -11,8 +12,11 @@ pub trait CustomControllerCallback: Send + Sync {
     fn request_uuid(&self) -> Option<String> {
         None
     }
-    fn get_features(&self) -> u64 {
-        0
+    /// Get the features supported by this controller.
+    ///
+    /// Returns a combination of `ControllerFeature` flags.
+    fn get_features(&self) -> ControllerFeature {
+        ControllerFeature::empty()
     }
     fn start_app(&self, _intent: &str) -> bool {
         false
@@ -93,7 +97,7 @@ unsafe extern "C" fn request_uuid_trampoline(
 
 unsafe extern "C" fn get_features_trampoline(trans_arg: *mut c_void) -> sys::MaaControllerFeature {
     let cb = &*(trans_arg as *const BoxedCallback);
-    cb.get_features()
+    cb.get_features().bits()
 }
 
 unsafe extern "C" fn start_app_trampoline(

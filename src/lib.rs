@@ -69,6 +69,7 @@ pub mod tasker;
 pub mod toolkit;
 pub mod util;
 
+pub use common::ControllerFeature;
 pub use common::MaaStatus;
 pub use error::{MaaError, MaaResult};
 
