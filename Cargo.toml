@@ -5,8 +5,8 @@ edition = "2021"
 authors = ["MaaFramework Contributors"]
 description = "Rust bindings for MaaFramework"
 license = "LGPL-3.0"
-homepage = "https://github.com/MaaAssistantArknights/MaaFramework"
-repository = "https://github.com/MaaAssistantArknights/MaaFramework"
+homepage = "https://github.com/MaaXYZ/MaaFramework"
+repository = "https://github.com/MaaXYZ/MaaFramework"
 keywords = ["maa", "automation", "framework", "binding"]
 categories = ["api-bindings", "development-tools"]
 

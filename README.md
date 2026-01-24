@@ -30,7 +30,7 @@
   English | <a href="README_zh.md">简体中文</a>
 </p>
 
-Rust bindings for [MaaFramework](https://github.com/MaaAssistantArknights/MaaFramework), a next-generation automation framework based on image recognition.
+Rust bindings for [MaaFramework](https://github.com/MaaXYZ/MaaFramework), a next-generation automation framework based on image recognition.
 
 ## ✨ Features
 

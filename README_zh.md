@@ -30,7 +30,7 @@
   <a href="README.md">English</a> | 简体中文
 </p>
 
-[MaaFramework](https://github.com/MaaAssistantArknights/MaaFramework) 的 Rust 绑定，基于图像识别的新一代自动化框架。
+[MaaFramework](https://github.com/MaaXYZ/MaaFramework) 的 Rust 绑定，基于图像识别的新一代自动化框架。
 
 ## ✨ 特性
 
