@@ -1,6 +1,6 @@
 [package]
 name = "maa-framework"
-version = "0.6.0"
+version = "1.0.0"
 edition = "2021"
 authors = ["MaaFramework Contributors"]
 description = "Rust bindings for MaaFramework"
