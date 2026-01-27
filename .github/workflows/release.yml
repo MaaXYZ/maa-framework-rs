@@ -68,6 +68,14 @@ jobs:
           cd MaaFramework
           cmake --install build --prefix ../install --config Debug
 
+      - name: Generate Bindings
+        env:
+          MAA_SDK_PATH: ${{ github.workspace }}/install
+        run: |
+          cargo build
+          find target -name bindings.rs -print0 | xargs -0 ls -1 -t | head -1 | xargs -I {} cp {} src/generated_bindings.rs
+          git add -f src/generated_bindings.rs
+
       - name: Cargo Publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

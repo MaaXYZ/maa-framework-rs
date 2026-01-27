@@ -55,6 +55,18 @@ fn probe_sdk_dir(dir: &PathBuf, include_dir: &mut Vec<PathBuf>, lib_dir: &mut Ve
 fn main() {
     // Skip build script on docs.rs
     if std::env::var("DOCS_RS").is_ok() {
+        let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
+        let bindings_path = out_dir.join("bindings.rs");
+        let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
+        let pre_generated_bindings = manifest_dir.join("src/generated_bindings.rs");
+
+        println!("cargo:warning=Detected docs.rs build, using pre-generated bindings.");
+        if pre_generated_bindings.exists() {
+            std::fs::copy(pre_generated_bindings, bindings_path)
+                .expect("Failed to copy pre-generated bindings");
+        } else {
+            println!("cargo:warning=Pre-generated bindings not found!");
+        }
         return;
     }
 
