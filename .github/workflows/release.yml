@@ -20,9 +20,57 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install dep
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ninja-build cmake ccache libclang-dev
+
+      - name: Checkout MaaFramework
+        uses: actions/checkout@v4
+        with:
+          repository: MaaXYZ/MaaFramework
+          submodules: recursive
+          path: MaaFramework
+
+      - name: Setup ccache
+        uses: Chocobo1/setup-ccache-action@v1
+        with:
+          remove_stale_cache: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v5.2.0
+        with:
+          python-version: "3.9"
+
+      - name: Bootstrap MaaDeps
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd MaaFramework
+          python3 tools/maadeps-download.py x64-linux
+
+      - name: Build MAA
+        run: |
+          cd MaaFramework
+          cmake --preset 'NinjaMulti Linux x64' \
+            -DMAADEPS_TRIPLET='maa-x64-linux' \
+            -DMAA_HASH_VERSION="CI-Build" \
+            -DWITH_NODEJS_BINDING=OFF -DWITH_QUICKJS_BINDING=OFF \
+            -DBUILD_PICLI=OFF \
+            -DWITH_DBG_CONTROLLER=ON -DBUILD_PIPELINE_TESTING=ON \
+            -DBUILD_DLOPEN_TESTING=ON
+          cmake --build build --preset 'NinjaMulti Linux x64 - Debug' -j 16
+
+      - name: Install MAA
+        shell: bash
+        run: |
+          cd MaaFramework
+          cmake --install build --prefix ../install --config Debug
+
       - name: Cargo Publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          MAA_SDK_PATH: ${{ github.workspace }}/install
         run: cargo publish
 
       - name: Generate Changelog
