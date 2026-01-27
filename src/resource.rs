@@ -79,7 +79,7 @@ impl Resource {
     /// Load a resource bundle from the specified directory.
     ///
     /// The bundle should contain pipeline definitions, images, and models.
-    pub fn post_bundle(&self, path: &str) -> MaaResult<crate::job::Job> {
+    pub fn post_bundle(&self, path: &str) -> MaaResult<crate::job::ResJob> {
         let c_path = CString::new(path)?;
         let id = unsafe { sys::MaaResourcePostBundle(self.inner.handle.as_ptr(), c_path.as_ptr()) };
         Ok(crate::job::Job::for_resource(self, id))
@@ -116,7 +116,7 @@ impl Resource {
     // === Additional resource loading ===
 
     /// Load an OCR model from the specified directory.
-    pub fn post_ocr_model(&self, path: &str) -> MaaResult<crate::job::Job> {
+    pub fn post_ocr_model(&self, path: &str) -> MaaResult<crate::job::ResJob> {
         let c_path = CString::new(path)?;
         let id =
             unsafe { sys::MaaResourcePostOcrModel(self.inner.handle.as_ptr(), c_path.as_ptr()) };
@@ -124,7 +124,7 @@ impl Resource {
     }
 
     /// Load additional pipeline definitions from the specified directory.
-    pub fn post_pipeline(&self, path: &str) -> MaaResult<crate::job::Job> {
+    pub fn post_pipeline(&self, path: &str) -> MaaResult<crate::job::ResJob> {
         let c_path = CString::new(path)?;
         let id =
             unsafe { sys::MaaResourcePostPipeline(self.inner.handle.as_ptr(), c_path.as_ptr()) };
@@ -132,7 +132,7 @@ impl Resource {
     }
 
     /// Load image resources from the specified directory.
-    pub fn post_image(&self, path: &str) -> MaaResult<crate::job::Job> {
+    pub fn post_image(&self, path: &str) -> MaaResult<crate::job::ResJob> {
         let c_path = CString::new(path)?;
         let id = unsafe { sys::MaaResourcePostImage(self.inner.handle.as_ptr(), c_path.as_ptr()) };
         Ok(crate::job::Job::for_resource(self, id))

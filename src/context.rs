@@ -24,7 +24,6 @@ pub struct Context {
 }
 
 unsafe impl Send for Context {}
-unsafe impl Sync for Context {}
 
 impl std::fmt::Debug for Context {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -424,8 +423,8 @@ impl Context {
 
     /// Retrieves a job handle representing the current task's execution state.
     ///
-    /// This allows the caller to query the task's status or wait for its completion details.
-    pub fn get_task_job(&self) -> crate::job::JobWithResult<common::TaskDetail> {
+    /// The returned job is bound to the lifetime of the `Context` to ensure safety.
+    pub fn get_task_job<'a>(&'a self) -> crate::job::JobWithResult<'a, common::TaskDetail> {
         let task_id = self.task_id();
         let tasker_raw = self.tasker_handle() as usize;
 

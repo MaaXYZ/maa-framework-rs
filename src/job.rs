@@ -7,21 +7,21 @@ use crate::{
     sys, MaaResult,
 };
 
-pub type StatusFn = Box<dyn Fn(MaaId) -> MaaStatus + Send + Sync>;
-pub type WaitFn = Box<dyn Fn(MaaId) -> MaaStatus + Send + Sync>;
+pub type StatusFn<'a> = Box<dyn Fn(MaaId) -> MaaStatus + Send + Sync + 'a>;
+pub type WaitFn<'a> = Box<dyn Fn(MaaId) -> MaaStatus + Send + Sync + 'a>;
 
 /// An asynchronous operation handle.
 ///
 /// Use this to track the status of controller, resource, and tasker operations.
-pub struct Job {
+pub struct Job<'a> {
     pub id: MaaId,
-    status_fn: StatusFn,
-    wait_fn: WaitFn,
+    status_fn: StatusFn<'a>,
+    wait_fn: WaitFn<'a>,
 }
 
-impl Job {
+impl<'a> Job<'a> {
     /// Create a new Job with custom status/wait functions.
-    pub fn new(id: MaaId, status_fn: StatusFn, wait_fn: WaitFn) -> Self {
+    pub fn new(id: MaaId, status_fn: StatusFn<'a>, wait_fn: WaitFn<'a>) -> Self {
         Self {
             id,
             status_fn,
@@ -30,10 +30,10 @@ impl Job {
     }
 
     /// Create a Job for a Tasker operation.
-    pub fn for_tasker(tasker: &crate::tasker::Tasker, id: MaaId) -> Self {
+    pub fn for_tasker(tasker: &crate::tasker::Tasker, id: MaaId) -> Job<'static> {
         let tasker1 = tasker.clone();
         let tasker2 = tasker.clone();
-        Self {
+        Job {
             id,
             status_fn: Box::new(move |job_id| {
                 MaaStatus(unsafe { sys::MaaTaskerStatus(tasker1.raw(), job_id) })
@@ -45,10 +45,10 @@ impl Job {
     }
 
     /// Create a Job for a Controller operation.
-    pub fn for_controller(controller: &crate::controller::Controller, id: MaaId) -> Self {
+    pub fn for_controller(controller: &crate::controller::Controller, id: MaaId) -> Job<'static> {
         let controller1 = controller.clone();
         let controller2 = controller.clone();
-        Self {
+        Job {
             id,
             status_fn: Box::new(move |job_id| {
                 MaaStatus(unsafe { sys::MaaControllerStatus(controller1.raw(), job_id) })
@@ -60,10 +60,10 @@ impl Job {
     }
 
     /// Create a Job for a Resource operation.
-    pub fn for_resource(resource: &crate::resource::Resource, id: MaaId) -> Self {
+    pub fn for_resource(resource: &crate::resource::Resource, id: MaaId) -> Job<'static> {
         let resource1 = resource.clone();
         let resource2 = resource.clone();
-        Self {
+        Job {
             id,
             status_fn: Box::new(move |job_id| {
                 MaaStatus(unsafe { sys::MaaResourceStatus(resource1.raw(), job_id) })
@@ -114,26 +114,26 @@ impl Job {
 /// An asynchronous operation handle with typed result retrieval.
 ///
 /// Similar to [`Job`] but includes a `get()` method to retrieve the operation result.
-pub struct JobWithResult<T> {
-    job: Job,
-    get_fn: Box<dyn Fn(MaaId) -> MaaResult<Option<T>> + Send + Sync>,
+pub struct JobWithResult<'a, T> {
+    job: Job<'a>,
+    get_fn: Box<dyn Fn(MaaId) -> MaaResult<Option<T>> + Send + Sync + 'a>,
 }
 
-impl<T> Deref for JobWithResult<T> {
-    type Target = Job;
+impl<'a, T> Deref for JobWithResult<'a, T> {
+    type Target = Job<'a>;
 
     fn deref(&self) -> &Self::Target {
         &self.job
     }
 }
 
-impl<T> JobWithResult<T> {
+impl<'a, T> JobWithResult<'a, T> {
     /// Create a new JobWithResult with custom status/wait/get functions.
     pub fn new(
         id: MaaId,
-        status_fn: StatusFn,
-        wait_fn: WaitFn,
-        get_fn: impl Fn(MaaId) -> MaaResult<Option<T>> + Send + Sync + 'static,
+        status_fn: StatusFn<'a>,
+        wait_fn: WaitFn<'a>,
+        get_fn: impl Fn(MaaId) -> MaaResult<Option<T>> + Send + Sync + 'a,
     ) -> Self {
         Self {
             job: Job::new(id, status_fn, wait_fn),
@@ -153,27 +153,27 @@ impl<T> JobWithResult<T> {
     }
 }
 
-pub type OverridePipelineFn = Box<dyn Fn(MaaId, &str) -> MaaResult<bool> + Send + Sync>;
+pub type OverridePipelineFn<'a> = Box<dyn Fn(MaaId, &str) -> MaaResult<bool> + Send + Sync + 'a>;
 
 /// Task job handle with extended capabilities.
 ///
 /// Inherits from [`JobWithResult`], additionally providing task-specific operations.
-pub struct TaskJob<T> {
-    job: JobWithResult<T>,
-    override_fn: OverridePipelineFn,
+pub struct TaskJob<'a, T> {
+    job: JobWithResult<'a, T>,
+    override_fn: OverridePipelineFn<'a>,
 }
 
-impl<T> Deref for TaskJob<T> {
-    type Target = JobWithResult<T>;
+impl<'a, T> Deref for TaskJob<'a, T> {
+    type Target = JobWithResult<'a, T>;
 
     fn deref(&self) -> &Self::Target {
         &self.job
     }
 }
 
-impl<T> TaskJob<T> {
+impl<'a, T> TaskJob<'a, T> {
     /// Create a new TaskJob.
-    pub fn new(job: JobWithResult<T>, override_fn: OverridePipelineFn) -> Self {
+    pub fn new(job: JobWithResult<'a, T>, override_fn: OverridePipelineFn<'a>) -> Self {
         Self { job, override_fn }
     }
 
@@ -196,24 +196,24 @@ impl<T> TaskJob<T> {
 /// Controller operation job.
 ///
 /// Returned by controller methods like `post_click()`, `post_swipe()`.
-pub type CtrlJob = Job;
+pub type CtrlJob = Job<'static>;
 
 /// Resource loading job.
 ///
 /// Returned by resource methods like `post_bundle()`.
-pub type ResJob = Job;
+pub type ResJob = Job<'static>;
 
 /// Task job with result retrieval.
 ///
 /// Returned by `Tasker::post_task()`.
-pub type TaskJobWithResult = JobWithResult<crate::common::TaskDetail>;
+pub type TaskJobWithResult = TaskJob<'static, crate::common::TaskDetail>;
 
 /// Recognition job with result retrieval.
 ///
 /// Returned by `Tasker::post_recognition()`.
-pub type RecoJobWithResult = JobWithResult<crate::common::RecognitionDetail>;
+pub type RecoJobWithResult = TaskJob<'static, crate::common::RecognitionDetail>;
 
 /// Action job with result retrieval.
 ///
 /// Returned by `Tasker::post_action()`.
-pub type ActionJobWithResult = JobWithResult<crate::common::ActionDetail>;
+pub type ActionJobWithResult = TaskJob<'static, crate::common::ActionDetail>;

@@ -360,7 +360,7 @@ impl Tasker {
         &self,
         entry: &str,
         pipeline_override: &str,
-    ) -> MaaResult<crate::job::TaskJob<crate::common::TaskDetail>> {
+    ) -> MaaResult<crate::job::TaskJob<'static, crate::common::TaskDetail>> {
         let c_entry = std::ffi::CString::new(entry)?;
         let c_pipeline = std::ffi::CString::new(pipeline_override)?;
         let id = unsafe {
@@ -418,7 +418,7 @@ impl Tasker {
         &self,
         entry: &str,
         pipeline_override: &serde_json::Value,
-    ) -> MaaResult<crate::job::TaskJob<crate::common::TaskDetail>> {
+    ) -> MaaResult<crate::job::TaskJob<'static, crate::common::TaskDetail>> {
         self.post_task(entry, &pipeline_override.to_string())
     }
 
@@ -720,7 +720,7 @@ impl Tasker {
         reco_type: &str,
         reco_param: &str,
         image: &crate::buffer::MaaImageBuffer,
-    ) -> MaaResult<crate::job::TaskJob<crate::common::RecognitionDetail>> {
+    ) -> MaaResult<crate::job::TaskJob<'static, crate::common::RecognitionDetail>> {
         let c_type = std::ffi::CString::new(reco_type)?;
         let c_param = std::ffi::CString::new(reco_param)?;
         let id = unsafe {
@@ -776,7 +776,7 @@ impl Tasker {
         action_param: &str,
         box_rect: &common::Rect,
         reco_detail: &str,
-    ) -> MaaResult<crate::job::TaskJob<crate::common::ActionDetail>> {
+    ) -> MaaResult<crate::job::TaskJob<'static, crate::common::ActionDetail>> {
         let c_type = std::ffi::CString::new(action_type)?;
         let c_param = std::ffi::CString::new(action_param)?;
         let c_detail = std::ffi::CString::new(reco_detail)?;
