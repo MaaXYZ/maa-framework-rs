@@ -9,6 +9,7 @@ homepage = "https://github.com/MaaXYZ/MaaFramework"
 repository = "https://github.com/MaaXYZ/MaaFramework"
 keywords = ["maa", "automation", "framework", "binding"]
 categories = ["api-bindings", "development-tools"]
+exclude = ["MaaFramework", "install", "download_plugins", ".github", ".vscode"]
 
 [dependencies]
 serde = { version = "^1.0", features = ["derive"] }
