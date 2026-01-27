@@ -23,6 +23,7 @@ pub struct Controller {
 
 struct ControllerInner {
     handle: NonNull<sys::MaaController>,
+    owns_handle: bool,
     callbacks: Mutex<HashMap<sys::MaaSinkId, usize>>,
     event_sinks: Mutex<HashMap<sys::MaaSinkId, usize>>,
 }
@@ -100,6 +101,7 @@ impl Controller {
             Ok(Self {
                 inner: Arc::new(ControllerInner {
                     handle: ptr,
+                    owns_handle: true,
                     callbacks: Mutex::new(HashMap::new()),
                     event_sinks: Mutex::new(HashMap::new()),
                 }),
@@ -150,6 +152,7 @@ impl Controller {
             .map(|ptr| Self {
                 inner: Arc::new(ControllerInner {
                     handle: ptr,
+                    owns_handle: true,
                     callbacks: Mutex::new(HashMap::new()),
                     event_sinks: Mutex::new(HashMap::new()),
                 }),
@@ -170,6 +173,7 @@ impl Controller {
             Ok(Self {
                 inner: Arc::new(ControllerInner {
                     handle: ptr,
+                    owns_handle: true,
                     callbacks: Mutex::new(HashMap::new()),
                     event_sinks: Mutex::new(HashMap::new()),
                 }),
@@ -654,7 +658,9 @@ impl Drop for ControllerInner {
             for (_, ptr) in event_sinks.drain() {
                 crate::callback::EventCallback::drop_sink(ptr as *mut c_void);
             }
-            sys::MaaControllerDestroy(self.handle.as_ptr());
+            if self.owns_handle {
+                sys::MaaControllerDestroy(self.handle.as_ptr());
+            }
         }
     }
 }

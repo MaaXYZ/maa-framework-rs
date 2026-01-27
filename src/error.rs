@@ -5,6 +5,7 @@ use std::str::Utf8Error;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
+#[non_exhaustive]
 pub enum MaaError {
     #[error("Null pointer exception")]
     NullPointer,

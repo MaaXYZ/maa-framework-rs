@@ -29,7 +29,13 @@ unsafe extern "C" fn event_callback_trampoline(
         std::borrow::Cow::Borrowed("")
     };
 
-    callback(&msg_str, &details_str);
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        callback(&msg_str, &details_str);
+    }));
+
+    if let Err(_) = result {
+        eprintln!("MaaFramework Rust Binding: Panic caught in event callback");
+    }
 }
 
 pub struct EventCallback {
@@ -107,6 +113,12 @@ unsafe extern "C" fn event_sink_trampoline(
         std::borrow::Cow::Borrowed("")
     };
 
-    let event = crate::notification::MaaEvent::from_json(&msg_str, &detail_str);
-    wrapper.sink.on_event(wrapper.handle, &event);
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let event = crate::notification::MaaEvent::from_json(&msg_str, &detail_str);
+        wrapper.sink.on_event(wrapper.handle, &event);
+    }));
+
+    if let Err(_) = result {
+        eprintln!("MaaFramework Rust Binding: Panic caught in event sink callback");
+    }
 }

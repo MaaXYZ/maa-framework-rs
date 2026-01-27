@@ -16,6 +16,7 @@ use std::sync::Arc;
 
 struct ResourceInner {
     handle: NonNull<sys::MaaResource>,
+    owns_handle: bool,
     custom_actions: std::sync::Mutex<std::collections::HashMap<String, usize>>, // Store pointer address
     custom_recognitions: std::sync::Mutex<std::collections::HashMap<String, usize>>,
     callbacks: std::sync::Mutex<std::collections::HashMap<sys::MaaSinkId, usize>>,
@@ -41,6 +42,7 @@ impl Resource {
             Ok(Self {
                 inner: Arc::new(ResourceInner {
                     handle: ptr,
+                    owns_handle: true,
                     custom_actions: std::sync::Mutex::new(std::collections::HashMap::new()),
                     custom_recognitions: std::sync::Mutex::new(std::collections::HashMap::new()),
                     callbacks: std::sync::Mutex::new(std::collections::HashMap::new()),
@@ -62,6 +64,7 @@ impl Resource {
             Ok(Self {
                 inner: Arc::new(ResourceInner {
                     handle,
+                    owns_handle: true,
                     custom_actions: std::sync::Mutex::new(std::collections::HashMap::new()),
                     custom_recognitions: std::sync::Mutex::new(std::collections::HashMap::new()),
                     callbacks: std::sync::Mutex::new(std::collections::HashMap::new()),
@@ -655,7 +658,9 @@ impl Drop for ResourceInner {
                 }
             }
 
-            sys::MaaResourceDestroy(self.handle.as_ptr())
+            if self.owns_handle {
+                sys::MaaResourceDestroy(self.handle.as_ptr())
+            }
         }
     }
 }

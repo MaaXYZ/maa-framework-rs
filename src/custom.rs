@@ -231,12 +231,17 @@ pub(crate) unsafe extern "C" fn custom_action_trampoline(
         common::Rect::default()
     };
 
-    let result = action.run(&ctx, task_id, node, name, param, reco_id, &rect);
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        action.run(&ctx, task_id, node, name, param, reco_id, &rect)
+    }));
 
-    if result {
-        1
-    } else {
-        0
+    match result {
+        Ok(true) => 1,
+        Ok(false) => 0,
+        Err(_) => {
+            eprintln!("MaaFramework Rust Binding: Panic caught in custom action callback");
+            0
+        }
     }
 }
 
@@ -291,22 +296,31 @@ pub(crate) unsafe extern "C" fn custom_recognition_trampoline(
         common::Rect::default()
     };
 
-    let result = reco.analyze(&ctx, task_id, node, name, param, &img_buf, &roi_rect);
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        reco.analyze(&ctx, task_id, node, name, param, &img_buf, &roi_rect)
+    }));
 
-    if let Some((res_rect, res_detail)) = result {
-        if !out_box.is_null() {
-            if let Some(mut out_rect_buf) = crate::buffer::MaaRectBuffer::from_handle(out_box) {
-                let _ = out_rect_buf.set(&res_rect);
+    match result {
+        Ok(Some((res_rect, res_detail))) => {
+            if !out_box.is_null() {
+                if let Some(mut out_rect_buf) = crate::buffer::MaaRectBuffer::from_handle(out_box) {
+                    let _ = out_rect_buf.set(&res_rect);
+                }
             }
-        }
-        if !out_detail.is_null() {
-            if let Some(mut out_str_buf) = crate::buffer::MaaStringBuffer::from_handle(out_detail) {
-                let _ = out_str_buf.set(&res_detail);
+            if !out_detail.is_null() {
+                if let Some(mut out_str_buf) =
+                    crate::buffer::MaaStringBuffer::from_handle(out_detail)
+                {
+                    let _ = out_str_buf.set(&res_detail);
+                }
             }
+            1
         }
-        1
-    } else {
-        0
+        Ok(None) => 0,
+        Err(_) => {
+            eprintln!("MaaFramework Rust Binding: Panic caught in custom recognition callback");
+            0
+        }
     }
 }
 

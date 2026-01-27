@@ -134,6 +134,7 @@ impl Point {
 /// Virtual gamepad type for GamepadController.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(u64)]
+#[non_exhaustive]
 pub enum GamepadType {
     /// Microsoft Xbox 360 Controller (wired)
     Xbox360 = 0,
@@ -144,6 +145,7 @@ pub enum GamepadType {
 /// Gamepad contact (analog stick or trigger) for touch mapping.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(i32)]
+#[non_exhaustive]
 pub enum GamepadContact {
     /// Left analog stick: x/y range -32768~32767
     LeftStick = 0,
@@ -739,6 +741,7 @@ impl ActionEnum {
 
 /// Notification type for event callbacks.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum NotificationType {
     Starting,
     Succeeded,
