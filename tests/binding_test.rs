@@ -1268,3 +1268,52 @@ fn test_tasker_with_native_dbg_controller() {
 
     println!("  PASS: tasker with native DbgController");
 }
+
+// ============================================================================
+// Buffer API Tests
+// ============================================================================
+
+#[test]
+fn test_buffer_api() {
+    println!("\n=== test_buffer_api ===");
+
+    let mut buf = maa_framework::buffer::MaaImageBuffer::new().expect("Failed to create buffer");
+
+    let width = 200;
+    let height = 100;
+    let channels = 3;
+    let data = vec![128u8; (width * height * channels) as usize];
+
+    // set expects BGR/RGB? CV_8UC3 (16).
+    buf.set_raw_data(&data, width as i32, height as i32, 16)
+        .expect("set_raw_data failed");
+
+    // Resize: width=50, height=0 (auto)
+    buf.resize(50, 0).expect("resize failed");
+
+    let resized_width = buf.width();
+    let resized_height = buf.height();
+
+    println!("  resized shape: ({}, {})", resized_width, resized_height);
+    assert_eq!(resized_width, 50, "width should be 50");
+    assert_eq!(resized_height, 25, "height should keep aspect ratio");
+
+    let expected_size = (resized_width * resized_height * 3) as usize;
+
+    if let Some(raw) = buf.raw_data() {
+        println!("  raw data length: {}", raw.len());
+        assert_eq!(
+            raw.len(),
+            expected_size,
+            "Buffer size should match new dimensions"
+        );
+
+        assert!(raw.len() > 0, "Buffer should not be empty");
+        assert_eq!(raw[0], 128, "First pixel should be gray (128)");
+        assert_eq!(raw[raw.len() - 1], 128, "Last pixel should be gray (128)");
+    } else {
+        panic!("Failed to get raw data after resize");
+    }
+
+    println!("  PASS: buffer API");
+}

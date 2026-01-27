@@ -315,6 +315,15 @@ impl MaaImageBuffer {
         crate::common::check_bool(ret)
     }
 
+    /// Resize the image.
+    ///
+    /// * `width`: Target width, 0 for auto aspect ratio.
+    /// * `height`: Target height, 0 for auto aspect ratio.
+    pub fn resize(&mut self, width: i32, height: i32) -> MaaResult<()> {
+        let ret = unsafe { sys::MaaImageBufferResize(self.handle.as_ptr(), width, height) };
+        crate::common::check_bool(ret)
+    }
+
     /// Convert to `image` crate's `DynamicImage`.
     #[cfg(feature = "image")]
     pub fn to_dynamic_image(&self) -> MaaResult<image::DynamicImage> {
