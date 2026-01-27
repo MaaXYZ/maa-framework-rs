@@ -71,7 +71,7 @@ jobs:
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
           MAA_SDK_PATH: ${{ github.workspace }}/install
-        run: cargo publish
+        run: cargo publish --allow-dirty
 
       - name: Generate Changelog
         uses: orhun/git-cliff-action@v4
