@@ -27,7 +27,7 @@
 <br />
 
 <p align="center">
-  English | <a href="README_zh.md">简体中文</a>
+  English | <a href="https://github.com/MaaXYZ/maa-framework-rs/blob/main/README_zh.md">简体中文</a>
 </p>
 
 Rust bindings for [MaaFramework](https://github.com/MaaXYZ/MaaFramework), a next-generation automation framework based on image recognition.

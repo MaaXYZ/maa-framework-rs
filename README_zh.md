@@ -27,7 +27,7 @@
 <br />
 
 <p align="center">
-  <a href="README.md">English</a> | 简体中文
+  <a href="https://github.com/MaaXYZ/maa-framework-rs/blob/main/README.md">English</a> | 简体中文
 </p>
 
 [MaaFramework](https://github.com/MaaXYZ/MaaFramework) 的 Rust 绑定，基于图像识别的新一代自动化框架。
