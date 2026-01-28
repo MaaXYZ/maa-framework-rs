@@ -213,3 +213,33 @@ pub fn load_plugin(path: &str) -> MaaResult<()> {
     let ret = unsafe { sys::MaaGlobalLoadPlugin(c_path.as_ptr()) };
     common::check_bool(ret)
 }
+
+/// Loads the MaaFramework dynamic library.
+///
+/// You **must** call this function successfully before using any other APIs when the `dynamic`
+/// feature is enabled.
+///
+/// # Arguments
+///
+/// * `path` - Path to the dynamic library file (e.g., `MaaFramework.dll`, `libMaaFramework.so`).
+///
+/// # Errors
+///
+/// Returns an error if:
+/// * The library file cannot be found or loaded.
+/// * The library has already been loaded (multiple initialization is not supported).
+/// * Required symbols are missing from the library.
+///
+/// # Panics
+///
+/// Subsequent calls to any MaaFramework API will panic if the library has not been initialized.
+///
+/// # Safety
+///
+/// This function is `unsafe` because:
+/// * It executes arbitrary initialization code (e.g., `DllMain`) inside the loaded library.
+/// * The caller must ensure `path` points to a valid MaaFramework binary compatible with these bindings.
+#[cfg(feature = "dynamic")]
+pub fn load_library(path: &std::path::Path) -> Result<(), String> {
+    unsafe { sys::load_library(path) }
+}

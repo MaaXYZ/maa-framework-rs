@@ -9,11 +9,37 @@ use maa_framework::custom_controller::CustomControllerCallback;
 use maa_framework::toolkit::Toolkit;
 use maa_framework::{self, sys, MaaResult};
 
-/// Get the installation directory for MaaFramework
-pub fn get_install_dir() -> PathBuf {
-    std::env::var("MAA_INSTALL_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("MAA-win-x86_64-v5.4.1"))
+#[cfg(feature = "dynamic")]
+#[ctor::ctor]
+fn global_setup() {
+    let lib_name = if cfg!(target_os = "windows") {
+        "MaaFramework.dll"
+    } else if cfg!(target_os = "macos") {
+        "libMaaFramework.dylib"
+    } else {
+        "libMaaFramework.so"
+    };
+
+    let mut candidates = Vec::new();
+
+    if let Ok(sdk_path) = std::env::var("MAA_SDK_PATH") {
+        let sdk = PathBuf::from(sdk_path);
+        candidates.push(sdk.join("bin").join(lib_name));
+        candidates.push(sdk.join("lib").join(lib_name));
+        candidates.push(sdk.join(lib_name));
+    }
+
+    candidates.push(PathBuf::from("target/debug").join(lib_name));
+
+    candidates.push(PathBuf::from(lib_name));
+
+    let final_path = candidates.into_iter().find(|p| p.exists());
+
+    if let Some(path) = final_path {
+        maa_framework::load_library(&path).expect("Failed to load MaaFramework");
+    } else {
+        panic!("MaaFramework library not found. Please set MAA_SDK_PATH.");
+    }
 }
 
 /// Get the test resources directory (test/TestingDataSet/PipelineSmoking)
@@ -53,12 +79,10 @@ pub fn get_test_resources_dir() -> PathBuf {
 
 /// Initialize the test environment with logging
 pub fn init_test_env() -> MaaResult<()> {
-    // Set environment variable for Toolkit to find binary
-    let install_dir = get_install_dir();
-    let bin_dir = install_dir.join("bin");
-
-    // We try to init Toolkit option, but if it fails (already inited), we ignore
-    let _ = Toolkit::init_option(bin_dir.to_str().unwrap(), "{}");
+    if let Ok(sdk_path) = std::env::var("MAA_SDK_PATH") {
+        let bin_dir = PathBuf::from(sdk_path).join("bin");
+        let _ = Toolkit::init_option(bin_dir.to_str().unwrap_or("."), "{}");
+    }
 
     maa_framework::set_debug_mode(true)?;
     maa_framework::set_stdout_level(sys::MaaLoggingLevelEnum_MaaLoggingLevel_All as i32)?;

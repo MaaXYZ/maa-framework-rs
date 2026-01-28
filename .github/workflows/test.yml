@@ -131,7 +131,7 @@ jobs:
             # D:\a\maa-framework-rs\download_plugins
             
             # Setup paths for tests
-            export PATH=$PATH:$(pwd)/install/bin
+            export MAA_SDK_PATH=$(pwd)/install
             export MAA_TEST_RESOURCES_DIR=$(pwd)/MaaFramework/test/TestingDataSet/PipelineSmoking
             
             # Debug: show structure
@@ -139,6 +139,7 @@ jobs:
             
             cd maa-framework-rs
             cargo test --verbose -- --test-threads=1
+            cargo test --verbose --features dynamic -- --test-threads=1
 
   ubuntu:
     runs-on: ubuntu-latest
@@ -223,11 +224,12 @@ jobs:
       - name: Run Rust testing
         shell: bash
         run: |
-            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/install/lib:$(pwd)/install/bin
+            export MAA_SDK_PATH=$(pwd)/install
             export MAA_TEST_RESOURCES_DIR=$(pwd)/MaaFramework/test/TestingDataSet/PipelineSmoking
             
             cd maa-framework-rs
             cargo test --verbose -- --test-threads=1
+            cargo test --verbose --features dynamic -- --test-threads=1
 
   macos:
     runs-on: macos-latest
@@ -319,8 +321,9 @@ jobs:
       - name: Run Rust testing
         shell: bash
         run: |
-            export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$(pwd)/install/lib:$(pwd)/install/bin
+            export MAA_SDK_PATH=$(pwd)/install
             export MAA_TEST_RESOURCES_DIR=$(pwd)/MaaFramework/test/TestingDataSet/PipelineSmoking
             
             cd maa-framework-rs
             cargo test --verbose -- --test-threads=1
+            cargo test --verbose --features dynamic -- --test-threads=1

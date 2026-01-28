@@ -71,6 +71,14 @@ fn main() {
     }
 
     println!("cargo:rerun-if-env-changed=MAA_SDK_PATH");
+    println!("cargo:rerun-if-env-changed=CARGO_FEATURE_DYNAMIC");
+
+    let is_dynamic = std::env::var("CARGO_FEATURE_DYNAMIC").is_ok();
+    let is_static = std::env::var("CARGO_FEATURE_STATIC").is_ok();
+
+    if is_dynamic && is_static {
+        println!("cargo:warning=MaaFramework: Both 'static' and 'dynamic' features are enabled. Forcing 'dynamic' mode.");
+    }
 
     let mut include_dir = vec![];
     let mut lib_dir = vec![];
@@ -159,13 +167,14 @@ fn main() {
         println!("cargo:rustc-link-search={}", dir.display());
     }
 
-    // Link MaaFramework libraries
-    println!("cargo:rustc-link-lib=MaaFramework");
-    println!("cargo:rustc-link-lib=MaaAgentClient");
-    println!("cargo:rustc-link-lib=MaaAgentServer");
+    if !is_dynamic {
+        println!("cargo:rustc-link-lib=MaaFramework");
+        println!("cargo:rustc-link-lib=MaaAgentClient");
+        println!("cargo:rustc-link-lib=MaaAgentServer");
 
-    #[cfg(feature = "toolkit")]
-    println!("cargo:rustc-link-lib=MaaToolkit");
+        #[cfg(feature = "toolkit")]
+        println!("cargo:rustc-link-lib=MaaToolkit");
+    }
 
     // Generate Rust bindings
     let out_path = PathBuf::from(std::env::var("OUT_DIR").unwrap());
@@ -189,16 +198,92 @@ fn main() {
         bindings_builder = bindings_builder.header("headers/maa_toolkit.h");
     }
 
-    let bindings = bindings_builder
-        .generate()
-        .expect("Unable to generate bindings");
+    bindings_builder = bindings_builder.blocklist_function("^__.*");
 
-    bindings
-        .write_to_file(out_path.join("bindings.rs"))
-        .expect("Couldn't write bindings!");
+    if is_dynamic {
+        let static_bindings = bindings_builder
+            .clone()
+            .generate()
+            .expect("Unable to generate static bindings for shim analysis");
 
-    // Copy DLLs to target directory for runtime
+        let static_code = static_bindings.to_string();
+        let shims = generate_shims(&static_code);
+
+        std::fs::write(out_path.join("shims.rs"), shims).expect("Unable to write shims.rs");
+
+        let dynamic_bindings = bindings_builder
+            .dynamic_library_name("MaaFramework")
+            .dynamic_link_require_all(true)
+            .generate()
+            .expect("Unable to generate dynamic bindings");
+
+        let mut bindings_content = dynamic_bindings.to_string();
+
+        if !bindings_content.contains(": ::libloading::Library") {
+            panic!("bindgen output format changed! Cannot apply CompositeLibrary patch. Expected ': ::libloading::Library'");
+        }
+
+        bindings_content =
+            bindings_content.replace(": ::libloading::Library", ": CompositeLibrary");
+        bindings_content =
+            bindings_content.replace("::libloading::Library::new", "CompositeLibrary::new");
+        bindings_content =
+            bindings_content.replace("Into<::libloading::Library>", "Into<CompositeLibrary>");
+
+        std::fs::write(out_path.join("bindings.rs"), bindings_content)
+            .expect("Couldn't write bindings!");
+    } else {
+        let bindings = bindings_builder
+            .generate()
+            .expect("Unable to generate bindings");
+
+        bindings
+            .write_to_file(out_path.join("bindings.rs"))
+            .expect("Couldn't write bindings!");
+    }
+
     copy_dlls_to_target(&lib_dir, &out_dir);
+}
+
+fn generate_shims(code: &str) -> String {
+    let file = syn::parse_file(code).expect("Unable to parse bindings for shim generation");
+
+    let mut result = String::new();
+
+    for item in file.items {
+        if let syn::Item::ForeignMod(foreign_mod) = item {
+            for foreign_item in foreign_mod.items {
+                if let syn::ForeignItem::Fn(func) = foreign_item {
+                    if func.sig.variadic.is_some() {
+                        continue;
+                    }
+
+                    let name = &func.sig.ident;
+                    let inputs = func.sig.inputs.iter().map(|arg| match arg {
+                        syn::FnArg::Typed(pat_type) => pat_type,
+                        syn::FnArg::Receiver(_) => panic!(
+                            "Unexpected receiver argument (self) in C function shim generation"
+                        ),
+                    });
+
+                    let output = &func.sig.output;
+
+                    let ret_type = match output {
+                        syn::ReturnType::Default => quote::quote! { () },
+                        syn::ReturnType::Type(_, ty) => quote::quote! { #ty },
+                    };
+
+                    let shim_macro = quote::quote! {
+                        shim!(#name ( #(#inputs),* ) -> #ret_type);
+                    };
+
+                    use std::fmt::Write;
+                    writeln!(result, "{}", shim_macro).unwrap();
+                }
+            }
+        }
+    }
+    result
 }
 
 /// Copy native DLLs and other assets to target directory so `cargo run` works.
