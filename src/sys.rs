@@ -47,7 +47,8 @@ impl CompositeLibrary {
             }
             #[cfg(not(target_os = "windows"))]
             {
-                libloading::Library::new(p)
+                let p = p.canonicalize().unwrap_or(p.to_path_buf());
+                libloading::Library::new(&p)
             }
         };
 
