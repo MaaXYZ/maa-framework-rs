@@ -165,6 +165,10 @@ fn main() {
     // Output library search paths
     for dir in &lib_dir {
         println!("cargo:rustc-link-search={}", dir.display());
+
+        if std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap_or_default() == "unix" {
+            println!("cargo:rustc-link-arg=-Wl,-rpath,{}", dir.display());
+        }
     }
 
     if !is_dynamic {
