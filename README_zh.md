@@ -97,7 +97,7 @@ MaaFramework Rust Binding 支持两种链接模式：**静态链接** (默认) �
 - **用法**:
   ```toml
   [dependencies]
-  maa-framework = "0.6"
+  maa-framework = "1"
   ```
 
 ### 动态链接 (Dynamic)
@@ -108,7 +108,7 @@ MaaFramework Rust Binding 支持两种链接模式：**静态链接** (默认) �
 - **用法**:
   ```toml
   [dependencies]
-  maa-framework = { version = "0.6", features = ["dynamic"] }
+  maa-framework = { version = "1", features = ["dynamic"] }
   ```
   在代码中：
   ```rust

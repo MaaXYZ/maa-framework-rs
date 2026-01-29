@@ -97,7 +97,7 @@ MaaFramework Rust Binding supports two linking modes: **Static** (default) and *
 - **Usage**:
   ```toml
   [dependencies]
-  maa-framework = "0.6"
+  maa-framework = "1"
   ```
 
 ### Dynamic Linking
@@ -108,7 +108,7 @@ MaaFramework Rust Binding supports two linking modes: **Static** (default) and *
 - **Usage**:
   ```toml
   [dependencies]
-  maa-framework = { version = "0.6", features = ["dynamic"] }
+  maa-framework = { version = "1", features = ["dynamic"] }
   ```
   And in your code:
   ```rust
