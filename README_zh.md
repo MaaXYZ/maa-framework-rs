@@ -45,7 +45,7 @@
 
 ```toml
 [dependencies]
-maa-framework = "0.6"
+maa-framework = "1"
 ```
 
 ### 2. 下载 SDK

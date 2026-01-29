@@ -45,7 +45,7 @@ Rust bindings for [MaaFramework](https://github.com/MaaXYZ/MaaFramework), a next
 
 ```toml
 [dependencies]
-maa-framework = "0.6"
+maa-framework = "1"
 ```
 
 ### 2. Download SDK
