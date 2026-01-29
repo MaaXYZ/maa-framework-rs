@@ -214,6 +214,9 @@ fn main() {
         let dynamic_bindings = bindings_builder
             .dynamic_library_name("MaaFramework")
             .dynamic_link_require_all(true)
+            .blocklist_item("__security_cookie")
+            .raw_line("unsafe impl Send for MaaFramework {}")
+            .raw_line("unsafe impl Sync for MaaFramework {}")
             .generate()
             .expect("Unable to generate dynamic bindings");
 

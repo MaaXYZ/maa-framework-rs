@@ -41,9 +41,7 @@ impl CompositeLibrary {
             #[cfg(target_os = "windows")]
             {
                 //LOAD_WITH_ALTERED_SEARCH_PATH (0x00000008)
-                let p = p
-                    .canonicalize()
-                    .map_err(|e| libloading::Error::DlOpen { source: e })?;
+                let p = p.canonicalize().unwrap_or(p.to_path_buf());
                 let lib = libloading::os::windows::Library::load_with_flags(&p, 0x00000008)?;
                 Ok(lib.into())
             }
