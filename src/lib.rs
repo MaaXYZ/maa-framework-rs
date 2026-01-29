@@ -12,6 +12,10 @@
 //! use maa_framework::tasker::Tasker;
 //!
 //! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     // 0. Load library (Dynamic only)
+//!     #[cfg(feature = "dynamic")]
+//!     maa_framework::load_library(std::path::Path::new("MaaFramework.dll"))?;
+//!
 //!     // 1. Find devices
 //!     let devices = Toolkit::find_adb_devices()?;
 //!     let device = devices.first().expect("No device found");

@@ -34,9 +34,10 @@ Rust bindings for [MaaFramework](https://github.com/MaaXYZ/MaaFramework), a next
 
 ## ✨ Features
 
-- **Full API Coverage** - Complete bindings for MaaFramework APIs
-- **Safe Rust** - Memory-safe wrappers with proper lifetime management
-- **DLL Auto-Copy** - Runtime libraries are copied to `target/` automatically
+- **Idiomatic Rust** - Ergonomic safe wrappers with `Result` error handling and strict typing.
+- **Dual Linking Modes** - Choose between **Static** linking or runtime **Dynamic** loading with automatic SDK setup.
+- **Full Capabilities** - Complete coverage of Tasker pipelines, Resources, Controllers, and custom extensions.
+- **Zero-Overhead FFI** - Direct bindings via `bindgen` ensuring C++ level performance with Rust safety.
 
 ## 📦 Installation
 
@@ -84,6 +85,37 @@ cargo run
 
 > DLLs are automatically copied to `target/debug/` or `target/release/`.
 
+## 🔗 Linking Modes
+
+MaaFramework Rust Binding supports two linking modes: **Static** (default) and **Dynamic**.
+
+### Static Linking (Default)
+
+- **Initialization**: Automatic. No extra code required.
+- **Behavior**: The OS loader handles DLL loading at startup.
+- **Requirement**: `MaaFramework.dll` (or `.so`/`.dylib`) must be in the system search path (usually next to the executable).
+- **Usage**:
+  ```toml
+  [dependencies]
+  maa-framework = "0.6"
+  ```
+
+### Dynamic Linking
+
+- **Initialization**: Manual. You must call `load_library` before using any API.
+- **Behavior**: Your code loads the DLL at runtime from a custom path.
+- **Requirement**: A valid path to the DLL file.
+- **Usage**:
+  ```toml
+  [dependencies]
+  maa-framework = { version = "0.6", features = ["dynamic"] }
+  ```
+  And in your code:
+  ```rust
+  // Must be called before any other API
+  maa_framework::load_library(std::path::Path::new("path/to/MaaFramework.dll"))?;
+  ```
+
 ## 🚀 Quick Start
 
 ```rust
@@ -93,6 +125,10 @@ use maa_framework::resource::Resource;
 use maa_framework::tasker::Tasker;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // [Dynamic only] Load MaaFramework library
+    #[cfg(feature = "dynamic")]
+    maa_framework::load_library(std::path::Path::new("MaaFramework.dll"))?;
+
     Toolkit::init_option("./", "{}")?;
 
     let devices = Toolkit::find_adb_devices()?;
