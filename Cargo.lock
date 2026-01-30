@@ -572,17 +572,24 @@ dependencies = [
 name = "maa-framework"
 version = "1.2.0"
 dependencies = [
- "bindgen",
  "bitflags",
  "ctor",
  "image",
+ "maa-framework-sys",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
+name = "maa-framework-sys"
+version = "1.0.0"
+dependencies = [
+ "bindgen",
  "libloading",
  "once_cell",
  "quote",
- "serde",
- "serde_json",
  "syn",
- "thiserror",
 ]
 
 [[package]]
