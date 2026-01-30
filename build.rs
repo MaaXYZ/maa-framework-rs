@@ -53,136 +53,266 @@ fn probe_sdk_dir(dir: &PathBuf, include_dir: &mut Vec<PathBuf>, lib_dir: &mut Ve
 }
 
 fn main() {
-    // Skip build script on docs.rs
-    if std::env::var("DOCS_RS").is_ok() {
-        let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
-        let bindings_path = out_dir.join("bindings.rs");
-        let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
-        let pre_generated_bindings = manifest_dir.join("src/generated_bindings.rs");
-
-        println!("cargo:warning=Detected docs.rs build, using pre-generated bindings.");
-        if pre_generated_bindings.exists() {
-            std::fs::copy(pre_generated_bindings, bindings_path)
-                .expect("Failed to copy pre-generated bindings");
-        } else {
-            println!("cargo:warning=Pre-generated bindings not found!");
-        }
-        return;
-    }
-
     println!("cargo:rerun-if-env-changed=MAA_SDK_PATH");
     println!("cargo:rerun-if-env-changed=CARGO_FEATURE_DYNAMIC");
+    println!("cargo:rerun-if-env-changed=MAA_REGENERATE_BINDINGS");
 
     let is_dynamic = std::env::var("CARGO_FEATURE_DYNAMIC").is_ok();
     let is_static = std::env::var("CARGO_FEATURE_STATIC").is_ok();
+    let regenerate_bindings = std::env::var("MAA_REGENERATE_BINDINGS").is_ok();
 
     if is_dynamic && is_static {
         println!("cargo:warning=MaaFramework: Both 'static' and 'dynamic' features are enabled. Forcing 'dynamic' mode.");
     }
 
-    let mut include_dir = vec![];
-    let mut lib_dir = vec![];
-
     let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
-    // Priority 1: Environment variable MAA_SDK_PATH
-    if let Ok(sdk_path) = std::env::var("MAA_SDK_PATH") {
-        let sdk_dir = PathBuf::from(&sdk_path);
-        if sdk_dir.exists() {
-            println!("cargo:warning=Using SDK from MAA_SDK_PATH: {}", sdk_path);
-            probe_sdk_dir(&sdk_dir, &mut include_dir, &mut lib_dir);
-        }
-    }
+    // Check for pre-generated bindings
+    let bindings_dir = manifest_dir.join("src/bindings");
+    let static_bindings_src = bindings_dir.join("static_bindings.rs");
+    let dynamic_bindings_src = bindings_dir.join("dynamic_bindings.rs");
+    let shims_src = bindings_dir.join("shims.rs");
 
-    // Priority 2: MAA-* directories in repository root
-    if include_dir.is_empty() {
-        for entry in std::fs::read_dir(&manifest_dir).into_iter().flatten() {
-            if let Ok(entry) = entry {
-                let path = entry.path();
-                if path.is_dir()
-                    && path
-                        .file_name()
-                        .map_or(false, |n| n.to_string_lossy().starts_with("MAA-"))
-                {
-                    probe_sdk_dir(&path, &mut include_dir, &mut lib_dir);
+    let bindings_dst = out_dir.join("bindings.rs");
+    let shims_dst = out_dir.join("shims.rs");
+
+    // Determine if we should use pre-generated bindings
+    let use_pregenerated = !regenerate_bindings && {
+        if is_dynamic {
+            dynamic_bindings_src.exists() && shims_src.exists()
+        } else {
+            static_bindings_src.exists()
+        }
+    };
+
+    // Skip SDK probing if using pre-generated bindings and in docs.rs or similar environment
+    let is_docs_rs = std::env::var("DOCS_RS").is_ok();
+
+    let mut include_dir = vec![];
+    let mut lib_dir = vec![];
+
+    if regenerate_bindings || !is_docs_rs {
+        // Priority 1: Environment variable MAA_SDK_PATH
+        if let Ok(sdk_path) = std::env::var("MAA_SDK_PATH") {
+            let sdk_dir = PathBuf::from(&sdk_path);
+            if sdk_dir.exists() {
+                println!("cargo:warning=Using SDK from MAA_SDK_PATH: {}", sdk_path);
+                probe_sdk_dir(&sdk_dir, &mut include_dir, &mut lib_dir);
+            }
+        }
+
+        // Determine user's project root from OUT_DIR
+        // OUT_DIR is typically: {user_project}/target/{profile}/build/{pkg}/out
+        // So we go up to find the project root (where Cargo.toml is)
+        let user_project_root = out_dir
+            .ancestors()
+            .find(|p| p.join("Cargo.toml").exists())
+            .map(|p| p.to_path_buf());
+
+        // Priority 2: MAA-* directories in user's project root
+        if include_dir.is_empty() {
+            if let Some(ref project_root) = user_project_root {
+                for entry in std::fs::read_dir(project_root).into_iter().flatten() {
+                    if let Ok(entry) = entry {
+                        let path = entry.path();
+                        if path.is_dir()
+                            && path
+                                .file_name()
+                                .map_or(false, |n| n.to_string_lossy().starts_with("MAA-"))
+                        {
+                            println!(
+                                "cargo:warning=Using SDK from user project: {}",
+                                path.display()
+                            );
+                            probe_sdk_dir(&path, &mut include_dir, &mut lib_dir);
+                        }
+                    }
                 }
             }
         }
-    }
 
-    // Priority 3: sdk/ directory (for user convenience)
-    if include_dir.is_empty() {
-        let sdk = manifest_dir.join("sdk");
-        if sdk.join("include").exists() {
-            probe_sdk_dir(&sdk, &mut include_dir, &mut lib_dir);
+        // Priority 3: sdk/ directory in user's project root
+        if include_dir.is_empty() {
+            if let Some(ref project_root) = user_project_root {
+                let sdk = project_root.join("sdk");
+                if sdk.join("include").exists() || sdk.join("bin").exists() {
+                    println!(
+                        "cargo:warning=Using SDK from user project sdk/: {}",
+                        sdk.display()
+                    );
+                    probe_sdk_dir(&sdk, &mut include_dir, &mut lib_dir);
+                }
+            }
         }
-    }
 
-    // Priority 4: install/ directory (local builds)
-    if include_dir.is_empty() {
-        let install = manifest_dir.join("install");
-        if install.exists() {
-            probe_sdk_dir(&install, &mut include_dir, &mut lib_dir);
+        // Priority 4: install/ directory in user's project root
+        if include_dir.is_empty() {
+            if let Some(ref project_root) = user_project_root {
+                let install = project_root.join("install");
+                if install.exists() {
+                    println!(
+                        "cargo:warning=Using SDK from user project install/: {}",
+                        install.display()
+                    );
+                    probe_sdk_dir(&install, &mut include_dir, &mut lib_dir);
+                }
+            }
         }
-    }
 
-    // Priority 5: In-tree build (MaaFramework/source/binding/Rust)
-    if include_dir.is_empty() {
-        for parent in ["../install", "../../install", "../../../install"] {
-            let install = manifest_dir.join(parent);
+        // Priority 5: MAA-* directories in crate's manifest directory (for development)
+        if include_dir.is_empty() {
+            for entry in std::fs::read_dir(&manifest_dir).into_iter().flatten() {
+                if let Ok(entry) = entry {
+                    let path = entry.path();
+                    if path.is_dir()
+                        && path
+                            .file_name()
+                            .map_or(false, |n| n.to_string_lossy().starts_with("MAA-"))
+                    {
+                        probe_sdk_dir(&path, &mut include_dir, &mut lib_dir);
+                    }
+                }
+            }
+        }
+
+        // Priority 6: sdk/ directory in crate's manifest directory
+        if include_dir.is_empty() {
+            let sdk = manifest_dir.join("sdk");
+            if sdk.join("include").exists() {
+                probe_sdk_dir(&sdk, &mut include_dir, &mut lib_dir);
+            }
+        }
+
+        // Priority 7: install/ directory (local builds)
+        if include_dir.is_empty() {
+            let install = manifest_dir.join("install");
             if install.exists() {
-                probe_sdk_dir(
-                    &install.canonicalize().unwrap_or(install),
-                    &mut include_dir,
-                    &mut lib_dir,
+                probe_sdk_dir(&install, &mut include_dir, &mut lib_dir);
+            }
+        }
+
+        // Priority 8: In-tree build (MaaFramework/source/binding/Rust)
+        if include_dir.is_empty() {
+            for parent in ["../install", "../../install", "../../../install"] {
+                let install = manifest_dir.join(parent);
+                if install.exists() {
+                    probe_sdk_dir(
+                        &install.canonicalize().unwrap_or(install),
+                        &mut include_dir,
+                        &mut lib_dir,
+                    );
+                    break;
+                }
+            }
+        }
+
+        // Priority 9: CMake find_package
+        if include_dir.is_empty() {
+            let _ = cmake_probe(&mut include_dir, &mut lib_dir);
+        }
+    }
+
+    // Handle bindings generation or copying
+    if use_pregenerated {
+        // Use pre-generated bindings
+        println!("cargo:warning=Using pre-generated bindings from src/bindings/");
+
+        if is_dynamic {
+            std::fs::copy(&dynamic_bindings_src, &bindings_dst)
+                .expect("Failed to copy pre-generated dynamic bindings");
+            std::fs::copy(&shims_src, &shims_dst).expect("Failed to copy pre-generated shims");
+        } else {
+            std::fs::copy(&static_bindings_src, &bindings_dst)
+                .expect("Failed to copy pre-generated static bindings");
+        }
+    } else if regenerate_bindings {
+        // Regenerate bindings using bindgen
+        println!("cargo:warning=Regenerating bindings with bindgen...");
+
+        if include_dir.is_empty() {
+            println!("cargo:warning===========================================");
+            println!("cargo:warning=MaaFramework SDK not found!");
+            println!("cargo:warning=");
+            println!("cargo:warning=Please download the SDK from:");
+            println!("cargo:warning=  https://github.com/MaaXYZ/MaaFramework/releases");
+            println!("cargo:warning=");
+            println!("cargo:warning=Then either:");
+            println!("cargo:warning=  1. Extract to project root (MAA-* directory)");
+            println!("cargo:warning=  2. Set MAA_SDK_PATH environment variable");
+            println!("cargo:warning===========================================");
+            panic!("MaaFramework SDK not found. See warnings above.");
+        }
+
+        generate_bindings_with_bindgen(&include_dir, &out_dir, is_dynamic);
+    } else if is_docs_rs {
+        // docs.rs build: try to use pre-generated, otherwise fail gracefully
+        println!("cargo:warning=Detected docs.rs build, using pre-generated bindings.");
+
+        if is_dynamic && dynamic_bindings_src.exists() && shims_src.exists() {
+            std::fs::copy(&dynamic_bindings_src, &bindings_dst)
+                .expect("Failed to copy pre-generated dynamic bindings");
+            std::fs::copy(&shims_src, &shims_dst).expect("Failed to copy pre-generated shims");
+        } else if !is_dynamic && static_bindings_src.exists() {
+            std::fs::copy(&static_bindings_src, &bindings_dst)
+                .expect("Failed to copy pre-generated static bindings");
+        } else {
+            println!("cargo:warning=Pre-generated bindings not found!");
+            // Create empty bindings to allow docs.rs to at least show something
+            std::fs::write(&bindings_dst, "// Bindings not available on docs.rs\n")
+                .expect("Failed to write placeholder bindings");
+        }
+    } else {
+        // No pre-generated bindings and not regenerating - use pre-generated (should exist)
+        if is_dynamic {
+            if dynamic_bindings_src.exists() && shims_src.exists() {
+                std::fs::copy(&dynamic_bindings_src, &bindings_dst)
+                    .expect("Failed to copy pre-generated dynamic bindings");
+                std::fs::copy(&shims_src, &shims_dst).expect("Failed to copy pre-generated shims");
+            } else {
+                println!("cargo:warning=Pre-generated dynamic bindings not found!");
+                println!(
+                    "cargo:warning=Run: MAA_REGENERATE_BINDINGS=1 cargo build --features dynamic"
                 );
-                break;
+                panic!("Pre-generated dynamic bindings not found. See warnings above.");
+            }
+        } else {
+            if static_bindings_src.exists() {
+                std::fs::copy(&static_bindings_src, &bindings_dst)
+                    .expect("Failed to copy pre-generated static bindings");
+            } else {
+                println!("cargo:warning=Pre-generated static bindings not found!");
+                println!("cargo:warning=Run: MAA_REGENERATE_BINDINGS=1 cargo build");
+                panic!("Pre-generated static bindings not found. See warnings above.");
             }
         }
     }
 
-    // Priority 6: CMake find_package
-    if include_dir.is_empty() {
-        let _ = cmake_probe(&mut include_dir, &mut lib_dir);
-    }
+    if !is_docs_rs {
+        // Output library search paths
+        for dir in &lib_dir {
+            println!("cargo:rustc-link-search={}", dir.display());
 
-    // Error if SDK not found
-    if include_dir.is_empty() {
-        println!("cargo:warning===========================================");
-        println!("cargo:warning=MaaFramework SDK not found!");
-        println!("cargo:warning=");
-        println!("cargo:warning=Please download the SDK from:");
-        println!("cargo:warning=  https://github.com/MaaXYZ/MaaFramework/releases");
-        println!("cargo:warning=");
-        println!("cargo:warning=Then either:");
-        println!("cargo:warning=  1. Extract to project root (MAA-* directory)");
-        println!("cargo:warning=  2. Set MAA_SDK_PATH environment variable");
-        println!("cargo:warning===========================================");
-        panic!("MaaFramework SDK not found. See warnings above.");
-    }
-
-    // Output library search paths
-    for dir in &lib_dir {
-        println!("cargo:rustc-link-search={}", dir.display());
-
-        if std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap_or_default() == "unix" {
-            println!("cargo:rustc-link-arg=-Wl,-rpath,{}", dir.display());
+            if std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap_or_default() == "unix" {
+                println!("cargo:rustc-link-arg=-Wl,-rpath,{}", dir.display());
+            }
         }
+
+        if !is_dynamic {
+            println!("cargo:rustc-link-lib=MaaFramework");
+            println!("cargo:rustc-link-lib=MaaAgentClient");
+            println!("cargo:rustc-link-lib=MaaAgentServer");
+
+            #[cfg(feature = "toolkit")]
+            println!("cargo:rustc-link-lib=MaaToolkit");
+        }
+
+        copy_dlls_to_target(&lib_dir, &out_dir);
     }
+}
 
-    if !is_dynamic {
-        println!("cargo:rustc-link-lib=MaaFramework");
-        println!("cargo:rustc-link-lib=MaaAgentClient");
-        println!("cargo:rustc-link-lib=MaaAgentServer");
-
-        #[cfg(feature = "toolkit")]
-        println!("cargo:rustc-link-lib=MaaToolkit");
-    }
-
-    // Generate Rust bindings
-    let out_path = PathBuf::from(std::env::var("OUT_DIR").unwrap());
-
+/// Generate bindings using bindgen (requires LLVM/Clang)
+fn generate_bindings_with_bindgen(include_dir: &[PathBuf], out_path: &PathBuf, is_dynamic: bool) {
     let clang_include_args = include_dir.iter().map(|d| {
         let s = d.to_string_lossy();
         if cfg!(windows) && s.starts_with(r"\\?\") {
@@ -248,8 +378,6 @@ fn main() {
             .write_to_file(out_path.join("bindings.rs"))
             .expect("Couldn't write bindings!");
     }
-
-    copy_dlls_to_target(&lib_dir, &out_dir);
 }
 
 fn generate_shims(code: &str) -> String {

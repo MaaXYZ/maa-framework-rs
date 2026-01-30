@@ -3,4 +3,3 @@
 .idea
 # MaaFramework SDK cache
 /sdk
-src/generated_bindings.rs
