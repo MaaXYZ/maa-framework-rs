@@ -9,6 +9,7 @@ homepage.workspace = true
 repository.workspace = true
 keywords = ["maa", "automation", "framework", "binding"]
 categories = ["api-bindings", "development-tools"]
+readme = "../README.md"
 exclude = ["MaaFramework", "install", "download_plugins", ".github", ".vscode"]
 
 [dependencies]
