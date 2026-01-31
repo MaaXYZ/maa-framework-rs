@@ -1,3 +1,14 @@
 [workspace]
 resolver = "2"
 members = ["maa-framework", "maa-framework-sys"]
+
+[workspace.package]
+version = "1.2.0"
+authors = ["MaaFramework Contributors"]
+edition = "2021"
+license = "LGPL-3.0"
+homepage = "https://github.com/MaaXYZ/MaaFramework"
+repository = "https://github.com/MaaXYZ/MaaFramework"
+
+[workspace.dependencies]
+maa-framework-sys = { path = "maa-framework-sys", version = "1.2.0" }

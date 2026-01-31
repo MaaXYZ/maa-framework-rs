@@ -1,12 +1,12 @@
 [package]
 name = "maa-framework"
-version = "1.2.0"
-edition = "2021"
-authors = ["MaaFramework Contributors"]
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
 description = "Rust bindings for MaaFramework"
-license = "LGPL-3.0"
-homepage = "https://github.com/MaaXYZ/MaaFramework"
-repository = "https://github.com/MaaXYZ/MaaFramework"
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
 keywords = ["maa", "automation", "framework", "binding"]
 categories = ["api-bindings", "development-tools"]
 exclude = ["MaaFramework", "install", "download_plugins", ".github", ".vscode"]
@@ -17,7 +17,7 @@ serde_json = "1.0"
 thiserror = "2.0"
 bitflags = "2.4"
 image = { version = "0.25", optional = true }
-maa-framework-sys = { path = "../maa-framework-sys" }
+maa-framework-sys = { workspace = true }
 
 [features]
 default = ["toolkit", "adb", "win32", "dbg", "custom", "internal"]

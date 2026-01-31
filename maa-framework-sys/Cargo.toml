@@ -1,12 +1,12 @@
 [package]
 name = "maa-framework-sys"
-version = "1.0.0"
-edition = "2021"
-authors = ["MaaFramework Contributors"]
-description = "Rust bindings for MaaFramework"
-license = "LGPL-3.0"
-homepage = "https://github.com/MaaXYZ/MaaFramework"
-repository = "https://github.com/MaaXYZ/MaaFramework"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+description = "Low-level Rust bindings for MaaFramework"
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
 keywords = ["maa", "automation", "framework", "binding"]
 categories = ["api-bindings", "development-tools"]
 exclude = ["MaaFramework", "install", "download_plugins", ".github", ".vscode"]
