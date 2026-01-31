@@ -7,7 +7,8 @@ permissions:
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "v*.*.*"      # maa-framework release
+      - "sys-v*.*.*"  # maa-framework-sys release
 
 jobs:
   publish-release:
@@ -17,6 +18,18 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Determine release type
+        id: release-type
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [[ "$TAG" == sys-v* ]]; then
+            echo "type=sys" >> $GITHUB_OUTPUT
+            echo "version=${TAG#sys-v}" >> $GITHUB_OUTPUT
+          else
+            echo "type=framework" >> $GITHUB_OUTPUT
+            echo "version=${TAG#v}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -78,11 +91,19 @@ jobs:
           cd MaaFramework
           cmake --install build --prefix ../install --config Debug
 
-      - name: Cargo Publish
+      - name: Cargo Publish maa-framework-sys
+        if: steps.release-type.outputs.type == 'sys'
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
           MAA_SDK_PATH: ${{ github.workspace }}/install
-        run: cargo publish --allow-dirty
+        run: cargo publish -p maa-framework-sys --allow-dirty
+
+      - name: Cargo Publish maa-framework
+        if: steps.release-type.outputs.type == 'framework'
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          MAA_SDK_PATH: ${{ github.workspace }}/install
+        run: cargo publish -p maa-framework --allow-dirty
 
       - name: Generate Changelog
         uses: orhun/git-cliff-action@v4
