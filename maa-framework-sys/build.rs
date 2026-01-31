@@ -59,7 +59,6 @@ fn main() {
 
     let is_dynamic = std::env::var("CARGO_FEATURE_DYNAMIC").is_ok();
     let is_static = std::env::var("CARGO_FEATURE_STATIC").is_ok();
-    let regenerate_bindings = std::env::var("CARGO_FEATURE_GENERATE_BINDINGS").is_ok();
 
     if is_dynamic && is_static {
         println!("cargo:warning=MaaFramework: Both 'static' and 'dynamic' features are enabled. Forcing 'dynamic' mode.");
@@ -78,6 +77,10 @@ fn main() {
     let shims_dst = out_dir.join("shims.rs");
 
     // Determine if we should use pre-generated bindings
+    let is_docs_rs = std::env::var("DOCS_RS").is_ok();
+    let regenerate_bindings =
+        !is_docs_rs && std::env::var("CARGO_FEATURE_GENERATE_BINDINGS").is_ok();
+
     let use_pregenerated = !regenerate_bindings && {
         if is_dynamic {
             dynamic_bindings_src.exists() && shims_src.exists()
@@ -85,9 +88,6 @@ fn main() {
             static_bindings_src.exists()
         }
     };
-
-    // Skip SDK probing if using pre-generated bindings and in docs.rs or similar environment
-    let is_docs_rs = std::env::var("DOCS_RS").is_ok();
 
     let mut include_dir = vec![];
     let mut lib_dir = vec![];
