@@ -292,9 +292,11 @@ fn main() {
     if !is_docs_rs {
         // Output library search paths
         for dir in &lib_dir {
-            println!("cargo:rustc-link-search={}", dir.display());
+            println!("cargo:rustc-link-search=native={}", dir.display());
 
-            if std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap_or_default() == "unix" {
+            if std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default() == "macos" {
+                println!("cargo:rustc-link-arg=-Wl,-rpath,{}", dir.display());
+            } else if std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap_or_default() == "unix" {
                 println!("cargo:rustc-link-arg=-Wl,-rpath,{}", dir.display());
             }
         }
