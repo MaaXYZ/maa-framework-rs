@@ -1,0 +1,146 @@
+name: Update Bindings
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  check-upstream:
+    runs-on: ubuntu-latest
+    outputs:
+      needs_update: ${{ steps.check.outputs.needs_update }}
+      upstream_version: ${{ steps.check.outputs.upstream_version }}
+      current_version: ${{ steps.check.outputs.current_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get upstream MaaFramework version
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Only get stable releases, exclude pre-releases
+          UPSTREAM_TAG=$(gh release list --repo MaaXYZ/MaaFramework --exclude-pre-releases --limit 1 --json tagName -q '.[0].tagName')
+          UPSTREAM_VERSION="${UPSTREAM_TAG#v}"
+          
+          CURRENT_VERSION=$(grep '^version = ' maa-framework-sys/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          
+          echo "upstream_version=$UPSTREAM_VERSION" >> $GITHUB_OUTPUT
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          
+          echo "Upstream: $UPSTREAM_VERSION, Current: $CURRENT_VERSION"
+          
+          if [ "$UPSTREAM_VERSION" != "$CURRENT_VERSION" ]; then
+            echo "needs_update=true" >> $GITHUB_OUTPUT
+          else
+            echo "needs_update=false" >> $GITHUB_OUTPUT
+          fi
+
+  update-bindings:
+    needs: check-upstream
+    if: needs.check-upstream.outputs.needs_update == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dep
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ninja-build cmake ccache libclang-dev
+
+      - name: Checkout MaaFramework
+        uses: actions/checkout@v4
+        with:
+          repository: MaaXYZ/MaaFramework
+          ref: v${{ needs.check-upstream.outputs.upstream_version }}
+          submodules: recursive
+          path: MaaFramework
+
+      - name: Setup ccache
+        uses: Chocobo1/setup-ccache-action@v1
+        with:
+          remove_stale_cache: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v5.2.0
+        with:
+          python-version: "3.9"
+
+      - name: Bootstrap MaaDeps
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd MaaFramework
+          python3 tools/maadeps-download.py x64-linux
+
+      - name: Build MAA
+        run: |
+          cd MaaFramework
+          cmake --preset 'NinjaMulti Linux x64' \
+            -DMAADEPS_TRIPLET='maa-x64-linux' \
+            -DMAA_HASH_VERSION="CI-Build" \
+            -DWITH_NODEJS_BINDING=OFF -DWITH_QUICKJS_BINDING=OFF \
+            -DBUILD_PICLI=OFF \
+            -DWITH_DBG_CONTROLLER=ON \
+            -DBUILD_PIPELINE_TESTING=ON \
+            -DBUILD_DLOPEN_TESTING=ON
+          cmake --build build --preset 'NinjaMulti Linux x64 - Debug' -j 16
+
+      - name: Install MAA
+        run: |
+          cd MaaFramework
+          cmake --install build --prefix ../install --config Debug
+
+      - name: Update sys version in Cargo.toml
+        run: |
+          NEW_VERSION="${{ needs.check-upstream.outputs.upstream_version }}"
+          sed -i "s/^version = \".*\"/version = \"$NEW_VERSION\"/" maa-framework-sys/Cargo.toml
+          sed -i "s/maa-framework-sys = { path = \"maa-framework-sys\", version = \".*\" }/maa-framework-sys = { path = \"maa-framework-sys\", version = \"$NEW_VERSION\" }/" Cargo.toml
+
+      - name: Regenerate bindings
+        env:
+          MAA_SDK_PATH: ${{ github.workspace }}/install
+        run: |
+          cargo build -p maa-framework-sys --features generate-bindings
+          cargo build -p maa-framework-sys --features generate-bindings,dynamic
+          
+          # Copy generated bindings to src/bindings
+          cp target/debug/build/maa-framework-sys-*/out/bindings.rs maa-framework-sys/src/bindings/static_bindings.rs || true
+
+      - name: Regenerate dynamic bindings
+        env:
+          MAA_SDK_PATH: ${{ github.workspace }}/install
+        run: |
+          cargo build -p maa-framework-sys --features generate-bindings,dynamic
+          
+          # Find and copy dynamic bindings
+          for dir in target/debug/build/maa-framework-sys-*/out; do
+            if [ -f "$dir/bindings.rs" ] && grep -q "CompositeLibrary" "$dir/bindings.rs"; then
+              cp "$dir/bindings.rs" maa-framework-sys/src/bindings/dynamic_bindings.rs
+              cp "$dir/shims.rs" maa-framework-sys/src/bindings/shims.rs
+              break
+            fi
+          done
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "feat(sys): update bindings for MaaFramework v${{ needs.check-upstream.outputs.upstream_version }}"
+          title: "feat(sys): update bindings for MaaFramework v${{ needs.check-upstream.outputs.upstream_version }}"
+          body: |
+            Automatically generated PR to update `maa-framework-sys` bindings.
+            
+            **Changes:**
+            - Updated version: `${{ needs.check-upstream.outputs.current_version }}` → `${{ needs.check-upstream.outputs.upstream_version }}`
+            - Regenerated FFI bindings (static and dynamic)
+            
+            Please review and merge to publish the new version.
+          branch: update-sys-${{ needs.check-upstream.outputs.upstream_version }}
+          delete-branch: true

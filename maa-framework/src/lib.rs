@@ -90,7 +90,6 @@ pub mod job;
 pub mod notification;
 pub mod pipeline;
 pub mod resource;
-pub mod sys;
 pub mod tasker;
 pub mod toolkit;
 pub mod util;
@@ -98,6 +97,8 @@ pub mod util;
 pub use common::ControllerFeature;
 pub use common::MaaStatus;
 pub use error::{MaaError, MaaResult};
+
+pub use maa_framework_sys as sys;
 
 use std::ffi::CString;
 

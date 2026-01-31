@@ -1,0 +1,27 @@
+[package]
+name = "maa-framework-sys"
+version = "5.5.0"
+authors.workspace = true
+edition.workspace = true
+description = "Low-level Rust bindings for MaaFramework"
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+keywords = ["maa", "automation", "framework", "binding"]
+categories = ["api-bindings", "development-tools"]
+exclude = ["MaaFramework", "install", "download_plugins", ".github", ".vscode"]
+
+[dependencies]
+libloading = { version = "0.8", optional = true }
+once_cell = { version = "1.19", optional = true }
+
+[build-dependencies]
+bindgen = { version = "0.72", optional = true }
+syn = { version = "2.0", features = ["full", "extra-traits"], optional = true }
+quote = { version = "1.0", optional = true }
+
+[features]
+static = []
+dynamic = ["dep:libloading", "dep:once_cell"]
+toolkit = []
+generate-bindings = ["dep:bindgen", "dep:syn", "dep:quote"]

@@ -323,6 +323,8 @@ jobs:
         run: |
             export MAA_SDK_PATH=$(pwd)/install
             export MAA_TEST_RESOURCES_DIR=$(pwd)/MaaFramework/test/TestingDataSet/PipelineSmoking
+            export DYLD_LIBRARY_PATH=$(pwd)/install/bin:$DYLD_LIBRARY_PATH
+            export LD_LIBRARY_PATH=$(pwd)/install/bin:$LD_LIBRARY_PATH
             
             cd maa-framework-rs
             cargo test --verbose -- --test-threads=1

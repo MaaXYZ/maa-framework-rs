@@ -55,11 +55,10 @@ fn probe_sdk_dir(dir: &PathBuf, include_dir: &mut Vec<PathBuf>, lib_dir: &mut Ve
 fn main() {
     println!("cargo:rerun-if-env-changed=MAA_SDK_PATH");
     println!("cargo:rerun-if-env-changed=CARGO_FEATURE_DYNAMIC");
-    println!("cargo:rerun-if-env-changed=MAA_REGENERATE_BINDINGS");
+    println!("cargo:rerun-if-env-changed=CARGO_FEATURE_GENERATE_BINDINGS");
 
     let is_dynamic = std::env::var("CARGO_FEATURE_DYNAMIC").is_ok();
     let is_static = std::env::var("CARGO_FEATURE_STATIC").is_ok();
-    let regenerate_bindings = std::env::var("MAA_REGENERATE_BINDINGS").is_ok();
 
     if is_dynamic && is_static {
         println!("cargo:warning=MaaFramework: Both 'static' and 'dynamic' features are enabled. Forcing 'dynamic' mode.");
@@ -78,6 +77,10 @@ fn main() {
     let shims_dst = out_dir.join("shims.rs");
 
     // Determine if we should use pre-generated bindings
+    let is_docs_rs = std::env::var("DOCS_RS").is_ok();
+    let regenerate_bindings =
+        !is_docs_rs && std::env::var("CARGO_FEATURE_GENERATE_BINDINGS").is_ok();
+
     let use_pregenerated = !regenerate_bindings && {
         if is_dynamic {
             dynamic_bindings_src.exists() && shims_src.exists()
@@ -85,9 +88,6 @@ fn main() {
             static_bindings_src.exists()
         }
     };
-
-    // Skip SDK probing if using pre-generated bindings and in docs.rs or similar environment
-    let is_docs_rs = std::env::var("DOCS_RS").is_ok();
 
     let mut include_dir = vec![];
     let mut lib_dir = vec![];
@@ -228,23 +228,26 @@ fn main() {
         }
     } else if regenerate_bindings {
         // Regenerate bindings using bindgen
-        println!("cargo:warning=Regenerating bindings with bindgen...");
+        #[cfg(feature = "generate-bindings")]
+        {
+            println!("cargo:warning=Regenerating bindings with bindgen...");
 
-        if include_dir.is_empty() {
-            println!("cargo:warning===========================================");
-            println!("cargo:warning=MaaFramework SDK not found!");
-            println!("cargo:warning=");
-            println!("cargo:warning=Please download the SDK from:");
-            println!("cargo:warning=  https://github.com/MaaXYZ/MaaFramework/releases");
-            println!("cargo:warning=");
-            println!("cargo:warning=Then either:");
-            println!("cargo:warning=  1. Extract to project root (MAA-* directory)");
-            println!("cargo:warning=  2. Set MAA_SDK_PATH environment variable");
-            println!("cargo:warning===========================================");
-            panic!("MaaFramework SDK not found. See warnings above.");
+            if include_dir.is_empty() {
+                println!("cargo:warning===========================================");
+                println!("cargo:warning=MaaFramework SDK not found!");
+                println!("cargo:warning=");
+                println!("cargo:warning=Please download the SDK from:");
+                println!("cargo:warning=  https://github.com/MaaXYZ/MaaFramework/releases");
+                println!("cargo:warning=");
+                println!("cargo:warning=Then either:");
+                println!("cargo:warning=  1. Extract to project root (MAA-* directory)");
+                println!("cargo:warning=  2. Set MAA_SDK_PATH environment variable");
+                println!("cargo:warning===========================================");
+                panic!("MaaFramework SDK not found. See warnings above.");
+            }
+
+            generate_bindings_with_bindgen(&include_dir, &out_dir, is_dynamic);
         }
-
-        generate_bindings_with_bindgen(&include_dir, &out_dir, is_dynamic);
     } else if is_docs_rs {
         // docs.rs build: try to use pre-generated, otherwise fail gracefully
         println!("cargo:warning=Detected docs.rs build, using pre-generated bindings.");
@@ -271,10 +274,8 @@ fn main() {
                 std::fs::copy(&shims_src, &shims_dst).expect("Failed to copy pre-generated shims");
             } else {
                 println!("cargo:warning=Pre-generated dynamic bindings not found!");
-                println!(
-                    "cargo:warning=Run: MAA_REGENERATE_BINDINGS=1 cargo build --features dynamic"
-                );
-                panic!("Pre-generated dynamic bindings not found. See warnings above.");
+                println!("cargo:warning=Run with --features generate-bindings to generate them.");
+                panic!("Pre-generated dynamic bindings not found.");
             }
         } else {
             if static_bindings_src.exists() {
@@ -282,8 +283,8 @@ fn main() {
                     .expect("Failed to copy pre-generated static bindings");
             } else {
                 println!("cargo:warning=Pre-generated static bindings not found!");
-                println!("cargo:warning=Run: MAA_REGENERATE_BINDINGS=1 cargo build");
-                panic!("Pre-generated static bindings not found. See warnings above.");
+                println!("cargo:warning=Run with --features generate-bindings to generate them.");
+                panic!("Pre-generated static bindings not found.");
             }
         }
     }
@@ -291,9 +292,11 @@ fn main() {
     if !is_docs_rs {
         // Output library search paths
         for dir in &lib_dir {
-            println!("cargo:rustc-link-search={}", dir.display());
+            println!("cargo:rustc-link-search=native={}", dir.display());
 
-            if std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap_or_default() == "unix" {
+            if std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default() == "macos" {
+                println!("cargo:rustc-link-arg=-Wl,-rpath,{}", dir.display());
+            } else if std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap_or_default() == "unix" {
                 println!("cargo:rustc-link-arg=-Wl,-rpath,{}", dir.display());
             }
         }
@@ -312,6 +315,7 @@ fn main() {
 }
 
 /// Generate bindings using bindgen (requires LLVM/Clang)
+#[cfg(feature = "generate-bindings")]
 fn generate_bindings_with_bindgen(include_dir: &[PathBuf], out_path: &PathBuf, is_dynamic: bool) {
     let clang_include_args = include_dir.iter().map(|d| {
         let s = d.to_string_lossy();
@@ -380,6 +384,7 @@ fn generate_bindings_with_bindgen(include_dir: &[PathBuf], out_path: &PathBuf, i
     }
 }
 
+#[cfg(feature = "generate-bindings")]
 fn generate_shims(code: &str) -> String {
     let file = syn::parse_file(code).expect("Unable to parse bindings for shim generation");
 
