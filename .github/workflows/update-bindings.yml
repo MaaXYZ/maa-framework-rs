@@ -136,6 +136,8 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           commit-message: "feat(sys): update bindings for MaaFramework v${{ needs.check-upstream.outputs.upstream_version }}"
           title: "feat(sys): update bindings for MaaFramework v${{ needs.check-upstream.outputs.upstream_version }}"
           body: |
