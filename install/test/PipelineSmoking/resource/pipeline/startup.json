@@ -1,0 +1,257 @@
+{
+    "StartUp": {
+        "next": [
+            "HomeFlag",
+            "[JumpBack]Sub_HomeButton",
+            "[JumpBack]Sub_BackButton",
+            "[JumpBack]Sub_HomeLoading",
+            "[JumpBack]Sub_ObtainedAwards",
+            "[JumpBack]Sub_AccumulatedSignIn",
+            "[JumpBack]Sub_BirthdayReward",
+            "[JumpBack]Sub_Reward",
+            "[JumpBack]Sub_CloseDuringFestivalDipaRewardPage",
+            "StartGame",
+            "CloseAnnouncement",
+            "Download",
+            "GameLoading",
+            "BluePochLogo",
+            "Disclaimer",
+            "[JumpBack]Sub_Start1999"
+        ]
+    },
+    "Sub_StartUp": {
+        "next": [
+            "HomeFlag",
+            "[JumpBack]Sub_HomeButton",
+            "[JumpBack]Sub_BackButton",
+            "[JumpBack]Sub_HomeLoading",
+            "[JumpBack]Sub_ObtainedAwards",
+            "[JumpBack]Sub_AccumulatedSignIn",
+            "[JumpBack]Sub_BirthdayReward",
+            "[JumpBack]Sub_Reward",
+            "[JumpBack]Sub_CloseDuringFestivalDipaRewardPage",
+            "StartGame",
+            "CloseAnnouncement",
+            "Download",
+            "GameLoading",
+            "BluePochLogo",
+            "Disclaimer",
+            "Stop"
+        ]
+    },
+    "Sub_Start1999": {
+        "action": "StartApp",
+        "package_doc": "set in code."
+    },
+    "BluePochLogo": {
+        "recognition": "TemplateMatch",
+        "template": "StartUp/BluePochLogo.png",
+        "roi": [
+            298,
+            163,
+            620,
+            336
+        ],
+        "next": [
+            "BluePochLogo",
+            "Disclaimer",
+            "GameLoading",
+            "Download",
+            "StartGame",
+            "CloseAnnouncement"
+        ]
+    },
+    "Disclaimer": {
+        "recognition": "TemplateMatch",
+        "template": "StartUp/Disclaimer.png",
+        "roi": [
+            512,
+            107,
+            238,
+            214
+        ],
+        "next": [
+            "Disclaimer",
+            "GameLoading",
+            "Download",
+            "StartGame",
+            "CloseAnnouncement"
+        ]
+    },
+    "GameLoading": {
+        "recognition": "TemplateMatch",
+        "template": "StartUp/GameLoading.png",
+        "roi": [
+            323,
+            0,
+            599,
+            563
+        ],
+        "next": [
+            "GameLoading",
+            "Download",
+            "StartGame",
+            "CloseAnnouncement"
+        ]
+    },
+    "Download": {
+        "recognition": "OCR",
+        "expected": [
+            "下载",
+            "重试"
+        ],
+        "roi": [
+            712,
+            390,
+            187,
+            150
+        ],
+        "action": "Click",
+        "next": [
+            "GameLoading",
+            "Download",
+            "StartGame",
+            "CloseAnnouncement"
+        ]
+    },
+    "CloseAnnouncement": {
+        "recognition": "TemplateMatch",
+        "template": "StartUp/CloseAnnouncement.png",
+        "roi": [
+            1105,
+            40,
+            143,
+            140
+        ],
+        "action": "Click",
+        "next": [
+            "[JumpBack]Sub_HomeLoading",
+            "HomeFlag",
+            "StartGame",
+            "CloseAnnouncement"
+        ]
+    },
+    "StartGame": {
+        "recognition": "TemplateMatch",
+        "template": "StartUp/StartGame.png",
+        "roi": [
+            517,
+            458,
+            242,
+            163
+        ],
+        "action": "Click",
+        "next": [
+            "[JumpBack]Sub_BackButton",
+            "[JumpBack]Sub_ObtainedAwards",
+            "[JumpBack]Sub_AccumulatedSignIn",
+            "[JumpBack]Sub_BirthdayReward",
+            "[JumpBack]Sub_Reward",
+            "[JumpBack]Sub_HomeLoading",
+            "[JumpBack]Sub_CloseDuringFestivalDipaRewardPage",
+            "HomeFlag",
+            "StartGame",
+            "CloseAnnouncement"
+        ]
+    },
+    "Sub_HomeLoading": {
+        "recognition": "TemplateMatch",
+        "template": "StartUp/HomeLoading.png",
+        "roi": [
+            459,
+            359,
+            364,
+            152
+        ]
+    },
+    "HomeFlag": {
+        "recognition": "TemplateMatch",
+        "template": "StartUp/HomeFlag.png",
+        "roi": [
+            1022,
+            419,
+            194,
+            166
+        ]
+    },
+    "Sub_BackButton": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "StartUp/BackButton.png",
+            "StartUp/BackButton_White.png"
+        ],
+        "roi": [
+            0,
+            0,
+            134,
+            138
+        ],
+        "action": "Click"
+    },
+    "Sub_HomeButton": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "StartUp/HomeButton.png",
+            "StartUp/HomeButton_White.png"
+        ],
+        "roi": [
+            70,
+            0,
+            144,
+            144
+        ],
+        "action": "Click"
+    },
+    "Stop": {},
+    "Sub_Reward": {
+        "recognition": "TemplateMatch",
+        "template": "StartUp/Reward.png",
+        "roi": [
+            419,
+            90,
+            297,
+            148
+        ],
+        "action": "Click",
+        "target": [
+            0,
+            0,
+            526,
+            590
+        ]
+    },
+    "Sub_AccumulatedSignIn": {
+        "recognition": "TemplateMatch",
+        "template": "StartUp/AccumulatedSignIn.png",
+        "roi": [
+            562,
+            483,
+            347,
+            163
+        ],
+        "action": "Click"
+    },
+    "Sub_BirthdayReward": {
+        "recognition": "TemplateMatch",
+        "template": "StartUp/BirthdayReward.png",
+        "threshold": 0.8,
+        "roi": [
+            803,
+            273,
+            121,
+            121
+        ],
+        "action": "Click"
+    },
+    "Sub_CloseDuringFestivalDipaRewardPage": {
+        "recognition": "TemplateMatch",
+        "template": "StartUp/CloseDuringFestivalDipaRewardPage.png",
+        "roi": [
+            1069,
+            68,
+            138,
+            138
+        ],
+        "action": "Click"
+    }
+}

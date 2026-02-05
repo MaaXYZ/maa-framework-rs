@@ -1,0 +1,225 @@
+{
+    "Awards": {
+        "next": [
+            "[JumpBack]Sub_MailBadge",
+            "[JumpBack]Sub_JukeboxBadge",
+            "[JumpBack]Sub_DailyBadge",
+            "HomeFlag",
+            "[JumpBack]Sub_ObtainedAwards",
+            "[JumpBack]Sub_StartUp"
+        ]
+    },
+    "Sub_MailBadge": {
+        "recognition": "TemplateMatch",
+        "template": "Awards/MailBadge.png",
+        "threshold": 0.98,
+        "roi": [
+            47,
+            115,
+            108,
+            108
+        ],
+        "action": "Click",
+        "next": ["CollectMailAwards", "[JumpBack]Sub_MailBadge"]
+    },
+    "CollectMailAwards": {
+        "recognition": "TemplateMatch",
+        "template": "Awards/CollectMailAwards.png",
+        "roi": [
+            109,
+            551,
+            191,
+            132
+        ],
+        "action": "Click",
+        "next": [
+            "[JumpBack]Sub_ObtainedAwards",
+            "NoMailAwards",
+            "CollectMailAwards"
+        ]
+    },
+    "Sub_ObtainedAwards": {
+        "recognition": "TemplateMatch",
+        "template": "Awards/ObtainedAwards.png",
+        "roi": [
+            524,
+            62,
+            232,
+            158
+        ],
+        "action": "Click"
+    },
+    "NoMailAwards": {
+        "recognition": "TemplateMatch",
+        "template": "Awards/NoMailAwards.png",
+        "roi": [
+            952,
+            39,
+            164,
+            163
+        ],
+        "next": [
+            "HomeFlag",
+            "[JumpBack]Sub_HomeButton",
+            "[JumpBack]Sub_BackButton"
+        ]
+    },
+    "Sub_DailyBadge": {
+        "recognition": "TemplateMatch",
+        "template": "Awards/DailyBadge.png",
+        "threshold": 0.98,
+        "action": "Click",
+        "post_wait_freezes": 1,
+        "roi": [
+            44,
+            194,
+            111,
+            110
+        ],
+        "next": [
+            "[JumpBack]Sub_CollectDailyAwards",
+            "[JumpBack]Sub_ObtainedDailyAwards",
+            "WeeklyAwardsBadge",
+            "DailyAwardsPageFlag"
+        ]
+    },
+    "Sub_CollectDailyAwards": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "Awards/CollectDailyAwards.png",
+            "Awards/CollectSingleDailyAwards.png"
+        ],
+        "action": "Click",
+        "post_wait_freezes": 1,
+        "roi": [
+            1075,
+            63,
+            201,
+            183
+        ]
+    },
+    "Sub_ObtainedDailyAwards": {
+        "recognition": "TemplateMatch",
+        "template": "Awards/ObtainedAwards.png",
+        "roi": [
+            524,
+            62,
+            232,
+            158
+        ],
+        "action": "Click"
+    },
+    "WeeklyAwardsBadge": {
+        "recognition": "TemplateMatch",
+        "template": "Awards/WeeklyAwardsBadge.png",
+        "threshold": 0.98,
+        "action": "Click",
+        "roi": [
+            1165,
+            0,
+            111,
+            113
+        ],
+        "next": [
+            "[JumpBack]Sub_CollectDailyAwards",
+            "[JumpBack]Sub_ObtainedDailyAwards",
+            "WeeklyAwardsBadge",
+            "[JumpBack]Sub_BackButton",
+            "HomeFlag"
+        ]
+    },
+    "DailyAwardsPageFlag": {
+        "recognition": "TemplateMatch",
+        "template": "Awards/DailyAwardsPageFlag.png",
+        "roi": [
+            458,
+            0,
+            138,
+            136
+        ]
+    },
+    "Sub_JukeboxBadge": {
+        "recognition": "TemplateMatch",
+        "template": "Awards/JukeboxBadge.png",
+        "roi": [
+            183,
+            0,
+            108,
+            108
+        ],
+        "action": "Click",
+        "post_wait_freezes": 1,
+        "next": [
+            "[JumpBack]Sub_CollectJukeboxExp",
+            "[JumpBack]Sub_JukeboxAwardsBadge",
+            "[JumpBack]Sub_BackButton",
+            "HomeFlag"
+        ]
+    },
+    "Sub_CollectJukeboxExp": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "Awards/CollectJukebox.png",
+            "Awards/CollectJukeboxExp_Single.png"
+        ],
+        "roi": [
+            951,
+            208,
+            329,
+            512
+        ],
+        "action": "Click"
+    },
+    "Sub_JukeboxAwardsBadge": {
+        "recognition": "TemplateMatch",
+        "template": "Awards/JukeboxAwardsBadge.png",
+        "roi": [
+            967,
+            1,
+            110,
+            113
+        ],
+        "action": "Click",
+        "next": [
+            "[JumpBack]Sub_CollectJukeboxAwards",
+            "[JumpBack]Sub_ObtainedJukeboxAwards",
+            "NoJukeboxAwards"
+        ]
+    },
+    "Sub_CollectJukeboxAwards": {
+        "recognition": "TemplateMatch",
+        "template": "Awards/CollectJukebox.png",
+        "roi": [
+            1009,
+            594,
+            213,
+            126
+        ],
+        "action": "Click"
+    },
+    "Sub_ObtainedJukeboxAwards": {
+        "recognition": "OCR",
+        "expected": [
+            "获得",
+            "物品"
+        ],
+        "roi": [
+            534,
+            69,
+            211,
+            132
+        ],
+        "action": "Click"
+    },
+    "NoJukeboxAwards": {
+        "recognition": "TemplateMatch",
+        "template": "Awards/NoJukeboxAwards.png",
+        "threshold": 0.98,
+        "roi": [
+            1012,
+            46,
+            23,
+            20
+        ]
+    }
+}
