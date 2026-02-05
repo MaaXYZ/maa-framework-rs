@@ -148,3 +148,7 @@ jobs:
             Please review and merge to publish the new version.
           branch: update-sys-${{ needs.check-upstream.outputs.upstream_version }}
           delete-branch: true
+          add-paths: |
+            maa-framework-sys/**
+            Cargo.toml
+            Cargo.lock
