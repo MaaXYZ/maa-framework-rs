@@ -107,23 +107,24 @@ jobs:
           sed -i "s/^version = \".*\"/version = \"$NEW_VERSION\"/" maa-framework-sys/Cargo.toml
           sed -i "s/maa-framework-sys = { path = \"maa-framework-sys\", version = \".*\" }/maa-framework-sys = { path = \"maa-framework-sys\", version = \"$NEW_VERSION\" }/" Cargo.toml
 
-      - name: Regenerate bindings
+      - name: Regenerate bindings (Static)
         env:
           MAA_SDK_PATH: ${{ github.workspace }}/install
         run: |
+          rm -rf target/debug/build/maa-framework-sys-*
+
           cargo build -p maa-framework-sys --features generate-bindings
-          cargo build -p maa-framework-sys --features generate-bindings,dynamic
-          
-          # Copy generated bindings to src/bindings
-          cp target/debug/build/maa-framework-sys-*/out/bindings.rs maa-framework-sys/src/bindings/static_bindings.rs || true
+
+          cp target/debug/build/maa-framework-sys-*/out/bindings.rs maa-framework-sys/src/bindings/static_bindings.rs
 
       - name: Regenerate dynamic bindings
         env:
           MAA_SDK_PATH: ${{ github.workspace }}/install
         run: |
+          rm -rf target/debug/build/maa-framework-sys-*
+
           cargo build -p maa-framework-sys --features generate-bindings,dynamic
-          
-          # Find and copy dynamic bindings
+
           for dir in target/debug/build/maa-framework-sys-*/out; do
             if [ -f "$dir/bindings.rs" ] && grep -q "CompositeLibrary" "$dir/bindings.rs"; then
               cp "$dir/bindings.rs" maa-framework-sys/src/bindings/dynamic_bindings.rs
