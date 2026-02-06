@@ -286,3 +286,36 @@ fn test_agent_full_integration() {
 
     println!("PASS: agent multi-process integration");
 }
+
+/// Test AgentClient::create_tcp API.
+///
+/// This test verifies:
+/// - AgentClient can be created with TCP mode
+/// - Port 0 auto-selects an available port
+/// - identifier() returns the allocated port number
+#[test]
+fn test_agent_client_create_tcp() {
+    println!("\n=== test_agent_client_create_tcp ===");
+    init_test_env().unwrap();
+
+    // Create TCP client with auto-selected port
+    let client = AgentClient::create_tcp(0).expect("Failed to create TCP AgentClient");
+    println!("  TCP AgentClient created");
+
+    // Verify identifier returns a port number string
+    let identifier = client.identifier();
+    println!("  identifier: {:?}", identifier);
+
+    assert!(identifier.is_some(), "identifier should be Some");
+    let port_str = identifier.unwrap();
+    assert!(!port_str.is_empty(), "identifier should not be empty");
+
+    // Verify it's a valid port number
+    let port: u16 = port_str
+        .parse()
+        .expect("identifier should be a valid port number");
+    assert!(port > 0, "auto-selected port should be > 0");
+    println!("  auto-selected port: {}", port);
+
+    println!("  PASS: AgentClient TCP mode");
+}

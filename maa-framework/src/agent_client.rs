@@ -26,8 +26,24 @@ unsafe impl Sync for AgentClient {}
 impl AgentClient {
     /// Create a new agent client.
     ///
+    /// Uses IPC mode by default. On older Windows versions that don't support AF_UNIX
+    /// (before Build 17063), it will automatically fall back to TCP mode.
+    ///
     /// # Arguments
     /// * `identifier` - Optional connection identifier for matching specific AgentServer
+    ///
+    /// # Example
+    /// ```no_run
+    /// use maa_framework::agent_client::AgentClient;
+    ///
+    /// // Create with auto-generated identifier
+    /// let client = AgentClient::new(None).expect("Failed to create client");
+    ///
+    /// // Create with specific identifier
+    /// let client = AgentClient::new(Some("my_agent")).expect("Failed to create client");
+    /// let id = client.identifier().expect("Failed to get identifier");
+    /// println!("Identifier: {}", id);
+    /// ```
     pub fn new(identifier: Option<&str>) -> MaaResult<Self> {
         let id_buffer = if let Some(id) = identifier {
             let mut buf = buffer::MaaStringBuffer::new()?;
@@ -45,6 +61,37 @@ impl AgentClient {
                     .unwrap_or(std::ptr::null_mut()),
             )
         };
+
+        NonNull::new(handle)
+            .map(|ptr| Self {
+                handle: ptr,
+                _resource_guard: None,
+                _controller_guard: None,
+                _tasker_guard: None,
+            })
+            .ok_or(MaaError::FrameworkError(-1))
+    }
+
+    /// Create an agent client with TCP connection.
+    ///
+    /// The client listens on 127.0.0.1 at the specified port.
+    /// If 0 is passed, an available port is automatically selected.
+    /// AgentServer can use the port number from [`identifier()`](Self::identifier)
+    /// to connect via TCP.
+    ///
+    /// # Arguments
+    /// * `port` - TCP port (0-65535), 0 for auto-select
+    ///
+    /// # Example
+    /// ```no_run
+    /// use maa_framework::agent_client::AgentClient;
+    ///
+    /// let client = AgentClient::create_tcp(0).expect("Failed to create TCP client");
+    /// let port = client.identifier().expect("Failed to get port");
+    /// println!("Listening on port: {}", port);
+    /// ```
+    pub fn create_tcp(port: u16) -> MaaResult<Self> {
+        let handle = unsafe { sys::MaaAgentClientCreateTcp(port) };
 
         NonNull::new(handle)
             .map(|ptr| Self {
