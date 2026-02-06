@@ -125,6 +125,19 @@ impl CustomRecognition for MyRecognition {
             let clear_result = new_ctx.clear_hit_count(node_name);
             println!("  clear_hit_count result: {:?}", clear_result);
 
+            // Test wait_freezes API (parameter validation: both time and wait_freezes_param.time being zero should fail)
+            use maa_framework::pipeline::WaitFreezes;
+            let wait_params = WaitFreezes {
+                time: 0,
+                ..Default::default()
+            };
+            let wait_result = new_ctx.wait_freezes(0, None, Some(&wait_params));
+            println!("  wait_freezes (both zero): {:?}", wait_result);
+            assert!(
+                wait_result.is_err(),
+                "wait_freezes should fail when both time are zero"
+            );
+
             // Verify runtime image overriding in context
             let mut test_image_buf = maa_framework::buffer::MaaImageBuffer::new()
                 .expect("Failed to create image buffer");

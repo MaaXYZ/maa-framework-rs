@@ -382,6 +382,59 @@ impl Context {
         common::check_bool(ret)
     }
 
+    /// Waits for the screen to freeze (stop changing).
+    ///
+    /// This method blocks until the specified screen region remains stable for the given time,
+    /// or until the timeout is reached.
+    ///
+    /// # Arguments
+    ///
+    /// * `time` - Time in milliseconds the screen must remain stable (0 to use param).
+    /// * `hit_box` - Optional region of interest as (x, y, width, height). `None` uses full screen.
+    /// * `wait_freezes_param` - Optional detailed wait configuration.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(())` if the screen froze as expected, or an error otherwise.
+    ///
+    /// # Note
+    ///
+    /// - `time` and `wait_freezes_param.time` are mutually exclusive.
+    /// - `hit_box` and `wait_freezes_param.target` are mutually exclusive.
+    pub fn wait_freezes(
+        &self,
+        time: u64,
+        hit_box: Option<(i32, i32, i32, i32)>,
+        wait_freezes_param: Option<&crate::pipeline::WaitFreezes>,
+    ) -> MaaResult<()> {
+        let rect_storage = hit_box.map(|(x, y, w, h)| sys::MaaRect {
+            x,
+            y,
+            width: w,
+            height: h,
+        });
+
+        let rect_ptr = rect_storage
+            .as_ref()
+            .map(|r| r as *const _)
+            .unwrap_or(std::ptr::null());
+
+        let param_json = if let Some(param) = wait_freezes_param {
+            serde_json::to_string(param)
+                .map_err(|e| MaaError::InvalidConfig(format!("Failed to serialize: {}", e)))?
+        } else {
+            "{}".to_string()
+        };
+
+        let c_param = CString::new(param_json)?;
+
+        let ret = unsafe {
+            sys::MaaContextWaitFreezes(self.handle.as_ptr(), time, rect_ptr, c_param.as_ptr())
+        };
+
+        common::check_bool(ret)
+    }
+
     /// Creates a clone of the current context.
     ///
     /// The new context can be used for independent execution threads, preventing
