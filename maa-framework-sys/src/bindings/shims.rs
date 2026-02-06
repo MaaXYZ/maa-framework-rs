@@ -98,7 +98,6 @@ shim ! (MaaContextRunRecognition (context : * mut MaaContext , entry : * const :
 shim ! (MaaContextRunAction (context : * mut MaaContext , entry : * const :: std :: os :: raw :: c_char , pipeline_override : * const :: std :: os :: raw :: c_char , box_ : * const MaaRect , reco_detail : * const :: std :: os :: raw :: c_char) -> MaaActId) ;
 shim ! (MaaContextRunRecognitionDirect (context : * mut MaaContext , reco_type : * const :: std :: os :: raw :: c_char , reco_param : * const :: std :: os :: raw :: c_char , image : * const MaaImageBuffer) -> MaaRecoId) ;
 shim ! (MaaContextRunActionDirect (context : * mut MaaContext , action_type : * const :: std :: os :: raw :: c_char , action_param : * const :: std :: os :: raw :: c_char , box_ : * const MaaRect , reco_detail : * const :: std :: os :: raw :: c_char) -> MaaActId) ;
-shim ! (MaaContextWaitFreezes (context : * mut MaaContext , time : MaaSize , box_ : * const MaaRect , wait_freezes_param : * const :: std :: os :: raw :: c_char) -> MaaBool) ;
 shim ! (MaaContextOverridePipeline (context : * mut MaaContext , pipeline_override : * const :: std :: os :: raw :: c_char) -> MaaBool) ;
 shim ! (MaaContextOverrideNext (context : * mut MaaContext , node_name : * const :: std :: os :: raw :: c_char , next_list : * const MaaStringListBuffer) -> MaaBool) ;
 shim ! (MaaContextOverrideImage (context : * mut MaaContext , image_name : * const :: std :: os :: raw :: c_char , image : * const MaaImageBuffer) -> MaaBool) ;
@@ -160,7 +159,6 @@ shim ! (MaaRectGetH (handle : * const MaaRect) -> i32) ;
 shim ! (MaaRectSet (handle : * mut MaaRect , x : i32 , y : i32 , w : i32 , h : i32) -> MaaBool) ;
 shim ! (MaaVersion () -> * const :: std :: os :: raw :: c_char) ;
 shim ! (MaaAgentClientCreateV2 (identifier : * const MaaStringBuffer) -> * mut MaaAgentClient) ;
-shim ! (MaaAgentClientCreateTcp (port : u16) -> * mut MaaAgentClient) ;
 shim ! (MaaAgentClientDestroy (client : * mut MaaAgentClient) -> ()) ;
 shim ! (MaaAgentClientIdentifier (client : * mut MaaAgentClient , identifier : * mut MaaStringBuffer) -> MaaBool) ;
 shim ! (MaaAgentClientBindResource (client : * mut MaaAgentClient , res : * mut MaaResource) -> MaaBool) ;
