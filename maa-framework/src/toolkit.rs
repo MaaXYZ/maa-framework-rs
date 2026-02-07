@@ -1,11 +1,13 @@
 //! Device discovery and configuration utilities.
 
+use serde::{Deserialize, Serialize};
+
 use crate::{common, sys, MaaError, MaaResult};
 use std::ffi::{CStr, CString};
 use std::path::PathBuf;
 
 /// Information about a connected ADB device.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdbDevice {
     /// Device display name.
     pub name: String,
@@ -22,7 +24,7 @@ pub struct AdbDevice {
 }
 
 /// Information about a desktop window (Win32).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DesktopWindow {
     /// Window handle (HWND).
     pub hwnd: usize,
