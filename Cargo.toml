@@ -1,11 +1,11 @@
 [workspace]
-resolver = "2"
+resolver = "3"
 members = ["maa-framework", "maa-framework-sys"]
 
 [workspace.package]
 version = "1.4.0"
 authors = ["MaaFramework Contributors"]
-edition = "2021"
+edition = "2024"
 license = "LGPL-3.0"
 homepage = "https://github.com/MaaXYZ/MaaFramework"
 repository = "https://github.com/MaaXYZ/MaaFramework"
