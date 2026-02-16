@@ -260,7 +260,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             device.adb_path.to_str().unwrap(),
             &device.address,
             &config_str,
-            None,
+            "./MaaAgentBinary",
         )?);
     } else {
         controller = None;

@@ -25,7 +25,7 @@
 //!         device.adb_path.to_str().unwrap(),
 //!         &device.address,
 //!         "{}",
-//!         None,
+//!         "./MaaAgentBinary",
 //!     )?;
 //!
 //!     // 3. Create resource and tasker
