@@ -210,35 +210,66 @@ pub type __darwin_uid_t = __uint32_t ;
 pub type __darwin_useconds_t = __uint32_t ;
 pub type __darwin_uuid_t = [:: std :: os :: raw :: c_uchar ; 16usize] ;
 pub type __darwin_uuid_string_t = [:: std :: os :: raw :: c_char ; 37usize] ;
+// Darwin/macOS-only pthread types; layout assertions fail on Windows (different sizes).
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [repr (C)] # [derive (Debug , Copy , Clone)] pub struct __darwin_pthread_handler_rec { pub __routine : :: std :: option :: Option < unsafe extern "C" fn (arg1 : * mut :: std :: os :: raw :: c_void) > , pub __arg : * mut :: std :: os :: raw :: c_void , pub __next : * mut __darwin_pthread_handler_rec , }
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of __darwin_pthread_handler_rec"] [:: std :: mem :: size_of :: < __darwin_pthread_handler_rec > () - 24usize] ; ["Alignment of __darwin_pthread_handler_rec"] [:: std :: mem :: align_of :: < __darwin_pthread_handler_rec > () - 8usize] ; ["Offset of field: __darwin_pthread_handler_rec::__routine"] [:: std :: mem :: offset_of ! (__darwin_pthread_handler_rec , __routine) - 0usize] ; ["Offset of field: __darwin_pthread_handler_rec::__arg"] [:: std :: mem :: offset_of ! (__darwin_pthread_handler_rec , __arg) - 8usize] ; ["Offset of field: __darwin_pthread_handler_rec::__next"] [:: std :: mem :: offset_of ! (__darwin_pthread_handler_rec , __next) - 16usize] ; } ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [repr (C)] # [derive (Debug , Copy , Clone)] pub struct _opaque_pthread_attr_t { pub __sig : :: std :: os :: raw :: c_long , pub __opaque : [:: std :: os :: raw :: c_char ; 56usize] , }
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of _opaque_pthread_attr_t"] [:: std :: mem :: size_of :: < _opaque_pthread_attr_t > () - 64usize] ; ["Alignment of _opaque_pthread_attr_t"] [:: std :: mem :: align_of :: < _opaque_pthread_attr_t > () - 8usize] ; ["Offset of field: _opaque_pthread_attr_t::__sig"] [:: std :: mem :: offset_of ! (_opaque_pthread_attr_t , __sig) - 0usize] ; ["Offset of field: _opaque_pthread_attr_t::__opaque"] [:: std :: mem :: offset_of ! (_opaque_pthread_attr_t , __opaque) - 8usize] ; } ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [repr (C)] # [derive (Debug , Copy , Clone)] pub struct _opaque_pthread_cond_t { pub __sig : :: std :: os :: raw :: c_long , pub __opaque : [:: std :: os :: raw :: c_char ; 40usize] , }
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of _opaque_pthread_cond_t"] [:: std :: mem :: size_of :: < _opaque_pthread_cond_t > () - 48usize] ; ["Alignment of _opaque_pthread_cond_t"] [:: std :: mem :: align_of :: < _opaque_pthread_cond_t > () - 8usize] ; ["Offset of field: _opaque_pthread_cond_t::__sig"] [:: std :: mem :: offset_of ! (_opaque_pthread_cond_t , __sig) - 0usize] ; ["Offset of field: _opaque_pthread_cond_t::__opaque"] [:: std :: mem :: offset_of ! (_opaque_pthread_cond_t , __opaque) - 8usize] ; } ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [repr (C)] # [derive (Debug , Copy , Clone)] pub struct _opaque_pthread_condattr_t { pub __sig : :: std :: os :: raw :: c_long , pub __opaque : [:: std :: os :: raw :: c_char ; 8usize] , }
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of _opaque_pthread_condattr_t"] [:: std :: mem :: size_of :: < _opaque_pthread_condattr_t > () - 16usize] ; ["Alignment of _opaque_pthread_condattr_t"] [:: std :: mem :: align_of :: < _opaque_pthread_condattr_t > () - 8usize] ; ["Offset of field: _opaque_pthread_condattr_t::__sig"] [:: std :: mem :: offset_of ! (_opaque_pthread_condattr_t , __sig) - 0usize] ; ["Offset of field: _opaque_pthread_condattr_t::__opaque"] [:: std :: mem :: offset_of ! (_opaque_pthread_condattr_t , __opaque) - 8usize] ; } ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [repr (C)] # [derive (Debug , Copy , Clone)] pub struct _opaque_pthread_mutex_t { pub __sig : :: std :: os :: raw :: c_long , pub __opaque : [:: std :: os :: raw :: c_char ; 56usize] , }
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of _opaque_pthread_mutex_t"] [:: std :: mem :: size_of :: < _opaque_pthread_mutex_t > () - 64usize] ; ["Alignment of _opaque_pthread_mutex_t"] [:: std :: mem :: align_of :: < _opaque_pthread_mutex_t > () - 8usize] ; ["Offset of field: _opaque_pthread_mutex_t::__sig"] [:: std :: mem :: offset_of ! (_opaque_pthread_mutex_t , __sig) - 0usize] ; ["Offset of field: _opaque_pthread_mutex_t::__opaque"] [:: std :: mem :: offset_of ! (_opaque_pthread_mutex_t , __opaque) - 8usize] ; } ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [repr (C)] # [derive (Debug , Copy , Clone)] pub struct _opaque_pthread_mutexattr_t { pub __sig : :: std :: os :: raw :: c_long , pub __opaque : [:: std :: os :: raw :: c_char ; 8usize] , }
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of _opaque_pthread_mutexattr_t"] [:: std :: mem :: size_of :: < _opaque_pthread_mutexattr_t > () - 16usize] ; ["Alignment of _opaque_pthread_mutexattr_t"] [:: std :: mem :: align_of :: < _opaque_pthread_mutexattr_t > () - 8usize] ; ["Offset of field: _opaque_pthread_mutexattr_t::__sig"] [:: std :: mem :: offset_of ! (_opaque_pthread_mutexattr_t , __sig) - 0usize] ; ["Offset of field: _opaque_pthread_mutexattr_t::__opaque"] [:: std :: mem :: offset_of ! (_opaque_pthread_mutexattr_t , __opaque) - 8usize] ; } ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [repr (C)] # [derive (Debug , Copy , Clone)] pub struct _opaque_pthread_once_t { pub __sig : :: std :: os :: raw :: c_long , pub __opaque : [:: std :: os :: raw :: c_char ; 8usize] , }
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of _opaque_pthread_once_t"] [:: std :: mem :: size_of :: < _opaque_pthread_once_t > () - 16usize] ; ["Alignment of _opaque_pthread_once_t"] [:: std :: mem :: align_of :: < _opaque_pthread_once_t > () - 8usize] ; ["Offset of field: _opaque_pthread_once_t::__sig"] [:: std :: mem :: offset_of ! (_opaque_pthread_once_t , __sig) - 0usize] ; ["Offset of field: _opaque_pthread_once_t::__opaque"] [:: std :: mem :: offset_of ! (_opaque_pthread_once_t , __opaque) - 8usize] ; } ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [repr (C)] # [derive (Debug , Copy , Clone)] pub struct _opaque_pthread_rwlock_t { pub __sig : :: std :: os :: raw :: c_long , pub __opaque : [:: std :: os :: raw :: c_char ; 192usize] , }
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of _opaque_pthread_rwlock_t"] [:: std :: mem :: size_of :: < _opaque_pthread_rwlock_t > () - 200usize] ; ["Alignment of _opaque_pthread_rwlock_t"] [:: std :: mem :: align_of :: < _opaque_pthread_rwlock_t > () - 8usize] ; ["Offset of field: _opaque_pthread_rwlock_t::__sig"] [:: std :: mem :: offset_of ! (_opaque_pthread_rwlock_t , __sig) - 0usize] ; ["Offset of field: _opaque_pthread_rwlock_t::__opaque"] [:: std :: mem :: offset_of ! (_opaque_pthread_rwlock_t , __opaque) - 8usize] ; } ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [repr (C)] # [derive (Debug , Copy , Clone)] pub struct _opaque_pthread_rwlockattr_t { pub __sig : :: std :: os :: raw :: c_long , pub __opaque : [:: std :: os :: raw :: c_char ; 16usize] , }
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of _opaque_pthread_rwlockattr_t"] [:: std :: mem :: size_of :: < _opaque_pthread_rwlockattr_t > () - 24usize] ; ["Alignment of _opaque_pthread_rwlockattr_t"] [:: std :: mem :: align_of :: < _opaque_pthread_rwlockattr_t > () - 8usize] ; ["Offset of field: _opaque_pthread_rwlockattr_t::__sig"] [:: std :: mem :: offset_of ! (_opaque_pthread_rwlockattr_t , __sig) - 0usize] ; ["Offset of field: _opaque_pthread_rwlockattr_t::__opaque"] [:: std :: mem :: offset_of ! (_opaque_pthread_rwlockattr_t , __opaque) - 8usize] ; } ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [repr (C)] # [derive (Debug , Copy , Clone)] pub struct _opaque_pthread_t { pub __sig : :: std :: os :: raw :: c_long , pub __cleanup_stack : * mut __darwin_pthread_handler_rec , pub __opaque : [:: std :: os :: raw :: c_char ; 8176usize] , }
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 # [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of _opaque_pthread_t"] [:: std :: mem :: size_of :: < _opaque_pthread_t > () - 8192usize] ; ["Alignment of _opaque_pthread_t"] [:: std :: mem :: align_of :: < _opaque_pthread_t > () - 8usize] ; ["Offset of field: _opaque_pthread_t::__sig"] [:: std :: mem :: offset_of ! (_opaque_pthread_t , __sig) - 0usize] ; ["Offset of field: _opaque_pthread_t::__cleanup_stack"] [:: std :: mem :: offset_of ! (_opaque_pthread_t , __cleanup_stack) - 8usize] ; ["Offset of field: _opaque_pthread_t::__opaque"] [:: std :: mem :: offset_of ! (_opaque_pthread_t , __opaque) - 16usize] ; } ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 pub type __darwin_pthread_attr_t = _opaque_pthread_attr_t ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 pub type __darwin_pthread_cond_t = _opaque_pthread_cond_t ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 pub type __darwin_pthread_condattr_t = _opaque_pthread_condattr_t ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 pub type __darwin_pthread_key_t = :: std :: os :: raw :: c_ulong ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 pub type __darwin_pthread_mutex_t = _opaque_pthread_mutex_t ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 pub type __darwin_pthread_mutexattr_t = _opaque_pthread_mutexattr_t ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 pub type __darwin_pthread_once_t = _opaque_pthread_once_t ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 pub type __darwin_pthread_rwlock_t = _opaque_pthread_rwlock_t ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 pub type __darwin_pthread_rwlockattr_t = _opaque_pthread_rwlockattr_t ;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 pub type __darwin_pthread_t = * mut _opaque_pthread_t ;
 pub type intmax_t = :: std :: os :: raw :: c_long ;
 pub type uintmax_t = :: std :: os :: raw :: c_ulong ;
