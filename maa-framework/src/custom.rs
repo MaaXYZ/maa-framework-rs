@@ -204,9 +204,9 @@ pub(crate) unsafe extern "C" fn custom_action_trampoline(
         return 0; // Failure
     }
 
-    let action = &*(trans_arg as *mut Box<dyn CustomAction>);
+    let action = unsafe { &*(trans_arg as *mut Box<dyn CustomAction>) };
 
-    let ctx = match Context::from_raw(context) {
+    let ctx = match unsafe { Context::from_raw(context) } {
         Some(c) => c,
         None => return 0,
     };
@@ -215,7 +215,7 @@ pub(crate) unsafe extern "C" fn custom_action_trampoline(
         if ptr.is_null() {
             ""
         } else {
-            CStr::from_ptr(ptr).to_str().unwrap_or("")
+            unsafe { CStr::from_ptr(ptr).to_str().unwrap_or("") }
         }
     };
 
@@ -260,9 +260,9 @@ pub(crate) unsafe extern "C" fn custom_recognition_trampoline(
     if trans_arg.is_null() {
         return 0;
     }
-    let reco = &*(trans_arg as *mut Box<dyn CustomRecognition>);
+    let reco = unsafe { &*(trans_arg as *mut Box<dyn CustomRecognition>) };
 
-    let ctx = match Context::from_raw(context) {
+    let ctx = match unsafe { Context::from_raw(context) } {
         Some(c) => c,
         None => return 0,
     };
@@ -271,7 +271,7 @@ pub(crate) unsafe extern "C" fn custom_recognition_trampoline(
         if ptr.is_null() {
             ""
         } else {
-            CStr::from_ptr(ptr).to_str().unwrap_or("")
+            unsafe { CStr::from_ptr(ptr).to_str().unwrap_or("") }
         }
     };
 
