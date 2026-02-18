@@ -23,18 +23,6 @@ edition = "2024"
 name = "main"
 path = "examples/main.rs"
 
-[[example]]
-name = "test_adb"
-path = "examples/test_adb.rs"
-
-[[example]]
-name = "test_basic"
-path = "examples/test_basic.rs"
-
-[[example]]
-name = "test_dynamic"
-path = "examples/test_dynamic.rs"
-
 [features]
 default = ["adb", "dynamic", "maa-framework/toolkit", "maa-framework/adb", "maa-framework/dynamic", "maa-framework/win32", "maa-framework/dbg", "maa-framework/custom", "maa-framework/internal"]
 adb = ["maa-framework/adb"]
