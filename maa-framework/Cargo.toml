@@ -16,12 +16,13 @@ exclude = ["MaaFramework", "install", "download_plugins", ".github", ".vscode"]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "2.0"
-bitflags = "2.4"
+bitflags = "2.10.0"
 image = { version = "0.25", optional = true }
-maa-framework-sys = { workspace = true }
+# Explicit path so we can set default-features = false (workspace dep cannot override it).
+maa-framework-sys = { path = "../maa-framework-sys", version = "5.6.0", default-features = false }
 
 [features]
-default = ["toolkit", "adb", "win32", "dbg", "custom", "internal"]
+default = ["toolkit", "adb", "win32", "dbg", "custom", "internal", "dynamic"]
 static = ["maa-framework-sys/static"]
 dynamic = ["maa-framework-sys/dynamic"]
 toolkit = ["maa-framework-sys/toolkit"]

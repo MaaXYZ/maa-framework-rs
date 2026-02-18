@@ -15,16 +15,16 @@ unsafe extern "C" fn event_callback_trampoline(
     if trans_arg.is_null() {
         return;
     }
-    let callback = &*(trans_arg as *const EventCallbackFn);
+    let callback = unsafe { &*(trans_arg as *const EventCallbackFn) };
 
     let msg_str = if !msg.is_null() {
-        CStr::from_ptr(msg).to_string_lossy()
+        unsafe { CStr::from_ptr(msg).to_string_lossy() }
     } else {
         std::borrow::Cow::Borrowed("")
     };
 
     let details_str = if !details.is_null() {
-        CStr::from_ptr(details).to_string_lossy()
+        unsafe { CStr::from_ptr(details).to_string_lossy() }
     } else {
         std::borrow::Cow::Borrowed("")
     };
@@ -53,7 +53,7 @@ impl EventCallback {
 
     pub unsafe fn drop_callback(ptr: *mut c_void) {
         if !ptr.is_null() {
-            let _ = Box::from_raw(ptr as *mut EventCallbackFn);
+            let _ = unsafe { Box::from_raw(ptr as *mut EventCallbackFn) };
         }
     }
 
@@ -68,7 +68,7 @@ impl EventCallback {
 
     pub unsafe fn drop_sink(ptr: *mut c_void) {
         if !ptr.is_null() {
-            let _ = Box::from_raw(ptr as *mut EventSinkWrapper);
+            let _ = unsafe { Box::from_raw(ptr as *mut EventSinkWrapper) };
         }
     }
 }
@@ -99,16 +99,16 @@ unsafe extern "C" fn event_sink_trampoline(
     if callback_arg.is_null() {
         return;
     }
-    let wrapper = &*(callback_arg as *const EventSinkWrapper);
+    let wrapper = unsafe { &*(callback_arg as *const EventSinkWrapper) };
 
     let msg_str = if !_msg.is_null() {
-        CStr::from_ptr(_msg).to_string_lossy()
+        unsafe { CStr::from_ptr(_msg).to_string_lossy() }
     } else {
         std::borrow::Cow::Borrowed("")
     };
 
     let detail_str = if !_detail.is_null() {
-        CStr::from_ptr(_detail).to_string_lossy()
+        unsafe { CStr::from_ptr(_detail).to_string_lossy() }
     } else {
         std::borrow::Cow::Borrowed("")
     };

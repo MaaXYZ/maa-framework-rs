@@ -18,7 +18,7 @@ use maa_framework::custom::{CustomAction, CustomRecognition};
 use maa_framework::resource::Resource;
 use maa_framework::tasker::Tasker;
 use maa_framework::toolkit::Toolkit;
-use maa_framework::{buffer, common, sys};
+use maa_framework::{common, sys};
 
 // ============================================================================
 // Custom Recognition Implementation
@@ -51,12 +51,10 @@ impl CustomRecognition for MyRecognition {
 
         // --- Context API Demo ---
 
-        // 1. Run sub-pipeline recognition with override
-        let pp_override = r#"{"MyCustomOCR": {"recognition": "OCR", "roi": [100, 100, 200, 300]}}"#;
-        if let Ok(img_buf) = buffer::MaaImageBuffer::new() {
-            let reco_id = context.run_recognition("MyCustomOCR", pp_override, &img_buf);
-            println!("  run_recognition result: {:?}", reco_id);
-        }
+        // 1. Run sub-pipeline recognition with override (commented out - requires OCR model)
+        // let pp_override = r#"{"MyCustomOCR": {"recognition": "OCR", "roi": [100, 100, 200, 300]}}"#;
+        // let reco_id = context.run_recognition("MyCustomOCR", pp_override, _image);  
+        // println!("  run_recognition result: {:?}", reco_id);
 
         // 2. Take a new screenshot via tasker's controller
         let tasker_ptr = context.tasker_handle();
@@ -98,6 +96,8 @@ impl CustomRecognition for MyRecognition {
         println!("  [Demo] Async click would complete here");
 
         // 7. Clone context for independent operations (modifications won't affect original)
+        // Commented out - demonstrates cloning but requires proper image/pipeline setup
+        /*
         if let Ok(new_ctx) = context.clone_context() {
             let _ = new_ctx.override_pipeline(r#"{"MyCustomOCR": {"roi": [100, 200, 300, 400]}}"#);
 
@@ -124,6 +124,8 @@ impl CustomRecognition for MyRecognition {
             }
             // new_ctx changes don't affect original context
         }
+        */
+        println!("  [Demo] Context cloning and sub-recognition available (commented out)");
 
         // 8. Get current task ID
         let task_id = context.task_id();
@@ -160,7 +162,7 @@ struct MyAction;
 impl CustomAction for MyAction {
     fn run(
         &self,
-        context: &Context,
+        _context: &Context,
         _task_id: sys::MaaTaskId,
         node_name: &str,
         custom_action_name: &str,
@@ -178,6 +180,8 @@ impl CustomAction for MyAction {
         );
 
         // You can use Context API here too
+        // Commented out - "Click" task needs to be defined in pipeline
+        /*
         let _ = context.run_action(
             "Click",
             "{}",
@@ -189,6 +193,8 @@ impl CustomAction for MyAction {
             },
             "{}",
         );
+        */
+        println!("  [Demo] Context.run_action available (requires pipeline definition)");
 
         true // Return true for success, false for failure
     }
@@ -200,6 +206,9 @@ impl CustomAction for MyAction {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== MaaFramework Rust SDK Demo ===\n");
+
+    #[cfg(feature = "dynamic")]
+    maa_framework::ensure_library_loaded()?;
 
     // -------------------------------------------------------------------------
     // 1. Initialize Toolkit
@@ -256,11 +265,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(device) = adb_devices.first() {
         println!("    Using ADB device: {}", device.name);
         let config_str = serde_json::to_string(&device.config)?;
+        let adb_path = device.adb_path.to_str().ok_or_else(|| {
+            std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid ADB path")
+        })?;
         controller = Some(Controller::new_adb(
-            device.adb_path.to_str().unwrap(),
+            adb_path,
             &device.address,
             &config_str,
-            "./MaaAgentBinary",
+            None,
         )?);
     } else {
         controller = None;
@@ -340,15 +352,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("    Recognition list: {:?}", reco_list);
     println!("    Action list: {:?}", action_list);
 
-    // Load resource bundle
+    // Load resource bundle (optional - commented out as sample resources don't exist)
+    // Uncomment below if you have resource files
     let resource_path = "sample/resource";
     println!("    Loading resource from: {}", resource_path);
-    match resource.post_bundle(resource_path) {
+    let resource_loaded = match resource.post_bundle(resource_path) {
         Ok(job) => {
             let status = job.wait();
             println!("    Load status: {:?}", status);
+            status == common::MaaStatus::SUCCEEDED
         }
-        Err(e) => println!("    Load failed: {} (OK for demo)", e),
+        Err(e) => {
+            println!("    Load failed: {} (OK for demo)", e);
+            false
+        }
+    };
+
+    if resource_loaded {
+        println!("    ✅ Resource loaded successfully!");
+    } else {
+        println!("    ⚠️  Resource not loaded - OpenSettings task will be skipped");
     }
 
     // Add event sink
@@ -386,7 +409,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!(
                 "    [TaskerEvent] {}: {}",
                 msg,
-                &details[..details.len().min(50)]
+                &details[..details.len().min(100)]
             );
         })?;
 
@@ -400,7 +423,49 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }"#;
 
-        println!("\n[7] Executing task...");
+        // Execute "OpenSettings" task (if resource was loaded and controller is available)
+        if resource_loaded && controller.is_some() {
+            println!("\n[7a] Opening Android Settings...");
+            match tasker.post_task("OpenSettings", "{}") {
+                Ok(job) => {
+                    println!("    Task posted, waiting for completion...");
+                    let status = job.wait();
+                    println!("    OpenSettings task status: {:?}", status);
+                    
+                    if status == common::MaaStatus::SUCCEEDED {
+                        println!("    ✅ Successfully opened Android Settings!");
+                        
+                        // Wait a moment for the app to fully open
+                        std::thread::sleep(std::time::Duration::from_secs(2));
+                        
+                        // Verify by checking screen
+                        if let Some(ref ctrl) = controller {
+                            println!("    Taking screenshot to verify...");
+                            let cap_id = ctrl.post_screencap()?;
+                            ctrl.wait(cap_id);
+                        }
+                    } else {
+                        println!("    ⚠️  Task completed with status: {:?}", status);
+                    }
+                    
+                    if let Ok(Some(detail)) = job.get(false) {
+                        println!("    Entry: {}", detail.entry);
+                        println!("    Nodes executed: {}", detail.nodes.len());
+                    }
+                }
+                Err(e) => println!("    ❌ OpenSettings task failed: {}", e),
+            }
+        } else {
+            println!("\n[7a] Skipping OpenSettings task:");
+            if !resource_loaded {
+                println!("    - Resource not loaded");
+            }
+            if controller.is_none() {
+                println!("    - No controller available (need ADB device)");
+            }
+        }
+
+        // println!("\n[7b] Executing custom task...");
         match tasker.post_task("MyCustomEntry", pipeline_override) {
             Ok(job) => {
                 let status = job.wait();
