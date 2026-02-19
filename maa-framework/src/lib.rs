@@ -20,13 +20,11 @@
 //!     let devices = Toolkit::find_adb_devices()?;
 //!     let device = devices.first().expect("No device found");
 //!
-//!     // 2. Create controller
-//!     let controller = Controller::new_adb(
-//!         device.adb_path.to_str().unwrap(),
-//!         &device.address,
-//!         "{}",
-//!         None,
-//!     )?;
+//!     // 2. Create controller (agent_path: "" to use MAA_AGENT_PATH or current dir)
+//!     let adb_path = device.adb_path.to_str().ok_or_else(|| {
+//!         std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid ADB path")
+//!     })?;
+//!     let controller = Controller::new_adb(adb_path, &device.address, "{}", "")?;
 //!
 //!     // 3. Create resource and tasker
 //!     let resource = Resource::new()?;
