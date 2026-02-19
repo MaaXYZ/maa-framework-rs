@@ -26,7 +26,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           # Only get stable releases, exclude pre-releases
-          UPSTREAM_TAG=$(gh release list --repo MaaXYZ/MaaFramework --exclude-pre-releases --limit 1 --json tagName -q '.[0].tagName')
+          UPSTREAM_TAG=$(gh release list --repo MaaXYZ/MaaFramework --limit 1 --json tagName -q '.[0].tagName')
           UPSTREAM_VERSION="${UPSTREAM_TAG#v}"
           
           CURRENT_VERSION=$(grep '^version = ' maa-framework-sys/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
