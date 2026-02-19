@@ -31,7 +31,66 @@ where
 // --- Common Types ---
 
 /// Rectangle coordinates: (x, y, width, height).
-pub type Rect = (i32, i32, i32, i32);
+/// Compatible with both array [x, y, w, h] and object {"x": 0, "y": 0, "w": 0, "h": 0} formats.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(from = "RectDef")]
+pub struct Rect {
+    pub x: i32,
+    pub y: i32,
+    pub width: i32,
+    pub height: i32,
+}
+
+/// Private proxy for deserialization
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum RectDef {
+    Map {
+        x: i32,
+        y: i32,
+        #[serde(alias = "w")]
+        width: i32,
+        #[serde(alias = "h")]
+        height: i32,
+    },
+    Array(i32, i32, i32, i32),
+}
+
+impl From<RectDef> for Rect {
+    fn from(def: RectDef) -> Self {
+        match def {
+            RectDef::Map { x, y, width, height } => Rect { x, y, width, height },
+            RectDef::Array(x, y, w, h) => Rect { x, y, width: w, height: h },
+        }
+    }
+}
+
+impl From<(i32, i32, i32, i32)> for Rect {
+    fn from(tuple: (i32, i32, i32, i32)) -> Self {
+        Self { x: tuple.0, y: tuple.1, width: tuple.2, height: tuple.3 }
+    }
+}
+
+impl Rect {
+    pub fn to_tuple(&self) -> (i32, i32, i32, i32) {
+        (self.x, self.y, self.width, self.height)
+    }
+}
+
+// Allow `Rect == (x, y, w, h)`
+impl PartialEq<(i32, i32, i32, i32)> for Rect {
+    fn eq(&self, other: &(i32, i32, i32, i32)) -> bool {
+        self.x == other.0 && self.y == other.1 && self.width == other.2 && self.height == other.3
+    }
+}
+
+// Allow `(x, y, w, h) == Rect`
+impl PartialEq<Rect> for (i32, i32, i32, i32) {
+    fn eq(&self, other: &Rect) -> bool {
+        self.0 == other.x && self.1 == other.y && self.2 == other.width && self.3 == other.height
+    }
+}
+
 /// Region of interest: (x, y, width, height). Use [0, 0, 0, 0] for full screen.
 pub type Roi = (i32, i32, i32, i32);
 
@@ -129,7 +188,7 @@ impl Default for WaitFreezes {
         Self {
             time: default_wait_time(),
             target: Target::default(),
-            target_offset: (0, 0, 0, 0),
+            target_offset: Rect::default(),
             threshold: default_wait_threshold(),
             method: default_wait_method(),
             rate_limit: default_rate_limit(),
@@ -815,7 +874,7 @@ fn default_target_list_true() -> Vec<Target> {
     vec![Target::Bool(true)]
 }
 fn default_rect_list_zero() -> Vec<Rect> {
-    vec![(0, 0, 0, 0)]
+    vec![(0, 0, 0, 0).into()]
 }
 fn default_i32_list_zero() -> Vec<i32> {
     vec![0]
@@ -839,5 +898,5 @@ fn default_max_hit() -> u32 {
     u32::MAX
 }
 fn default_roi_zero() -> Target {
-    Target::Rect((0, 0, 0, 0))
+    Target::Rect((0, 0, 0, 0).into())
 }
