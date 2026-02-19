@@ -336,7 +336,11 @@ fn generate_bindings_with_bindgen(include_dir: &[PathBuf], out_path: &PathBuf, i
         bindings_builder = bindings_builder.header("headers/maa_toolkit.h");
     }
 
-    bindings_builder = bindings_builder.blocklist_function("^__.*");
+    bindings_builder = bindings_builder
+        .allowlist_function("Maa.*")
+        .allowlist_type("Maa.*")
+        .allowlist_var("Maa.*")
+        .blocklist_function("^__.*");
 
     if is_dynamic {
         let static_bindings = bindings_builder
