@@ -45,7 +45,7 @@ macro_rules! impl_buffer_lifecycle {
             /// Use this when you are borrowing a handle from the C API.
             pub unsafe fn from_raw(handle: *mut $sys_type) -> Self {
                 Self {
-                    handle: NonNull::new_unchecked(handle),
+                    handle: unsafe { NonNull::new_unchecked(handle) },
                     own: false,
                 }
             }
