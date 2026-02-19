@@ -2,6 +2,7 @@
 
 use serde::{de::DeserializeOwned, Deserialize, Deserializer, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
 
 // --- Custom Deserializers for Scalar/Array Polymorphism ---
 // The C API may return either a scalar or an array for some fields.
@@ -51,6 +52,26 @@ pub enum Target {
 impl Default for Target {
     fn default() -> Self {
         Target::Bool(true)
+    }
+}
+
+/// Anchor configuration.
+///
+/// Can be:
+/// - String: Set anchor to current node.
+/// - List of strings: Set multiple anchors to current node.
+/// - Map: Set anchors to specific nodes (or clear if empty).
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(untagged)]
+pub enum Anchor {
+    Name(String),
+    List(Vec<String>),
+    Map(HashMap<String, String>),
+}
+
+impl Default for Anchor {
+    fn default() -> Self {
+        Anchor::List(Vec::new())
     }
 }
 
@@ -690,7 +711,7 @@ pub struct PipelineData {
     pub on_error: Vec<NodeAttr>,
     /// Anchor names for this node. Default: [].
     #[serde(default)]
-    pub anchor: Vec<String>,
+    pub anchor: Anchor,
     /// Invert recognition result. Default: false.
     #[serde(default)]
     pub inverse: bool,

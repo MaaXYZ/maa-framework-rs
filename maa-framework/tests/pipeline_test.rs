@@ -122,6 +122,10 @@ fn run_context_pipeline_tests(context: &Context) -> MaaResult<()> {
         println!("FAILED: test_node_attributes: {:?}", e);
         e
     })?;
+    test_anchor_object_format(context).map_err(|e| {
+        println!("FAILED: test_anchor_object_format: {:?}", e);
+        e
+    })?;
     test_v2_format(context).map_err(|e| {
         println!("FAILED: test_v2_format: {:?}", e);
         e
@@ -244,7 +248,13 @@ fn test_context_override_pipeline(context: &Context) -> MaaResult<()> {
     assert_eq!(node_obj.max_hit, 3, "max_hit");
     assert_eq!(node_obj.enabled, true, "enabled");
     assert_eq!(node_obj.inverse, false, "inverse");
-    assert_eq!(node_obj.anchor, vec!["my_anchor".to_string()], "anchor");
+
+    match node_obj.anchor {
+        maa_framework::pipeline::Anchor::List(l) => {
+            assert_eq!(l, vec!["my_anchor".to_string()], "anchor");
+        }
+        _ => panic!("Expected Anchor::List"),
+    }
 
     // Verify attach
     assert!(node_obj.attach.is_some(), "attach should exist");
@@ -933,6 +943,72 @@ fn test_node_attributes(context: &Context) -> MaaResult<()> {
     assert_eq!(obj.on_error[0].jump_back, true);
 
     println!("    PASS: node attributes");
+    Ok(())
+}
+
+/// Test anchor object format - matching Python _test_anchor_object_format
+fn test_anchor_object_format(context: &Context) -> MaaResult<()> {
+    println!("  Testing anchor object format...");
+
+    let new_ctx = context.clone_context()?;
+
+    // Test anchor formats
+    new_ctx.override_pipeline(
+        r#"{
+        "AnchorString": {
+            "anchor": "StringAnchor"
+        },
+        "AnchorArray": {
+            "anchor": ["ArrayAnchor1", "ArrayAnchor2"]
+        },
+        "AnchorObject": {
+            "anchor": {
+                "ObjAnchor1": "TargetNode1",
+                "ObjAnchor2": "",
+                "ObjAnchor3": "TargetNode2"
+            }
+        },
+        "TargetNode1": {},
+        "TargetNode2": {}
+    }"#,
+    )?;
+
+    // Verify String format
+    let obj1 = new_ctx
+        .get_node_object("AnchorString")?
+        .expect("AnchorString should exist");
+    match obj1.anchor {
+        maa_framework::pipeline::Anchor::Name(s) => {
+            assert_eq!(s, "StringAnchor");
+        }
+        _ => panic!("Expected Anchor::Name for AnchorString"),
+    }
+
+    // Verify Array format
+    let obj2 = new_ctx
+        .get_node_object("AnchorArray")?
+        .expect("AnchorArray should exist");
+    match obj2.anchor {
+        maa_framework::pipeline::Anchor::List(l) => {
+            assert_eq!(l, vec!["ArrayAnchor1", "ArrayAnchor2"]);
+        }
+        _ => panic!("Expected Anchor::List for AnchorArray"),
+    }
+
+    // Verify Map format
+    let obj3 = new_ctx
+        .get_node_object("AnchorObject")?
+        .expect("AnchorObject should exist");
+    match obj3.anchor {
+        maa_framework::pipeline::Anchor::Map(m) => {
+            assert_eq!(m.get("ObjAnchor1").map(|s| s.as_str()), Some("TargetNode1"));
+            assert_eq!(m.get("ObjAnchor2").map(|s| s.as_str()), Some(""));
+            assert_eq!(m.get("ObjAnchor3").map(|s| s.as_str()), Some("TargetNode2"));
+        }
+        _ => panic!("Expected Anchor::Map for AnchorObject"),
+    }
+
+    println!("    PASS: anchor object format");
     Ok(())
 }
 
