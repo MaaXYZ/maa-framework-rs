@@ -32,13 +32,22 @@ where
 
 /// Rectangle coordinates: (x, y, width, height).
 /// Compatible with both array [x, y, w, h] and object {"x": 0, "y": 0, "w": 0, "h": 0} formats.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Default)]
 #[serde(from = "RectDef")]
 pub struct Rect {
     pub x: i32,
     pub y: i32,
     pub width: i32,
     pub height: i32,
+}
+
+impl Serialize for Rect {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        (self.x, self.y, self.width, self.height).serialize(serializer)
+    }
 }
 
 /// Private proxy for deserialization
