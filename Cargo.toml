@@ -12,36 +12,3 @@ repository = "https://github.com/MaaXYZ/MaaFramework"
 
 [workspace.dependencies]
 maa-framework-sys = { path = "maa-framework-sys", version = "5.6.0" }
-
-# Example configuration
-[package]
-name = "maa-framework-examples"
-version = "0.1.0"
-edition = "2024"
-
-[[example]]
-name = "main"
-path = "examples/main.rs"
-
-[features]
-default = ["adb", "dynamic", "maa-framework/toolkit", "maa-framework/adb", "maa-framework/dynamic", "maa-framework/win32", "maa-framework/dbg", "maa-framework/custom", "maa-framework/internal"]
-adb = ["maa-framework/adb"]
-dynamic = ["maa-framework/dynamic"]
-# Static build: do not use default so maa-framework gets only static (no dynamic).
-static = [
-    "maa-framework/static",
-    "maa-framework/toolkit",
-    "maa-framework/adb",
-    "maa-framework/win32",
-    "maa-framework/dbg",
-    "maa-framework/custom",
-    "maa-framework/internal",
-]
-
-[dependencies]
-maa-framework = { path = "maa-framework", default-features = false }
-serde_json = "1.0"
-
-# Dynamic example needs dynamic feature
-[package.metadata.cargo-all-features]
-denylist = ["dynamic"]

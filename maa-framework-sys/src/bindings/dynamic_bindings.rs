@@ -1,377 +1,3008 @@
-unsafe impl Send for MaaFramework { }
-unsafe impl Sync for MaaFramework { }
-pub const __WORDSIZE : u32 = 64 ;
-pub const __has_safe_buffers : u32 = 1 ;
-pub const __DARWIN_ONLY_64_BIT_INO_T : u32 = 1 ;
-pub const __DARWIN_ONLY_UNIX_CONFORMANCE : u32 = 1 ;
-pub const __DARWIN_ONLY_VERS_1050 : u32 = 1 ;
-pub const __DARWIN_UNIX03 : u32 = 1 ;
-pub const __DARWIN_64_BIT_INO_T : u32 = 1 ;
-pub const __DARWIN_VERS_1050 : u32 = 1 ;
-pub const __DARWIN_NON_CANCELABLE : u32 = 0 ;
-pub const __DARWIN_SUF_EXTSN : & [u8 ; 14] = b"$DARWIN_EXTSN\0" ;
-pub const __DARWIN_C_ANSI : u32 = 4096 ;
-pub const __DARWIN_C_FULL : u32 = 900000 ;
-pub const __DARWIN_C_LEVEL : u32 = 900000 ;
-pub const __STDC_WANT_LIB_EXT1__ : u32 = 1 ;
-pub const __DARWIN_NO_LONG_LONG : u32 = 0 ;
-pub const _DARWIN_FEATURE_64_BIT_INODE : u32 = 1 ;
-pub const _DARWIN_FEATURE_ONLY_64_BIT_INODE : u32 = 1 ;
-pub const _DARWIN_FEATURE_ONLY_VERS_1050 : u32 = 1 ;
-pub const _DARWIN_FEATURE_ONLY_UNIX_CONFORMANCE : u32 = 1 ;
-pub const _DARWIN_FEATURE_UNIX_CONFORMANCE : u32 = 3 ;
-pub const __has_ptrcheck : u32 = 0 ;
-pub const __has_bounds_safety_attributes : u32 = 0 ;
-pub const USE_CLANG_TYPES : u32 = 0 ;
-pub const __PTHREAD_SIZE__ : u32 = 8176 ;
-pub const __PTHREAD_ATTR_SIZE__ : u32 = 56 ;
-pub const __PTHREAD_MUTEXATTR_SIZE__ : u32 = 8 ;
-pub const __PTHREAD_MUTEX_SIZE__ : u32 = 56 ;
-pub const __PTHREAD_CONDATTR_SIZE__ : u32 = 8 ;
-pub const __PTHREAD_COND_SIZE__ : u32 = 40 ;
-pub const __PTHREAD_ONCE_SIZE__ : u32 = 8 ;
-pub const __PTHREAD_RWLOCK_SIZE__ : u32 = 192 ;
-pub const __PTHREAD_RWLOCKATTR_SIZE__ : u32 = 16 ;
-pub const INT8_MAX : u32 = 127 ;
-pub const INT16_MAX : u32 = 32767 ;
-pub const INT32_MAX : u32 = 2147483647 ;
-pub const INT64_MAX : u64 = 9223372036854775807 ;
-pub const INT8_MIN : i32 = - 128 ;
-pub const INT16_MIN : i32 = - 32768 ;
-pub const INT32_MIN : i32 = - 2147483648 ;
-pub const INT64_MIN : i64 = - 9223372036854775808 ;
-pub const UINT8_MAX : u32 = 255 ;
-pub const UINT16_MAX : u32 = 65535 ;
-pub const UINT32_MAX : u32 = 4294967295 ;
-pub const UINT64_MAX : i32 = - 1 ;
-pub const INT_LEAST8_MIN : i32 = - 128 ;
-pub const INT_LEAST16_MIN : i32 = - 32768 ;
-pub const INT_LEAST32_MIN : i32 = - 2147483648 ;
-pub const INT_LEAST64_MIN : i64 = - 9223372036854775808 ;
-pub const INT_LEAST8_MAX : u32 = 127 ;
-pub const INT_LEAST16_MAX : u32 = 32767 ;
-pub const INT_LEAST32_MAX : u32 = 2147483647 ;
-pub const INT_LEAST64_MAX : u64 = 9223372036854775807 ;
-pub const UINT_LEAST8_MAX : u32 = 255 ;
-pub const UINT_LEAST16_MAX : u32 = 65535 ;
-pub const UINT_LEAST32_MAX : u32 = 4294967295 ;
-pub const UINT_LEAST64_MAX : i32 = - 1 ;
-pub const INT_FAST8_MIN : i32 = - 128 ;
-pub const INT_FAST16_MIN : i32 = - 32768 ;
-pub const INT_FAST32_MIN : i32 = - 2147483648 ;
-pub const INT_FAST64_MIN : i64 = - 9223372036854775808 ;
-pub const INT_FAST8_MAX : u32 = 127 ;
-pub const INT_FAST16_MAX : u32 = 32767 ;
-pub const INT_FAST32_MAX : u32 = 2147483647 ;
-pub const INT_FAST64_MAX : u64 = 9223372036854775807 ;
-pub const UINT_FAST8_MAX : u32 = 255 ;
-pub const UINT_FAST16_MAX : u32 = 65535 ;
-pub const UINT_FAST32_MAX : u32 = 4294967295 ;
-pub const UINT_FAST64_MAX : i32 = - 1 ;
-pub const INTPTR_MAX : u64 = 9223372036854775807 ;
-pub const INTPTR_MIN : i64 = - 9223372036854775808 ;
-pub const UINTPTR_MAX : i32 = - 1 ;
-pub const SIZE_MAX : i32 = - 1 ;
-pub const RSIZE_MAX : i32 = - 1 ;
-pub const WINT_MIN : i32 = - 2147483648 ;
-pub const WINT_MAX : u32 = 2147483647 ;
-pub const SIG_ATOMIC_MIN : i32 = - 2147483648 ;
-pub const SIG_ATOMIC_MAX : u32 = 2147483647 ;
-pub const MaaNullSize : i32 = - 1 ;
-pub const MaaAdbScreencapMethod_EncodeToFileAndPull : u32 = 1 ;
-pub const MaaAdbScreencapMethod_Encode : u32 = 2 ;
-pub const MaaAdbScreencapMethod_RawWithGzip : u32 = 4 ;
-pub const MaaAdbScreencapMethod_RawByNetcat : u32 = 8 ;
-pub const MaaAdbScreencapMethod_MinicapDirect : u32 = 16 ;
-pub const MaaAdbScreencapMethod_MinicapStream : u32 = 32 ;
-pub const MaaAdbScreencapMethod_EmulatorExtras : u32 = 64 ;
-pub const MaaAdbScreencapMethod_None : u32 = 0 ;
-pub const MaaAdbScreencapMethod_All : i32 = - 1 ;
-pub const MaaAdbScreencapMethod_Default : i32 = - 57 ;
-pub const MaaAdbInputMethod_AdbShell : u32 = 1 ;
-pub const MaaAdbInputMethod_MinitouchAndAdbKey : u32 = 2 ;
-pub const MaaAdbInputMethod_Maatouch : u32 = 4 ;
-pub const MaaAdbInputMethod_EmulatorExtras : u32 = 8 ;
-pub const MaaAdbInputMethod_None : u32 = 0 ;
-pub const MaaAdbInputMethod_All : i32 = - 1 ;
-pub const MaaAdbInputMethod_Default : i32 = - 9 ;
-pub const MaaWin32ScreencapMethod_None : u32 = 0 ;
-pub const MaaWin32ScreencapMethod_GDI : u32 = 1 ;
-pub const MaaWin32ScreencapMethod_FramePool : u32 = 2 ;
-pub const MaaWin32ScreencapMethod_DXGI_DesktopDup : u32 = 4 ;
-pub const MaaWin32ScreencapMethod_DXGI_DesktopDup_Window : u32 = 8 ;
-pub const MaaWin32ScreencapMethod_PrintWindow : u32 = 16 ;
-pub const MaaWin32ScreencapMethod_ScreenDC : u32 = 32 ;
-pub const MaaWin32InputMethod_None : u32 = 0 ;
-pub const MaaWin32InputMethod_Seize : u32 = 1 ;
-pub const MaaWin32InputMethod_SendMessage : u32 = 2 ;
-pub const MaaWin32InputMethod_PostMessage : u32 = 4 ;
-pub const MaaWin32InputMethod_LegacyEvent : u32 = 8 ;
-pub const MaaWin32InputMethod_PostThreadMessage : u32 = 16 ;
-pub const MaaWin32InputMethod_SendMessageWithCursorPos : u32 = 32 ;
-pub const MaaWin32InputMethod_PostMessageWithCursorPos : u32 = 64 ;
-pub const MaaDbgControllerType_None : u32 = 0 ;
-pub const MaaDbgControllerType_CarouselImage : u32 = 1 ;
-pub const MaaDbgControllerType_ReplayRecording : u32 = 2 ;
-pub const MaaGamepadType_Xbox360 : u32 = 0 ;
-pub const MaaGamepadType_DualShock4 : u32 = 1 ;
-pub const MaaGamepadButton_A : u32 = 4096 ;
-pub const MaaGamepadButton_B : u32 = 8192 ;
-pub const MaaGamepadButton_X : u32 = 16384 ;
-pub const MaaGamepadButton_Y : u32 = 32768 ;
-pub const MaaGamepadButton_LB : u32 = 256 ;
-pub const MaaGamepadButton_RB : u32 = 512 ;
-pub const MaaGamepadButton_LEFT_THUMB : u32 = 64 ;
-pub const MaaGamepadButton_RIGHT_THUMB : u32 = 128 ;
-pub const MaaGamepadButton_START : u32 = 16 ;
-pub const MaaGamepadButton_BACK : u32 = 32 ;
-pub const MaaGamepadButton_GUIDE : u32 = 1024 ;
-pub const MaaGamepadButton_DPAD_UP : u32 = 1 ;
-pub const MaaGamepadButton_DPAD_DOWN : u32 = 2 ;
-pub const MaaGamepadButton_DPAD_LEFT : u32 = 4 ;
-pub const MaaGamepadButton_DPAD_RIGHT : u32 = 8 ;
-pub const MaaGamepadButton_CROSS : u32 = 4096 ;
-pub const MaaGamepadButton_CIRCLE : u32 = 8192 ;
-pub const MaaGamepadButton_SQUARE : u32 = 16384 ;
-pub const MaaGamepadButton_TRIANGLE : u32 = 32768 ;
-pub const MaaGamepadButton_L1 : u32 = 256 ;
-pub const MaaGamepadButton_R1 : u32 = 512 ;
-pub const MaaGamepadButton_L3 : u32 = 64 ;
-pub const MaaGamepadButton_R3 : u32 = 128 ;
-pub const MaaGamepadButton_OPTIONS : u32 = 16 ;
-pub const MaaGamepadButton_SHARE : u32 = 32 ;
-pub const MaaGamepadButton_PS : u32 = 65536 ;
-pub const MaaGamepadButton_TOUCHPAD : u32 = 131072 ;
-pub const MaaGamepadTouch_LeftStick : u32 = 0 ;
-pub const MaaGamepadTouch_RightStick : u32 = 1 ;
-pub const MaaGamepadTouch_LeftTrigger : u32 = 2 ;
-pub const MaaGamepadTouch_RightTrigger : u32 = 3 ;
-pub const MaaControllerFeature_None : u32 = 0 ;
-pub const MaaControllerFeature_UseMouseDownAndUpInsteadOfClick : u32 = 1 ;
-pub const MaaControllerFeature_UseKeyboardDownAndUpInsteadOfClick : u32 = 2 ;
-pub const MaaControllerFeature_NoScalingTouchPoints : u32 = 4 ;
-pub type int_least8_t = i8 ;
-pub type int_least16_t = i16 ;
-pub type int_least32_t = i32 ;
-pub type int_least64_t = i64 ;
-pub type uint_least8_t = u8 ;
-pub type uint_least16_t = u16 ;
-pub type uint_least32_t = u32 ;
-pub type uint_least64_t = u64 ;
-pub type int_fast8_t = i8 ;
-pub type int_fast16_t = i16 ;
-pub type int_fast32_t = i32 ;
-pub type int_fast64_t = i64 ;
-pub type uint_fast8_t = u8 ;
-pub type uint_fast16_t = u16 ;
-pub type uint_fast32_t = u32 ;
-pub type uint_fast64_t = u64 ;
-pub type __int8_t = :: std :: os :: raw :: c_schar ;
-pub type __uint8_t = :: std :: os :: raw :: c_uchar ;
-pub type __int16_t = :: std :: os :: raw :: c_short ;
-pub type __uint16_t = :: std :: os :: raw :: c_ushort ;
-pub type __int32_t = :: std :: os :: raw :: c_int ;
-pub type __uint32_t = :: std :: os :: raw :: c_uint ;
-pub type __int64_t = :: std :: os :: raw :: c_longlong ;
-pub type __uint64_t = :: std :: os :: raw :: c_ulonglong ;
-pub type __darwin_intptr_t = :: std :: os :: raw :: c_long ;
-pub type __darwin_natural_t = :: std :: os :: raw :: c_uint ;
-pub type __darwin_ct_rune_t = :: std :: os :: raw :: c_int ;
-# [repr (C)] # [derive (Copy , Clone)] pub union __mbstate_t { pub __mbstate8 : [:: std :: os :: raw :: c_char ; 128usize] , pub _mbstateL : :: std :: os :: raw :: c_longlong , }
-# [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of __mbstate_t"] [:: std :: mem :: size_of :: < __mbstate_t > () - 128usize] ; ["Alignment of __mbstate_t"] [:: std :: mem :: align_of :: < __mbstate_t > () - 8usize] ; ["Offset of field: __mbstate_t::__mbstate8"] [:: std :: mem :: offset_of ! (__mbstate_t , __mbstate8) - 0usize] ; ["Offset of field: __mbstate_t::_mbstateL"] [:: std :: mem :: offset_of ! (__mbstate_t , _mbstateL) - 0usize] ; } ;
-pub type __darwin_mbstate_t = __mbstate_t ;
-pub type __darwin_ptrdiff_t = :: std :: os :: raw :: c_long ;
-pub type __darwin_size_t = :: std :: os :: raw :: c_ulong ;
-pub type __darwin_va_list = __builtin_va_list ;
-pub type __darwin_wchar_t = :: std :: os :: raw :: c_int ;
-pub type __darwin_rune_t = __darwin_wchar_t ;
-pub type __darwin_wint_t = :: std :: os :: raw :: c_int ;
-pub type __darwin_clock_t = :: std :: os :: raw :: c_ulong ;
-pub type __darwin_socklen_t = __uint32_t ;
-pub type __darwin_ssize_t = :: std :: os :: raw :: c_long ;
-pub type __darwin_time_t = :: std :: os :: raw :: c_long ;
-pub type __darwin_blkcnt_t = __int64_t ;
-pub type __darwin_blksize_t = __int32_t ;
-pub type __darwin_dev_t = __int32_t ;
-pub type __darwin_fsblkcnt_t = :: std :: os :: raw :: c_uint ;
-pub type __darwin_fsfilcnt_t = :: std :: os :: raw :: c_uint ;
-pub type __darwin_gid_t = __uint32_t ;
-pub type __darwin_id_t = __uint32_t ;
-pub type __darwin_ino64_t = __uint64_t ;
-pub type __darwin_ino_t = __darwin_ino64_t ;
-pub type __darwin_mach_port_name_t = __darwin_natural_t ;
-pub type __darwin_mach_port_t = __darwin_mach_port_name_t ;
-pub type __darwin_mode_t = __uint16_t ;
-pub type __darwin_off_t = __int64_t ;
-pub type __darwin_pid_t = __int32_t ;
-pub type __darwin_sigset_t = __uint32_t ;
-pub type __darwin_suseconds_t = __int32_t ;
-pub type __darwin_uid_t = __uint32_t ;
-pub type __darwin_useconds_t = __uint32_t ;
-pub type __darwin_uuid_t = [:: std :: os :: raw :: c_uchar ; 16usize] ;
-pub type __darwin_uuid_string_t = [:: std :: os :: raw :: c_char ; 37usize] ;
-// Darwin/macOS-only pthread types; layout assertions fail on Windows (different sizes).
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct __darwin_pthread_handler_rec { pub __routine : :: std :: option :: Option < unsafe extern "C" fn (arg1 : * mut :: std :: os :: raw :: c_void) > , pub __arg : * mut :: std :: os :: raw :: c_void , pub __next : * mut __darwin_pthread_handler_rec , }
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of __darwin_pthread_handler_rec"] [:: std :: mem :: size_of :: < __darwin_pthread_handler_rec > () - 24usize] ; ["Alignment of __darwin_pthread_handler_rec"] [:: std :: mem :: align_of :: < __darwin_pthread_handler_rec > () - 8usize] ; ["Offset of field: __darwin_pthread_handler_rec::__routine"] [:: std :: mem :: offset_of ! (__darwin_pthread_handler_rec , __routine) - 0usize] ; ["Offset of field: __darwin_pthread_handler_rec::__arg"] [:: std :: mem :: offset_of ! (__darwin_pthread_handler_rec , __arg) - 8usize] ; ["Offset of field: __darwin_pthread_handler_rec::__next"] [:: std :: mem :: offset_of ! (__darwin_pthread_handler_rec , __next) - 16usize] ; } ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct _opaque_pthread_attr_t { pub __sig : :: std :: os :: raw :: c_long , pub __opaque : [:: std :: os :: raw :: c_char ; 56usize] , }
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of _opaque_pthread_attr_t"] [:: std :: mem :: size_of :: < _opaque_pthread_attr_t > () - 64usize] ; ["Alignment of _opaque_pthread_attr_t"] [:: std :: mem :: align_of :: < _opaque_pthread_attr_t > () - 8usize] ; ["Offset of field: _opaque_pthread_attr_t::__sig"] [:: std :: mem :: offset_of ! (_opaque_pthread_attr_t , __sig) - 0usize] ; ["Offset of field: _opaque_pthread_attr_t::__opaque"] [:: std :: mem :: offset_of ! (_opaque_pthread_attr_t , __opaque) - 8usize] ; } ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct _opaque_pthread_cond_t { pub __sig : :: std :: os :: raw :: c_long , pub __opaque : [:: std :: os :: raw :: c_char ; 40usize] , }
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of _opaque_pthread_cond_t"] [:: std :: mem :: size_of :: < _opaque_pthread_cond_t > () - 48usize] ; ["Alignment of _opaque_pthread_cond_t"] [:: std :: mem :: align_of :: < _opaque_pthread_cond_t > () - 8usize] ; ["Offset of field: _opaque_pthread_cond_t::__sig"] [:: std :: mem :: offset_of ! (_opaque_pthread_cond_t , __sig) - 0usize] ; ["Offset of field: _opaque_pthread_cond_t::__opaque"] [:: std :: mem :: offset_of ! (_opaque_pthread_cond_t , __opaque) - 8usize] ; } ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct _opaque_pthread_condattr_t { pub __sig : :: std :: os :: raw :: c_long , pub __opaque : [:: std :: os :: raw :: c_char ; 8usize] , }
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of _opaque_pthread_condattr_t"] [:: std :: mem :: size_of :: < _opaque_pthread_condattr_t > () - 16usize] ; ["Alignment of _opaque_pthread_condattr_t"] [:: std :: mem :: align_of :: < _opaque_pthread_condattr_t > () - 8usize] ; ["Offset of field: _opaque_pthread_condattr_t::__sig"] [:: std :: mem :: offset_of ! (_opaque_pthread_condattr_t , __sig) - 0usize] ; ["Offset of field: _opaque_pthread_condattr_t::__opaque"] [:: std :: mem :: offset_of ! (_opaque_pthread_condattr_t , __opaque) - 8usize] ; } ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct _opaque_pthread_mutex_t { pub __sig : :: std :: os :: raw :: c_long , pub __opaque : [:: std :: os :: raw :: c_char ; 56usize] , }
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of _opaque_pthread_mutex_t"] [:: std :: mem :: size_of :: < _opaque_pthread_mutex_t > () - 64usize] ; ["Alignment of _opaque_pthread_mutex_t"] [:: std :: mem :: align_of :: < _opaque_pthread_mutex_t > () - 8usize] ; ["Offset of field: _opaque_pthread_mutex_t::__sig"] [:: std :: mem :: offset_of ! (_opaque_pthread_mutex_t , __sig) - 0usize] ; ["Offset of field: _opaque_pthread_mutex_t::__opaque"] [:: std :: mem :: offset_of ! (_opaque_pthread_mutex_t , __opaque) - 8usize] ; } ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct _opaque_pthread_mutexattr_t { pub __sig : :: std :: os :: raw :: c_long , pub __opaque : [:: std :: os :: raw :: c_char ; 8usize] , }
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of _opaque_pthread_mutexattr_t"] [:: std :: mem :: size_of :: < _opaque_pthread_mutexattr_t > () - 16usize] ; ["Alignment of _opaque_pthread_mutexattr_t"] [:: std :: mem :: align_of :: < _opaque_pthread_mutexattr_t > () - 8usize] ; ["Offset of field: _opaque_pthread_mutexattr_t::__sig"] [:: std :: mem :: offset_of ! (_opaque_pthread_mutexattr_t , __sig) - 0usize] ; ["Offset of field: _opaque_pthread_mutexattr_t::__opaque"] [:: std :: mem :: offset_of ! (_opaque_pthread_mutexattr_t , __opaque) - 8usize] ; } ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct _opaque_pthread_once_t { pub __sig : :: std :: os :: raw :: c_long , pub __opaque : [:: std :: os :: raw :: c_char ; 8usize] , }
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of _opaque_pthread_once_t"] [:: std :: mem :: size_of :: < _opaque_pthread_once_t > () - 16usize] ; ["Alignment of _opaque_pthread_once_t"] [:: std :: mem :: align_of :: < _opaque_pthread_once_t > () - 8usize] ; ["Offset of field: _opaque_pthread_once_t::__sig"] [:: std :: mem :: offset_of ! (_opaque_pthread_once_t , __sig) - 0usize] ; ["Offset of field: _opaque_pthread_once_t::__opaque"] [:: std :: mem :: offset_of ! (_opaque_pthread_once_t , __opaque) - 8usize] ; } ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct _opaque_pthread_rwlock_t { pub __sig : :: std :: os :: raw :: c_long , pub __opaque : [:: std :: os :: raw :: c_char ; 192usize] , }
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of _opaque_pthread_rwlock_t"] [:: std :: mem :: size_of :: < _opaque_pthread_rwlock_t > () - 200usize] ; ["Alignment of _opaque_pthread_rwlock_t"] [:: std :: mem :: align_of :: < _opaque_pthread_rwlock_t > () - 8usize] ; ["Offset of field: _opaque_pthread_rwlock_t::__sig"] [:: std :: mem :: offset_of ! (_opaque_pthread_rwlock_t , __sig) - 0usize] ; ["Offset of field: _opaque_pthread_rwlock_t::__opaque"] [:: std :: mem :: offset_of ! (_opaque_pthread_rwlock_t , __opaque) - 8usize] ; } ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct _opaque_pthread_rwlockattr_t { pub __sig : :: std :: os :: raw :: c_long , pub __opaque : [:: std :: os :: raw :: c_char ; 16usize] , }
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of _opaque_pthread_rwlockattr_t"] [:: std :: mem :: size_of :: < _opaque_pthread_rwlockattr_t > () - 24usize] ; ["Alignment of _opaque_pthread_rwlockattr_t"] [:: std :: mem :: align_of :: < _opaque_pthread_rwlockattr_t > () - 8usize] ; ["Offset of field: _opaque_pthread_rwlockattr_t::__sig"] [:: std :: mem :: offset_of ! (_opaque_pthread_rwlockattr_t , __sig) - 0usize] ; ["Offset of field: _opaque_pthread_rwlockattr_t::__opaque"] [:: std :: mem :: offset_of ! (_opaque_pthread_rwlockattr_t , __opaque) - 8usize] ; } ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct _opaque_pthread_t { pub __sig : :: std :: os :: raw :: c_long , pub __cleanup_stack : * mut __darwin_pthread_handler_rec , pub __opaque : [:: std :: os :: raw :: c_char ; 8176usize] , }
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-# [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of _opaque_pthread_t"] [:: std :: mem :: size_of :: < _opaque_pthread_t > () - 8192usize] ; ["Alignment of _opaque_pthread_t"] [:: std :: mem :: align_of :: < _opaque_pthread_t > () - 8usize] ; ["Offset of field: _opaque_pthread_t::__sig"] [:: std :: mem :: offset_of ! (_opaque_pthread_t , __sig) - 0usize] ; ["Offset of field: _opaque_pthread_t::__cleanup_stack"] [:: std :: mem :: offset_of ! (_opaque_pthread_t , __cleanup_stack) - 8usize] ; ["Offset of field: _opaque_pthread_t::__opaque"] [:: std :: mem :: offset_of ! (_opaque_pthread_t , __opaque) - 16usize] ; } ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-pub type __darwin_pthread_attr_t = _opaque_pthread_attr_t ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-pub type __darwin_pthread_cond_t = _opaque_pthread_cond_t ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-pub type __darwin_pthread_condattr_t = _opaque_pthread_condattr_t ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-pub type __darwin_pthread_key_t = :: std :: os :: raw :: c_ulong ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-pub type __darwin_pthread_mutex_t = _opaque_pthread_mutex_t ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-pub type __darwin_pthread_mutexattr_t = _opaque_pthread_mutexattr_t ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-pub type __darwin_pthread_once_t = _opaque_pthread_once_t ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-pub type __darwin_pthread_rwlock_t = _opaque_pthread_rwlock_t ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-pub type __darwin_pthread_rwlockattr_t = _opaque_pthread_rwlockattr_t ;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-pub type __darwin_pthread_t = * mut _opaque_pthread_t ;
-pub type intmax_t = :: std :: os :: raw :: c_long ;
-pub type uintmax_t = :: std :: os :: raw :: c_ulong ;
-pub type MaaBool = u8 ;
-pub type MaaSize = u64 ;
-pub type MaaId = i64 ;
-pub type MaaCtrlId = MaaId ;
-pub type MaaResId = MaaId ;
-pub type MaaTaskId = MaaId ;
-pub type MaaRecoId = MaaId ;
-pub type MaaActId = MaaId ;
-pub type MaaNodeId = MaaId ;
-pub type MaaSinkId = MaaId ;
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct MaaStringBuffer { _unused : [u8 ; 0] , }
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct MaaImageBuffer { _unused : [u8 ; 0] , }
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct MaaStringListBuffer { _unused : [u8 ; 0] , }
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct MaaImageListBuffer { _unused : [u8 ; 0] , }
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct MaaResource { _unused : [u8 ; 0] , }
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct MaaController { _unused : [u8 ; 0] , }
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct MaaTasker { _unused : [u8 ; 0] , }
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct MaaContext { _unused : [u8 ; 0] , }
-pub type MaaStatus = i32 ;
-pub const MaaStatusEnum_MaaStatus_Invalid : MaaStatusEnum = 0 ;
-pub const MaaStatusEnum_MaaStatus_Pending : MaaStatusEnum = 1000 ;
-pub const MaaStatusEnum_MaaStatus_Running : MaaStatusEnum = 2000 ;
-pub const MaaStatusEnum_MaaStatus_Succeeded : MaaStatusEnum = 3000 ;
-pub const MaaStatusEnum_MaaStatus_Failed : MaaStatusEnum = 4000 ;
-pub type MaaStatusEnum = :: std :: os :: raw :: c_uint ;
-pub type MaaLoggingLevel = i32 ;
-pub const MaaLoggingLevelEnum_MaaLoggingLevel_Off : MaaLoggingLevelEnum = 0 ;
-pub const MaaLoggingLevelEnum_MaaLoggingLevel_Fatal : MaaLoggingLevelEnum = 1 ;
-pub const MaaLoggingLevelEnum_MaaLoggingLevel_Error : MaaLoggingLevelEnum = 2 ;
-pub const MaaLoggingLevelEnum_MaaLoggingLevel_Warn : MaaLoggingLevelEnum = 3 ;
-pub const MaaLoggingLevelEnum_MaaLoggingLevel_Info : MaaLoggingLevelEnum = 4 ;
-pub const MaaLoggingLevelEnum_MaaLoggingLevel_Debug : MaaLoggingLevelEnum = 5 ;
-pub const MaaLoggingLevelEnum_MaaLoggingLevel_Trace : MaaLoggingLevelEnum = 6 ;
-pub const MaaLoggingLevelEnum_MaaLoggingLevel_All : MaaLoggingLevelEnum = 7 ;
-pub type MaaLoggingLevelEnum = :: std :: os :: raw :: c_uint ;
-pub type MaaOption = i32 ;
-pub type MaaOptionValue = * mut :: std :: os :: raw :: c_void ;
-pub type MaaOptionValueSize = u64 ;
-pub type MaaGlobalOption = MaaOption ;
-pub const MaaGlobalOptionEnum_MaaGlobalOption_Invalid : MaaGlobalOptionEnum = 0 ;
-# [doc = " Log dir\n\n value: string, eg: \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\log\"; val_size: string length"] pub const MaaGlobalOptionEnum_MaaGlobalOption_LogDir : MaaGlobalOptionEnum = 1 ;
-# [doc = " Whether to save draw\n\n value: bool, eg: true; val_size: sizeof(bool)"] pub const MaaGlobalOptionEnum_MaaGlobalOption_SaveDraw : MaaGlobalOptionEnum = 2 ;
-# [doc = " The level of log output to stdout\n\n value: MaaLoggingLevel, val_size: sizeof(MaaLoggingLevel)\n default value is MaaLoggingLevel_Error"] pub const MaaGlobalOptionEnum_MaaGlobalOption_StdoutLevel : MaaGlobalOptionEnum = 4 ;
-# [doc = " Whether to debug\n\n value: bool, eg: true; val_size: sizeof(bool)"] pub const MaaGlobalOptionEnum_MaaGlobalOption_DebugMode : MaaGlobalOptionEnum = 6 ;
-# [doc = " Whether to save screenshot on error\n\n value: bool, eg: true; val_size: sizeof(bool)"] pub const MaaGlobalOptionEnum_MaaGlobalOption_SaveOnError : MaaGlobalOptionEnum = 7 ;
-# [doc = " Image quality for draw images\n\n value: int, eg: 85; val_size: sizeof(int)\n default value is 85, range: [0, 100]"] pub const MaaGlobalOptionEnum_MaaGlobalOption_DrawQuality : MaaGlobalOptionEnum = 8 ;
-# [doc = " Recognition image cache limit\n\n value: size_t, eg: 4096; val_size: sizeof(size_t)\n default value is 4096"] pub const MaaGlobalOptionEnum_MaaGlobalOption_RecoImageCacheLimit : MaaGlobalOptionEnum = 9 ;
-pub type MaaGlobalOptionEnum = :: std :: os :: raw :: c_uint ;
-pub type MaaResOption = MaaOption ;
-pub type MaaInferenceDevice = i32 ;
-pub type MaaInferenceExecutionProvider = i32 ;
-pub const MaaInferenceDeviceEnum_MaaInferenceDevice_CPU : MaaInferenceDeviceEnum = - 2 ;
-pub const MaaInferenceDeviceEnum_MaaInferenceDevice_Auto : MaaInferenceDeviceEnum = - 1 ;
-pub const MaaInferenceDeviceEnum_MaaInferenceDevice_0 : MaaInferenceDeviceEnum = 0 ;
-pub const MaaInferenceDeviceEnum_MaaInferenceDevice_1 : MaaInferenceDeviceEnum = 1 ;
-pub type MaaInferenceDeviceEnum = :: std :: os :: raw :: c_int ;
-pub const MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_Auto : MaaInferenceExecutionProviderEnum = 0 ;
-pub const MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_CPU : MaaInferenceExecutionProviderEnum = 1 ;
-pub const MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_DirectML : MaaInferenceExecutionProviderEnum = 2 ;
-pub const MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_CoreML : MaaInferenceExecutionProviderEnum = 3 ;
-pub const MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_CUDA : MaaInferenceExecutionProviderEnum = 4 ;
-pub type MaaInferenceExecutionProviderEnum = :: std :: os :: raw :: c_uint ;
-pub const MaaResOptionEnum_MaaResOption_Invalid : MaaResOptionEnum = 0 ;
-# [doc = " Use the specified inference device.\n Please set this option before loading the model.\n\n value: MaaInferenceDevice, eg: 0; val_size: sizeof(MaaInferenceDevice)\n default value is MaaInferenceDevice_Auto"] pub const MaaResOptionEnum_MaaResOption_InferenceDevice : MaaResOptionEnum = 1 ;
-# [doc = " Use the specified inference execution provider\n Please set this option before loading the model.\n\n value: MaaInferenceExecutionProvider, eg: 0; val_size: sizeof(MaaInferenceExecutionProvider)\n default value is MaaInferenceExecutionProvider_Auto"] pub const MaaResOptionEnum_MaaResOption_InferenceExecutionProvider : MaaResOptionEnum = 2 ;
-pub type MaaResOptionEnum = :: std :: os :: raw :: c_uint ;
-pub type MaaCtrlOption = MaaOption ;
-pub const MaaCtrlOptionEnum_MaaCtrlOption_Invalid : MaaCtrlOptionEnum = 0 ;
-# [doc = " Only one of long and short side can be set, and the other is automatically scaled according to the aspect ratio.\n\n value: int, eg: 1280; val_size: sizeof(int)"] pub const MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotTargetLongSide : MaaCtrlOptionEnum = 1 ;
-# [doc = " Only one of long and short side can be set, and the other is automatically scaled according to the aspect ratio.\n\n value: int, eg: 720; val_size: sizeof(int)"] pub const MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotTargetShortSide : MaaCtrlOptionEnum = 2 ;
-# [doc = " Screenshot use raw size without scaling.\n Please note that this option may cause incorrect coordinates on user devices with different resolutions if scaling is not performed.\n\n value: bool, eg: true; val_size: sizeof(bool)"] pub const MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotUseRawSize : MaaCtrlOptionEnum = 3 ;
-# [doc = " @brief Option keys for controller instance options. See MaaControllerSetOption().\n"] pub type MaaCtrlOptionEnum = :: std :: os :: raw :: c_uint ;
-pub type MaaTaskerOption = MaaOption ;
-pub const MaaTaskerOptionEnum_MaaTaskerOption_Invalid : MaaTaskerOptionEnum = 0 ;
-pub type MaaTaskerOptionEnum = :: std :: os :: raw :: c_uint ;
-# [doc = " @brief Adb screencap method flags\n\n Use bitwise OR to set the methods you need.\n MaaFramework will test all provided methods and use the fastest available one.\n\n Default: All methods except RawByNetcat, MinicapDirect, MinicapStream\n\n Note: MinicapDirect and MinicapStream use lossy JPEG encoding, which may\n significantly reduce template matching accuracy. Not recommended.\n\n | Method                | Speed      | Compatibility | Encoding | Notes                             |\n |-----------------------|------------|---------------|----------|-----------------------------------|\n | EncodeToFileAndPull   | Slow       | High          | Lossless |                                   |\n | Encode                | Slow       | High          | Lossless |                                   |\n | RawWithGzip           | Medium     | High          | Lossless |                                   |\n | RawByNetcat           | Fast       | Low           | Lossless |                                   |\n | MinicapDirect         | Fast       | Low           | Lossy    |                                   |\n | MinicapStream         | Very Fast  | Low           | Lossy    |                                   |\n | EmulatorExtras        | Very Fast  | Low           | Lossless | Emulators only: MuMu 12, LDPlayer 9 |"] pub type MaaAdbScreencapMethod = u64 ;
-# [doc = " @brief Adb input method flags\n\n Use bitwise OR to set the methods you need.\n MaaFramework will select the first available method according to priority.\n\n Priority (high to low): EmulatorExtras > Maatouch > MinitouchAndAdbKey > AdbShell\n\n Default: All methods except EmulatorExtras\n\n | Method               | Speed | Compatibility | Notes                                 |\n |----------------------|-------|---------------|---------------------------------------|\n | AdbShell             | Slow  | High          |                                       |\n | MinitouchAndAdbKey   | Fast  | Medium        | Key press still uses AdbShell         |\n | Maatouch             | Fast  | Medium        |                                       |\n | EmulatorExtras       | Fast  | Low           | Emulators only: MuMu 12               |"] pub type MaaAdbInputMethod = u64 ;
-# [doc = " @brief Win32 screencap method\n\n No bitwise OR, select ONE method only.\n\n No default value. Client should choose one as default.\n\n Different applications use different rendering methods, there is no universal solution.\n\n | Method                  | Speed     | Compatibility | Require Admin | Background Support | Notes                            |\n |-------------------------|-----------|---------------|---------------|--------------------|----------------------------------|\n | GDI                     | Fast      | Medium        | No            | No                 |                                  |\n | FramePool               | Very Fast | Medium        | No            | Yes                | Requires Windows 10 1903+        |\n | DXGI_DesktopDup         | Very Fast | Low           | No            | No                 | Desktop duplication (full screen)|\n | DXGI_DesktopDup_Window  | Very Fast | Low           | No            | No                 | Desktop duplication then crop    |\n | PrintWindow             | Medium    | Medium        | No            | Yes                |                                  |\n | ScreenDC                | Fast      | High          | No            | No                 |                                  |\n\n Note: When a window is minimized on Windows, all screencap methods will fail.\n Avoid minimizing the target window."] pub type MaaWin32ScreencapMethod = u64 ;
-# [doc = " @brief Win32 input method\n\n No bitwise OR, select ONE method only.\n\n No default value. Client should choose one as default.\n\n Different applications process input differently, there is no universal solution.\n\n | Method                       | Compatibility | Require Admin | Seize Mouse | Background Support | Notes |\n |------------------------------|---------------|---------------|--------------|--------------------|-------------------------------------------------------------|\n | Seize                        | High          | No            | Yes          | No                 | | | SendMessage                  |\n Medium        | Maybe         | No           | Yes                |                                                             | |\n PostMessage                  | Medium        | Maybe         | No           | Yes                | | | LegacyEvent                  | Low\n | No            | Yes          | No                 |                                                             | | PostThreadMessage\n | Low           | Maybe         | No           | Yes                |                                                             | |\n SendMessageWithCursorPos     | Medium        | Maybe         | Briefly      | Yes                | Designed for apps that check real\n cursor position           | | PostMessageWithCursorPos     | Medium        | Maybe         | Briefly      | Yes                | Designed\n for apps that check real cursor position           |\n\n Note:\n - Admin rights mainly depend on the target application's privilege level.\n   If the target runs as admin, MaaFramework should also run as admin for compatibility.\n - \"WithCursorPos\" methods briefly move the cursor to target position, send message,\n   then restore cursor position. This \"briefly\" seizes the mouse but won't block user operations."] pub type MaaWin32InputMethod = u64 ;
-# [doc = " No bitwise OR, just set it"] pub type MaaDbgControllerType = u64 ;
-# [doc = " @brief Virtual gamepad type\n\n Select ONE type only.\n\n | Type          | Description                                    |\n |---------------|------------------------------------------------|\n | Xbox360       | Microsoft Xbox 360 Controller (wired)          |\n | DualShock4    | Sony DualShock 4 Controller (wired)            |"] pub type MaaGamepadType = u64 ;
-# [doc = " @brief Virtual gamepad button codes for click_key/key_down/key_up\n\n Use these values with MaaControllerPostClickKey, MaaControllerPostKeyDown, MaaControllerPostKeyUp.\n Values are based on XUSB (Xbox 360) button flags. DS4 face buttons are mapped to Xbox equivalents.\n\n Xbox 360 buttons:\n\n | Value   | Button              | Description            |\n |---------|---------------------|------------------------|\n | 0x1000  | A                   | A button               |\n | 0x2000  | B                   | B button               |\n | 0x4000  | X                   | X button               |\n | 0x8000  | Y                   | Y button               |\n | 0x0100  | LB (Left Shoulder)  | Left bumper            |\n | 0x0200  | RB (Right Shoulder) | Right bumper           |\n | 0x0040  | L_THUMB             | Left stick click       |\n | 0x0080  | R_THUMB             | Right stick click      |\n | 0x0010  | START               | Start button           |\n | 0x0020  | BACK                | Back button            |\n | 0x0400  | GUIDE               | Guide/Home button      |\n | 0x0001  | DPAD_UP             | D-pad up               |\n | 0x0002  | DPAD_DOWN           | D-pad down             |\n | 0x0004  | DPAD_LEFT           | D-pad left             |\n | 0x0008  | DPAD_RIGHT          | D-pad right            |\n\n DualShock 4 buttons (aliases to Xbox buttons):\n\n | Value   | Button    | Xbox Equivalent | Description               |\n |---------|-----------|-----------------|---------------------------|\n | 0x1000  | CROSS     | A                   | Cross (X) button          |\n | 0x2000  | CIRCLE    | B                   | Circle button             |\n | 0x4000  | SQUARE    | X                   | Square button             |\n | 0x8000  | TRIANGLE  | Y                   | Triangle button           |\n | 0x0100  | L1        | LB                  | L1 button                 |\n | 0x0200  | R1        | RB                  | R1 button                 |\n | 0x0040  | L3        | L_THUMB             | Left stick click          |\n | 0x0080  | R3        | R_THUMB             | Right stick click         |\n | 0x0010  | OPTIONS   | START               | Options button            |\n | 0x0020  | SHARE     | BACK                | Share button              |\n | 0x10000 | PS        | -                   | PS button (DS4 special)   |\n | 0x20000 | TOUCHPAD  | -                   | Touchpad click (DS4 only) |"] pub type MaaGamepadButton = u64 ;
-# [doc = " @brief Virtual gamepad touch contact definitions for touch_down/touch_move/touch_up\n\n For gamepad controller, the touch functions are repurposed for analog inputs:\n - x, y: Analog stick position\n - pressure: Trigger value (0~255)\n\n Contact mapping:\n\n | Contact | Input           | x range     | y range     | pressure   | Description                    |\n |---------|-----------------|-------------|-------------|------------|--------------------------------|\n | 0       | Left Stick      | -32768~32767| -32768~32767| ignored    | Left analog stick X/Y position |\n | 1       | Right Stick     | -32768~32767| -32768~32767| ignored    | Right analog stick X/Y position|\n | 2       | Left Trigger    | ignored     | ignored     | 0~255      | Left trigger (LT/L2) value     |\n | 3       | Right Trigger   | ignored     | ignored     | 0~255      | Right trigger (RT/R2) value    |\n\n Usage:\n - touch_down(contact, x, y, pressure): Start analog input\n - touch_move(contact, x, y, pressure): Update analog input position/value\n - touch_up(contact): Release/reset analog input to center/zero"] pub type MaaGamepadTouch = u64 ;
-# [doc = " Controller feature flags returned by get_features().\n These flags indicate which input methods the controller supports/prefers."] pub type MaaControllerFeature = u64 ;
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct MaaRect { pub x : i32 , pub y : i32 , pub width : i32 , pub height : i32 , }
-# [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of MaaRect"] [:: std :: mem :: size_of :: < MaaRect > () - 16usize] ; ["Alignment of MaaRect"] [:: std :: mem :: align_of :: < MaaRect > () - 4usize] ; ["Offset of field: MaaRect::x"] [:: std :: mem :: offset_of ! (MaaRect , x) - 0usize] ; ["Offset of field: MaaRect::y"] [:: std :: mem :: offset_of ! (MaaRect , y) - 4usize] ; ["Offset of field: MaaRect::width"] [:: std :: mem :: offset_of ! (MaaRect , width) - 8usize] ; ["Offset of field: MaaRect::height"] [:: std :: mem :: offset_of ! (MaaRect , height) - 12usize] ; } ;
-pub type MaaNotificationCallback = :: std :: option :: Option < unsafe extern "C" fn (message : * const :: std :: os :: raw :: c_char , details_json : * const :: std :: os :: raw :: c_char , notify_trans_arg : * mut :: std :: os :: raw :: c_void ,) , > ;
-# [doc = " void* handle:\n - MaaTasker* for MaaTasker event\n - MaaResource* for MaaResource event\n - MaaController* for MaaController event\n - MaaContext* for MaaContext event"] pub type MaaEventCallback = :: std :: option :: Option < unsafe extern "C" fn (handle : * mut :: std :: os :: raw :: c_void , message : * const :: std :: os :: raw :: c_char , details_json : * const :: std :: os :: raw :: c_char , trans_arg : * mut :: std :: os :: raw :: c_void ,) , > ;
-pub type MaaCustomRecognitionCallback = :: std :: option :: Option < unsafe extern "C" fn (context : * mut MaaContext , task_id : MaaTaskId , node_name : * const :: std :: os :: raw :: c_char , custom_recognition_name : * const :: std :: os :: raw :: c_char , custom_recognition_param : * const :: std :: os :: raw :: c_char , image : * const MaaImageBuffer , roi : * const MaaRect , trans_arg : * mut :: std :: os :: raw :: c_void , out_box : * mut MaaRect , out_detail : * mut MaaStringBuffer ,) -> MaaBool , > ;
-pub type MaaCustomActionCallback = :: std :: option :: Option < unsafe extern "C" fn (context : * mut MaaContext , task_id : MaaTaskId , node_name : * const :: std :: os :: raw :: c_char , custom_action_name : * const :: std :: os :: raw :: c_char , custom_action_param : * const :: std :: os :: raw :: c_char , reco_id : MaaRecoId , box_ : * const MaaRect , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaBool , > ;
-pub type MaaImageRawData = * mut :: std :: os :: raw :: c_void ;
-pub type MaaImageEncodedData = * mut u8 ;
-# [doc = " @brief The custom controller API.\n\n To create a custom controller, you need to implement this API.\n\n You do not have to implement all the functions in this API. Instead, just implement the\n functions you need. Do note that if an unimplemented function is called, the framework will\n likely crash."] # [repr (C)] # [derive (Debug , Copy , Clone)] pub struct MaaCustomControllerCallbacks { pub connect : :: std :: option :: Option < unsafe extern "C" fn (trans_arg : * mut :: std :: os :: raw :: c_void) -> MaaBool , > , pub connected : :: std :: option :: Option < unsafe extern "C" fn (trans_arg : * mut :: std :: os :: raw :: c_void) -> MaaBool , > , # [doc = " Write result to buffer."] pub request_uuid : :: std :: option :: Option < unsafe extern "C" fn (trans_arg : * mut :: std :: os :: raw :: c_void , buffer : * mut MaaStringBuffer ,) -> MaaBool , > , pub get_features : :: std :: option :: Option < unsafe extern "C" fn (trans_arg : * mut :: std :: os :: raw :: c_void) -> MaaControllerFeature , > , pub start_app : :: std :: option :: Option < unsafe extern "C" fn (intent : * const :: std :: os :: raw :: c_char , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaBool , > , pub stop_app : :: std :: option :: Option < unsafe extern "C" fn (intent : * const :: std :: os :: raw :: c_char , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaBool , > , # [doc = " Write result to buffer."] pub screencap : :: std :: option :: Option < unsafe extern "C" fn (trans_arg : * mut :: std :: os :: raw :: c_void , buffer : * mut MaaImageBuffer ,) -> MaaBool , > , pub click : :: std :: option :: Option < unsafe extern "C" fn (x : i32 , y : i32 , trans_arg : * mut :: std :: os :: raw :: c_void) -> MaaBool , > , pub swipe : :: std :: option :: Option < unsafe extern "C" fn (x1 : i32 , y1 : i32 , x2 : i32 , y2 : i32 , duration : i32 , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaBool , > , pub touch_down : :: std :: option :: Option < unsafe extern "C" fn (contact : i32 , x : i32 , y : i32 , pressure : i32 , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaBool , > , pub touch_move : :: std :: option :: Option < unsafe extern "C" fn (contact : i32 , x : i32 , y : i32 , pressure : i32 , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaBool , > , pub touch_up : :: std :: option :: Option < unsafe extern "C" fn (contact : i32 , trans_arg : * mut :: std :: os :: raw :: c_void) -> MaaBool , > , pub click_key : :: std :: option :: Option < unsafe extern "C" fn (keycode : i32 , trans_arg : * mut :: std :: os :: raw :: c_void) -> MaaBool , > , pub input_text : :: std :: option :: Option < unsafe extern "C" fn (text : * const :: std :: os :: raw :: c_char , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaBool , > , pub key_down : :: std :: option :: Option < unsafe extern "C" fn (keycode : i32 , trans_arg : * mut :: std :: os :: raw :: c_void) -> MaaBool , > , pub key_up : :: std :: option :: Option < unsafe extern "C" fn (keycode : i32 , trans_arg : * mut :: std :: os :: raw :: c_void) -> MaaBool , > , pub scroll : :: std :: option :: Option < unsafe extern "C" fn (dx : i32 , dy : i32 , trans_arg : * mut :: std :: os :: raw :: c_void) -> MaaBool , > , }
-# [allow (clippy :: unnecessary_operation , clippy :: identity_op)] const _ : () = { ["Size of MaaCustomControllerCallbacks"] [:: std :: mem :: size_of :: < MaaCustomControllerCallbacks > () - 136usize] ; ["Alignment of MaaCustomControllerCallbacks"] [:: std :: mem :: align_of :: < MaaCustomControllerCallbacks > () - 8usize] ; ["Offset of field: MaaCustomControllerCallbacks::connect"] [:: std :: mem :: offset_of ! (MaaCustomControllerCallbacks , connect) - 0usize] ; ["Offset of field: MaaCustomControllerCallbacks::connected"] [:: std :: mem :: offset_of ! (MaaCustomControllerCallbacks , connected) - 8usize] ; ["Offset of field: MaaCustomControllerCallbacks::request_uuid"] [:: std :: mem :: offset_of ! (MaaCustomControllerCallbacks , request_uuid) - 16usize] ; ["Offset of field: MaaCustomControllerCallbacks::get_features"] [:: std :: mem :: offset_of ! (MaaCustomControllerCallbacks , get_features) - 24usize] ; ["Offset of field: MaaCustomControllerCallbacks::start_app"] [:: std :: mem :: offset_of ! (MaaCustomControllerCallbacks , start_app) - 32usize] ; ["Offset of field: MaaCustomControllerCallbacks::stop_app"] [:: std :: mem :: offset_of ! (MaaCustomControllerCallbacks , stop_app) - 40usize] ; ["Offset of field: MaaCustomControllerCallbacks::screencap"] [:: std :: mem :: offset_of ! (MaaCustomControllerCallbacks , screencap) - 48usize] ; ["Offset of field: MaaCustomControllerCallbacks::click"] [:: std :: mem :: offset_of ! (MaaCustomControllerCallbacks , click) - 56usize] ; ["Offset of field: MaaCustomControllerCallbacks::swipe"] [:: std :: mem :: offset_of ! (MaaCustomControllerCallbacks , swipe) - 64usize] ; ["Offset of field: MaaCustomControllerCallbacks::touch_down"] [:: std :: mem :: offset_of ! (MaaCustomControllerCallbacks , touch_down) - 72usize] ; ["Offset of field: MaaCustomControllerCallbacks::touch_move"] [:: std :: mem :: offset_of ! (MaaCustomControllerCallbacks , touch_move) - 80usize] ; ["Offset of field: MaaCustomControllerCallbacks::touch_up"] [:: std :: mem :: offset_of ! (MaaCustomControllerCallbacks , touch_up) - 88usize] ; ["Offset of field: MaaCustomControllerCallbacks::click_key"] [:: std :: mem :: offset_of ! (MaaCustomControllerCallbacks , click_key) - 96usize] ; ["Offset of field: MaaCustomControllerCallbacks::input_text"] [:: std :: mem :: offset_of ! (MaaCustomControllerCallbacks , input_text) - 104usize] ; ["Offset of field: MaaCustomControllerCallbacks::key_down"] [:: std :: mem :: offset_of ! (MaaCustomControllerCallbacks , key_down) - 112usize] ; ["Offset of field: MaaCustomControllerCallbacks::key_up"] [:: std :: mem :: offset_of ! (MaaCustomControllerCallbacks , key_up) - 120usize] ; ["Offset of field: MaaCustomControllerCallbacks::scroll"] [:: std :: mem :: offset_of ! (MaaCustomControllerCallbacks , scroll) - 128usize] ; } ;
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct MaaAgentClient { _unused : [u8 ; 0] , }
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct MaaToolkitAdbDevice { _unused : [u8 ; 0] , }
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct MaaToolkitAdbDeviceList { _unused : [u8 ; 0] , }
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct MaaToolkitDesktopWindow { _unused : [u8 ; 0] , }
-# [repr (C)] # [derive (Debug , Copy , Clone)] pub struct MaaToolkitDesktopWindowList { _unused : [u8 ; 0] , }
-pub type __builtin_va_list = * mut :: std :: os :: raw :: c_char ;
-pub struct MaaFramework { __library : CompositeLibrary , pub MaaTaskerCreate : unsafe extern "C" fn () -> * mut MaaTasker , pub MaaTaskerDestroy : unsafe extern "C" fn (tasker : * mut MaaTasker) , pub MaaTaskerAddSink : unsafe extern "C" fn (tasker : * mut MaaTasker , sink : MaaEventCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaSinkId , pub MaaTaskerRemoveSink : unsafe extern "C" fn (tasker : * mut MaaTasker , sink_id : MaaSinkId) , pub MaaTaskerClearSinks : unsafe extern "C" fn (tasker : * mut MaaTasker) , pub MaaTaskerAddContextSink : unsafe extern "C" fn (tasker : * mut MaaTasker , sink : MaaEventCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaSinkId , pub MaaTaskerRemoveContextSink : unsafe extern "C" fn (tasker : * mut MaaTasker , sink_id : MaaSinkId) , pub MaaTaskerClearContextSinks : unsafe extern "C" fn (tasker : * mut MaaTasker) , pub MaaTaskerSetOption : unsafe extern "C" fn (tasker : * mut MaaTasker , key : MaaTaskerOption , value : MaaOptionValue , val_size : MaaOptionValueSize ,) -> MaaBool , pub MaaTaskerBindResource : unsafe extern "C" fn (tasker : * mut MaaTasker , res : * mut MaaResource) -> MaaBool , pub MaaTaskerBindController : unsafe extern "C" fn (tasker : * mut MaaTasker , ctrl : * mut MaaController) -> MaaBool , pub MaaTaskerInited : unsafe extern "C" fn (tasker : * const MaaTasker) -> MaaBool , pub MaaTaskerPostTask : unsafe extern "C" fn (tasker : * mut MaaTasker , entry : * const :: std :: os :: raw :: c_char , pipeline_override : * const :: std :: os :: raw :: c_char ,) -> MaaTaskId , pub MaaTaskerPostRecognition : unsafe extern "C" fn (tasker : * mut MaaTasker , reco_type : * const :: std :: os :: raw :: c_char , reco_param : * const :: std :: os :: raw :: c_char , image : * const MaaImageBuffer ,) -> MaaTaskId , pub MaaTaskerPostAction : unsafe extern "C" fn (tasker : * mut MaaTasker , action_type : * const :: std :: os :: raw :: c_char , action_param : * const :: std :: os :: raw :: c_char , box_ : * const MaaRect , reco_detail : * const :: std :: os :: raw :: c_char ,) -> MaaTaskId , pub MaaTaskerStatus : unsafe extern "C" fn (tasker : * const MaaTasker , id : MaaTaskId) -> MaaStatus , pub MaaTaskerWait : unsafe extern "C" fn (tasker : * const MaaTasker , id : MaaTaskId) -> MaaStatus , pub MaaTaskerRunning : unsafe extern "C" fn (tasker : * const MaaTasker) -> MaaBool , pub MaaTaskerPostStop : unsafe extern "C" fn (tasker : * mut MaaTasker) -> MaaTaskId , pub MaaTaskerStopping : unsafe extern "C" fn (tasker : * const MaaTasker) -> MaaBool , pub MaaTaskerGetResource : unsafe extern "C" fn (tasker : * const MaaTasker) -> * mut MaaResource , pub MaaTaskerGetController : unsafe extern "C" fn (tasker : * const MaaTasker) -> * mut MaaController , pub MaaTaskerClearCache : unsafe extern "C" fn (tasker : * mut MaaTasker) -> MaaBool , pub MaaTaskerOverridePipeline : unsafe extern "C" fn (tasker : * mut MaaTasker , task_id : MaaTaskId , pipeline_override : * const :: std :: os :: raw :: c_char ,) -> MaaBool , pub MaaTaskerGetRecognitionDetail : unsafe extern "C" fn (tasker : * const MaaTasker , reco_id : MaaRecoId , node_name : * mut MaaStringBuffer , algorithm : * mut MaaStringBuffer , hit : * mut MaaBool , box_ : * mut MaaRect , detail_json : * mut MaaStringBuffer , raw : * mut MaaImageBuffer , draws : * mut MaaImageListBuffer ,) -> MaaBool , pub MaaTaskerGetActionDetail : unsafe extern "C" fn (tasker : * const MaaTasker , action_id : MaaActId , node_name : * mut MaaStringBuffer , action : * mut MaaStringBuffer , box_ : * mut MaaRect , success : * mut MaaBool , detail_json : * mut MaaStringBuffer ,) -> MaaBool , pub MaaTaskerGetNodeDetail : unsafe extern "C" fn (tasker : * const MaaTasker , node_id : MaaNodeId , node_name : * mut MaaStringBuffer , reco_id : * mut MaaRecoId , action_id : * mut MaaActId , completed : * mut MaaBool ,) -> MaaBool , pub MaaTaskerGetTaskDetail : unsafe extern "C" fn (tasker : * const MaaTasker , task_id : MaaTaskId , entry : * mut MaaStringBuffer , node_id_list : * mut MaaNodeId , node_id_list_size : * mut MaaSize , status : * mut MaaStatus ,) -> MaaBool , pub MaaTaskerGetLatestNode : unsafe extern "C" fn (tasker : * const MaaTasker , node_name : * const :: std :: os :: raw :: c_char , latest_id : * mut MaaNodeId ,) -> MaaBool , pub MaaResourceCreate : unsafe extern "C" fn () -> * mut MaaResource , pub MaaResourceDestroy : unsafe extern "C" fn (res : * mut MaaResource) , pub MaaResourceAddSink : unsafe extern "C" fn (res : * mut MaaResource , sink : MaaEventCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaSinkId , pub MaaResourceRemoveSink : unsafe extern "C" fn (res : * mut MaaResource , sink_id : MaaSinkId) , pub MaaResourceClearSinks : unsafe extern "C" fn (res : * mut MaaResource) , pub MaaResourceRegisterCustomRecognition : unsafe extern "C" fn (res : * mut MaaResource , name : * const :: std :: os :: raw :: c_char , recognition : MaaCustomRecognitionCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaBool , pub MaaResourceUnregisterCustomRecognition : unsafe extern "C" fn (res : * mut MaaResource , name : * const :: std :: os :: raw :: c_char) -> MaaBool , pub MaaResourceClearCustomRecognition : unsafe extern "C" fn (res : * mut MaaResource) -> MaaBool , pub MaaResourceRegisterCustomAction : unsafe extern "C" fn (res : * mut MaaResource , name : * const :: std :: os :: raw :: c_char , action : MaaCustomActionCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaBool , pub MaaResourceUnregisterCustomAction : unsafe extern "C" fn (res : * mut MaaResource , name : * const :: std :: os :: raw :: c_char) -> MaaBool , pub MaaResourceClearCustomAction : unsafe extern "C" fn (res : * mut MaaResource) -> MaaBool , pub MaaResourcePostBundle : unsafe extern "C" fn (res : * mut MaaResource , path : * const :: std :: os :: raw :: c_char ,) -> MaaResId , pub MaaResourcePostOcrModel : unsafe extern "C" fn (res : * mut MaaResource , path : * const :: std :: os :: raw :: c_char ,) -> MaaResId , pub MaaResourcePostPipeline : unsafe extern "C" fn (res : * mut MaaResource , path : * const :: std :: os :: raw :: c_char ,) -> MaaResId , pub MaaResourcePostImage : unsafe extern "C" fn (res : * mut MaaResource , path : * const :: std :: os :: raw :: c_char ,) -> MaaResId , pub MaaResourceOverridePipeline : unsafe extern "C" fn (res : * mut MaaResource , pipeline_override : * const :: std :: os :: raw :: c_char ,) -> MaaBool , pub MaaResourceOverrideNext : unsafe extern "C" fn (res : * mut MaaResource , node_name : * const :: std :: os :: raw :: c_char , next_list : * const MaaStringListBuffer ,) -> MaaBool , pub MaaResourceOverrideImage : unsafe extern "C" fn (res : * mut MaaResource , image_name : * const :: std :: os :: raw :: c_char , image : * const MaaImageBuffer ,) -> MaaBool , pub MaaResourceGetNodeData : unsafe extern "C" fn (res : * mut MaaResource , node_name : * const :: std :: os :: raw :: c_char , buffer : * mut MaaStringBuffer ,) -> MaaBool , pub MaaResourceClear : unsafe extern "C" fn (res : * mut MaaResource) -> MaaBool , pub MaaResourceStatus : unsafe extern "C" fn (res : * const MaaResource , id : MaaResId) -> MaaStatus , pub MaaResourceWait : unsafe extern "C" fn (res : * const MaaResource , id : MaaResId) -> MaaStatus , pub MaaResourceLoaded : unsafe extern "C" fn (res : * const MaaResource) -> MaaBool , pub MaaResourceSetOption : unsafe extern "C" fn (res : * mut MaaResource , key : MaaResOption , value : MaaOptionValue , val_size : MaaOptionValueSize ,) -> MaaBool , pub MaaResourceGetHash : unsafe extern "C" fn (res : * const MaaResource , buffer : * mut MaaStringBuffer) -> MaaBool , pub MaaResourceGetNodeList : unsafe extern "C" fn (res : * const MaaResource , buffer : * mut MaaStringListBuffer) -> MaaBool , pub MaaResourceGetCustomRecognitionList : unsafe extern "C" fn (res : * const MaaResource , buffer : * mut MaaStringListBuffer) -> MaaBool , pub MaaResourceGetCustomActionList : unsafe extern "C" fn (res : * const MaaResource , buffer : * mut MaaStringListBuffer) -> MaaBool , pub MaaResourceGetDefaultRecognitionParam : unsafe extern "C" fn (res : * const MaaResource , reco_type : * const :: std :: os :: raw :: c_char , buffer : * mut MaaStringBuffer ,) -> MaaBool , pub MaaResourceGetDefaultActionParam : unsafe extern "C" fn (res : * const MaaResource , action_type : * const :: std :: os :: raw :: c_char , buffer : * mut MaaStringBuffer ,) -> MaaBool , pub MaaAdbControllerCreate : unsafe extern "C" fn (adb_path : * const :: std :: os :: raw :: c_char , address : * const :: std :: os :: raw :: c_char , screencap_methods : MaaAdbScreencapMethod , input_methods : MaaAdbInputMethod , config : * const :: std :: os :: raw :: c_char , agent_path : * const :: std :: os :: raw :: c_char ,) -> * mut MaaController , pub MaaWin32ControllerCreate : unsafe extern "C" fn (hWnd : * mut :: std :: os :: raw :: c_void , screencap_method : MaaWin32ScreencapMethod , mouse_method : MaaWin32InputMethod , keyboard_method : MaaWin32InputMethod ,) -> * mut MaaController , pub MaaCustomControllerCreate : unsafe extern "C" fn (controller : * mut MaaCustomControllerCallbacks , controller_arg : * mut :: std :: os :: raw :: c_void ,) -> * mut MaaController , pub MaaDbgControllerCreate : unsafe extern "C" fn (read_path : * const :: std :: os :: raw :: c_char , write_path : * const :: std :: os :: raw :: c_char , type_ : MaaDbgControllerType , config : * const :: std :: os :: raw :: c_char ,) -> * mut MaaController , pub MaaPlayCoverControllerCreate : unsafe extern "C" fn (address : * const :: std :: os :: raw :: c_char , uuid : * const :: std :: os :: raw :: c_char ,) -> * mut MaaController , pub MaaGamepadControllerCreate : unsafe extern "C" fn (hWnd : * mut :: std :: os :: raw :: c_void , gamepad_type : MaaGamepadType , screencap_method : MaaWin32ScreencapMethod ,) -> * mut MaaController , pub MaaControllerDestroy : unsafe extern "C" fn (ctrl : * mut MaaController) , pub MaaControllerAddSink : unsafe extern "C" fn (ctrl : * mut MaaController , sink : MaaEventCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaSinkId , pub MaaControllerRemoveSink : unsafe extern "C" fn (ctrl : * mut MaaController , sink_id : MaaSinkId) , pub MaaControllerClearSinks : unsafe extern "C" fn (ctrl : * mut MaaController) , pub MaaControllerSetOption : unsafe extern "C" fn (ctrl : * mut MaaController , key : MaaCtrlOption , value : MaaOptionValue , val_size : MaaOptionValueSize ,) -> MaaBool , pub MaaControllerPostConnection : unsafe extern "C" fn (ctrl : * mut MaaController) -> MaaCtrlId , pub MaaControllerPostClick : unsafe extern "C" fn (ctrl : * mut MaaController , x : i32 , y : i32) -> MaaCtrlId , pub MaaControllerPostClickV2 : unsafe extern "C" fn (ctrl : * mut MaaController , x : i32 , y : i32 , contact : i32 , pressure : i32 ,) -> MaaCtrlId , pub MaaControllerPostSwipe : unsafe extern "C" fn (ctrl : * mut MaaController , x1 : i32 , y1 : i32 , x2 : i32 , y2 : i32 , duration : i32 ,) -> MaaCtrlId , pub MaaControllerPostSwipeV2 : unsafe extern "C" fn (ctrl : * mut MaaController , x1 : i32 , y1 : i32 , x2 : i32 , y2 : i32 , duration : i32 , contact : i32 , pressure : i32 ,) -> MaaCtrlId , pub MaaControllerPostClickKey : unsafe extern "C" fn (ctrl : * mut MaaController , keycode : i32) -> MaaCtrlId , pub MaaControllerPostInputText : unsafe extern "C" fn (ctrl : * mut MaaController , text : * const :: std :: os :: raw :: c_char ,) -> MaaCtrlId , pub MaaControllerPostStartApp : unsafe extern "C" fn (ctrl : * mut MaaController , intent : * const :: std :: os :: raw :: c_char ,) -> MaaCtrlId , pub MaaControllerPostStopApp : unsafe extern "C" fn (ctrl : * mut MaaController , intent : * const :: std :: os :: raw :: c_char ,) -> MaaCtrlId , pub MaaControllerPostTouchDown : unsafe extern "C" fn (ctrl : * mut MaaController , contact : i32 , x : i32 , y : i32 , pressure : i32 ,) -> MaaCtrlId , pub MaaControllerPostTouchMove : unsafe extern "C" fn (ctrl : * mut MaaController , contact : i32 , x : i32 , y : i32 , pressure : i32 ,) -> MaaCtrlId , pub MaaControllerPostTouchUp : unsafe extern "C" fn (ctrl : * mut MaaController , contact : i32) -> MaaCtrlId , pub MaaControllerPostKeyDown : unsafe extern "C" fn (ctrl : * mut MaaController , keycode : i32) -> MaaCtrlId , pub MaaControllerPostKeyUp : unsafe extern "C" fn (ctrl : * mut MaaController , keycode : i32) -> MaaCtrlId , pub MaaControllerPostScreencap : unsafe extern "C" fn (ctrl : * mut MaaController) -> MaaCtrlId , pub MaaControllerPostScroll : unsafe extern "C" fn (ctrl : * mut MaaController , dx : i32 , dy : i32) -> MaaCtrlId , pub MaaControllerPostShell : unsafe extern "C" fn (ctrl : * mut MaaController , cmd : * const :: std :: os :: raw :: c_char , timeout : i64 ,) -> MaaCtrlId , pub MaaControllerGetShellOutput : unsafe extern "C" fn (ctrl : * const MaaController , buffer : * mut MaaStringBuffer) -> MaaBool , pub MaaControllerStatus : unsafe extern "C" fn (ctrl : * const MaaController , id : MaaCtrlId) -> MaaStatus , pub MaaControllerWait : unsafe extern "C" fn (ctrl : * const MaaController , id : MaaCtrlId) -> MaaStatus , pub MaaControllerConnected : unsafe extern "C" fn (ctrl : * const MaaController) -> MaaBool , pub MaaControllerCachedImage : unsafe extern "C" fn (ctrl : * const MaaController , buffer : * mut MaaImageBuffer) -> MaaBool , pub MaaControllerGetUuid : unsafe extern "C" fn (ctrl : * mut MaaController , buffer : * mut MaaStringBuffer) -> MaaBool , pub MaaControllerGetResolution : unsafe extern "C" fn (ctrl : * const MaaController , width : * mut i32 , height : * mut i32 ,) -> MaaBool , pub MaaControllerPostPressKey : unsafe extern "C" fn (ctrl : * mut MaaController , keycode : i32) -> MaaCtrlId , pub MaaContextRunTask : unsafe extern "C" fn (context : * mut MaaContext , entry : * const :: std :: os :: raw :: c_char , pipeline_override : * const :: std :: os :: raw :: c_char ,) -> MaaTaskId , pub MaaContextRunRecognition : unsafe extern "C" fn (context : * mut MaaContext , entry : * const :: std :: os :: raw :: c_char , pipeline_override : * const :: std :: os :: raw :: c_char , image : * const MaaImageBuffer ,) -> MaaRecoId , pub MaaContextRunAction : unsafe extern "C" fn (context : * mut MaaContext , entry : * const :: std :: os :: raw :: c_char , pipeline_override : * const :: std :: os :: raw :: c_char , box_ : * const MaaRect , reco_detail : * const :: std :: os :: raw :: c_char ,) -> MaaActId , pub MaaContextRunRecognitionDirect : unsafe extern "C" fn (context : * mut MaaContext , reco_type : * const :: std :: os :: raw :: c_char , reco_param : * const :: std :: os :: raw :: c_char , image : * const MaaImageBuffer ,) -> MaaRecoId , pub MaaContextRunActionDirect : unsafe extern "C" fn (context : * mut MaaContext , action_type : * const :: std :: os :: raw :: c_char , action_param : * const :: std :: os :: raw :: c_char , box_ : * const MaaRect , reco_detail : * const :: std :: os :: raw :: c_char ,) -> MaaActId , pub MaaContextWaitFreezes : unsafe extern "C" fn (context : * mut MaaContext , time : MaaSize , box_ : * const MaaRect , wait_freezes_param : * const :: std :: os :: raw :: c_char ,) -> MaaBool , pub MaaContextOverridePipeline : unsafe extern "C" fn (context : * mut MaaContext , pipeline_override : * const :: std :: os :: raw :: c_char ,) -> MaaBool , pub MaaContextOverrideNext : unsafe extern "C" fn (context : * mut MaaContext , node_name : * const :: std :: os :: raw :: c_char , next_list : * const MaaStringListBuffer ,) -> MaaBool , pub MaaContextOverrideImage : unsafe extern "C" fn (context : * mut MaaContext , image_name : * const :: std :: os :: raw :: c_char , image : * const MaaImageBuffer ,) -> MaaBool , pub MaaContextGetNodeData : unsafe extern "C" fn (context : * mut MaaContext , node_name : * const :: std :: os :: raw :: c_char , buffer : * mut MaaStringBuffer ,) -> MaaBool , pub MaaContextGetTaskId : unsafe extern "C" fn (context : * const MaaContext) -> MaaTaskId , pub MaaContextGetTasker : unsafe extern "C" fn (context : * const MaaContext) -> * mut MaaTasker , pub MaaContextClone : unsafe extern "C" fn (context : * const MaaContext) -> * mut MaaContext , pub MaaContextSetAnchor : unsafe extern "C" fn (context : * mut MaaContext , anchor_name : * const :: std :: os :: raw :: c_char , node_name : * const :: std :: os :: raw :: c_char ,) -> MaaBool , pub MaaContextGetAnchor : unsafe extern "C" fn (context : * mut MaaContext , anchor_name : * const :: std :: os :: raw :: c_char , buffer : * mut MaaStringBuffer ,) -> MaaBool , pub MaaContextGetHitCount : unsafe extern "C" fn (context : * mut MaaContext , node_name : * const :: std :: os :: raw :: c_char , count : * mut MaaSize ,) -> MaaBool , pub MaaContextClearHitCount : unsafe extern "C" fn (context : * mut MaaContext , node_name : * const :: std :: os :: raw :: c_char ,) -> MaaBool , pub MaaGlobalSetOption : unsafe extern "C" fn (key : MaaGlobalOption , value : MaaOptionValue , val_size : MaaOptionValueSize ,) -> MaaBool , pub MaaGlobalLoadPlugin : unsafe extern "C" fn (library_path : * const :: std :: os :: raw :: c_char) -> MaaBool , pub MaaSetGlobalOption : unsafe extern "C" fn (key : MaaGlobalOption , value : MaaOptionValue , val_size : MaaOptionValueSize ,) -> MaaBool , pub MaaStringBufferCreate : unsafe extern "C" fn () -> * mut MaaStringBuffer , pub MaaStringBufferDestroy : unsafe extern "C" fn (handle : * mut MaaStringBuffer) , pub MaaStringBufferIsEmpty : unsafe extern "C" fn (handle : * const MaaStringBuffer) -> MaaBool , pub MaaStringBufferClear : unsafe extern "C" fn (handle : * mut MaaStringBuffer) -> MaaBool , pub MaaStringBufferGet : unsafe extern "C" fn (handle : * const MaaStringBuffer) -> * const :: std :: os :: raw :: c_char , pub MaaStringBufferSize : unsafe extern "C" fn (handle : * const MaaStringBuffer) -> MaaSize , pub MaaStringBufferSet : unsafe extern "C" fn (handle : * mut MaaStringBuffer , str_ : * const :: std :: os :: raw :: c_char ,) -> MaaBool , pub MaaStringBufferSetEx : unsafe extern "C" fn (handle : * mut MaaStringBuffer , str_ : * const :: std :: os :: raw :: c_char , size : MaaSize ,) -> MaaBool , pub MaaStringListBufferCreate : unsafe extern "C" fn () -> * mut MaaStringListBuffer , pub MaaStringListBufferDestroy : unsafe extern "C" fn (handle : * mut MaaStringListBuffer) , pub MaaStringListBufferIsEmpty : unsafe extern "C" fn (handle : * const MaaStringListBuffer) -> MaaBool , pub MaaStringListBufferSize : unsafe extern "C" fn (handle : * const MaaStringListBuffer) -> MaaSize , pub MaaStringListBufferAt : unsafe extern "C" fn (handle : * const MaaStringListBuffer , index : MaaSize ,) -> * const MaaStringBuffer , pub MaaStringListBufferAppend : unsafe extern "C" fn (handle : * mut MaaStringListBuffer , value : * const MaaStringBuffer ,) -> MaaBool , pub MaaStringListBufferRemove : unsafe extern "C" fn (handle : * mut MaaStringListBuffer , index : MaaSize) -> MaaBool , pub MaaStringListBufferClear : unsafe extern "C" fn (handle : * mut MaaStringListBuffer) -> MaaBool , pub MaaImageBufferCreate : unsafe extern "C" fn () -> * mut MaaImageBuffer , pub MaaImageBufferDestroy : unsafe extern "C" fn (handle : * mut MaaImageBuffer) , pub MaaImageBufferIsEmpty : unsafe extern "C" fn (handle : * const MaaImageBuffer) -> MaaBool , pub MaaImageBufferClear : unsafe extern "C" fn (handle : * mut MaaImageBuffer) -> MaaBool , pub MaaImageBufferGetRawData : unsafe extern "C" fn (handle : * const MaaImageBuffer) -> MaaImageRawData , pub MaaImageBufferWidth : unsafe extern "C" fn (handle : * const MaaImageBuffer) -> i32 , pub MaaImageBufferHeight : unsafe extern "C" fn (handle : * const MaaImageBuffer) -> i32 , pub MaaImageBufferChannels : unsafe extern "C" fn (handle : * const MaaImageBuffer) -> i32 , pub MaaImageBufferType : unsafe extern "C" fn (handle : * const MaaImageBuffer) -> i32 , pub MaaImageBufferSetRawData : unsafe extern "C" fn (handle : * mut MaaImageBuffer , data : MaaImageRawData , width : i32 , height : i32 , type_ : i32 ,) -> MaaBool , pub MaaImageBufferResize : unsafe extern "C" fn (handle : * mut MaaImageBuffer , width : i32 , height : i32) -> MaaBool , pub MaaImageBufferGetEncoded : unsafe extern "C" fn (handle : * const MaaImageBuffer) -> MaaImageEncodedData , pub MaaImageBufferGetEncodedSize : unsafe extern "C" fn (handle : * const MaaImageBuffer) -> MaaSize , pub MaaImageBufferSetEncoded : unsafe extern "C" fn (handle : * mut MaaImageBuffer , data : MaaImageEncodedData , size : MaaSize ,) -> MaaBool , pub MaaImageListBufferCreate : unsafe extern "C" fn () -> * mut MaaImageListBuffer , pub MaaImageListBufferDestroy : unsafe extern "C" fn (handle : * mut MaaImageListBuffer) , pub MaaImageListBufferIsEmpty : unsafe extern "C" fn (handle : * const MaaImageListBuffer) -> MaaBool , pub MaaImageListBufferSize : unsafe extern "C" fn (handle : * const MaaImageListBuffer) -> MaaSize , pub MaaImageListBufferAt : unsafe extern "C" fn (handle : * const MaaImageListBuffer , index : MaaSize ,) -> * const MaaImageBuffer , pub MaaImageListBufferAppend : unsafe extern "C" fn (handle : * mut MaaImageListBuffer , value : * const MaaImageBuffer ,) -> MaaBool , pub MaaImageListBufferRemove : unsafe extern "C" fn (handle : * mut MaaImageListBuffer , index : MaaSize) -> MaaBool , pub MaaImageListBufferClear : unsafe extern "C" fn (handle : * mut MaaImageListBuffer) -> MaaBool , pub MaaRectCreate : unsafe extern "C" fn () -> * mut MaaRect , pub MaaRectDestroy : unsafe extern "C" fn (handle : * mut MaaRect) , pub MaaRectGetX : unsafe extern "C" fn (handle : * const MaaRect) -> i32 , pub MaaRectGetY : unsafe extern "C" fn (handle : * const MaaRect) -> i32 , pub MaaRectGetW : unsafe extern "C" fn (handle : * const MaaRect) -> i32 , pub MaaRectGetH : unsafe extern "C" fn (handle : * const MaaRect) -> i32 , pub MaaRectSet : unsafe extern "C" fn (handle : * mut MaaRect , x : i32 , y : i32 , w : i32 , h : i32) -> MaaBool , pub MaaVersion : unsafe extern "C" fn () -> * const :: std :: os :: raw :: c_char , pub MaaAgentClientCreateV2 : unsafe extern "C" fn (identifier : * const MaaStringBuffer) -> * mut MaaAgentClient , pub MaaAgentClientCreateTcp : unsafe extern "C" fn (port : u16) -> * mut MaaAgentClient , pub MaaAgentClientDestroy : unsafe extern "C" fn (client : * mut MaaAgentClient) , pub MaaAgentClientIdentifier : unsafe extern "C" fn (client : * mut MaaAgentClient , identifier : * mut MaaStringBuffer ,) -> MaaBool , pub MaaAgentClientBindResource : unsafe extern "C" fn (client : * mut MaaAgentClient , res : * mut MaaResource) -> MaaBool , pub MaaAgentClientRegisterResourceSink : unsafe extern "C" fn (client : * mut MaaAgentClient , res : * mut MaaResource) -> MaaBool , pub MaaAgentClientRegisterControllerSink : unsafe extern "C" fn (client : * mut MaaAgentClient , ctrl : * mut MaaController) -> MaaBool , pub MaaAgentClientRegisterTaskerSink : unsafe extern "C" fn (client : * mut MaaAgentClient , tasker : * mut MaaTasker) -> MaaBool , pub MaaAgentClientConnect : unsafe extern "C" fn (client : * mut MaaAgentClient) -> MaaBool , pub MaaAgentClientDisconnect : unsafe extern "C" fn (client : * mut MaaAgentClient) -> MaaBool , pub MaaAgentClientConnected : unsafe extern "C" fn (client : * mut MaaAgentClient) -> MaaBool , pub MaaAgentClientAlive : unsafe extern "C" fn (client : * mut MaaAgentClient) -> MaaBool , pub MaaAgentClientSetTimeout : unsafe extern "C" fn (client : * mut MaaAgentClient , milliseconds : i64) -> MaaBool , pub MaaAgentClientGetCustomRecognitionList : unsafe extern "C" fn (client : * mut MaaAgentClient , buffer : * mut MaaStringListBuffer ,) -> MaaBool , pub MaaAgentClientGetCustomActionList : unsafe extern "C" fn (client : * mut MaaAgentClient , buffer : * mut MaaStringListBuffer ,) -> MaaBool , pub MaaAgentClientCreate : unsafe extern "C" fn () -> * mut MaaAgentClient , pub MaaAgentClientCreateSocket : unsafe extern "C" fn (client : * mut MaaAgentClient , identifier : * mut MaaStringBuffer ,) -> MaaBool , pub MaaAgentServerRegisterCustomRecognition : unsafe extern "C" fn (name : * const :: std :: os :: raw :: c_char , recognition : MaaCustomRecognitionCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaBool , pub MaaAgentServerRegisterCustomAction : unsafe extern "C" fn (name : * const :: std :: os :: raw :: c_char , action : MaaCustomActionCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaBool , pub MaaAgentServerAddResourceSink : unsafe extern "C" fn (sink : MaaEventCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaSinkId , pub MaaAgentServerAddControllerSink : unsafe extern "C" fn (sink : MaaEventCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaSinkId , pub MaaAgentServerAddTaskerSink : unsafe extern "C" fn (sink : MaaEventCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaSinkId , pub MaaAgentServerAddContextSink : unsafe extern "C" fn (sink : MaaEventCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaSinkId , pub MaaAgentServerStartUp : unsafe extern "C" fn (identifier : * const :: std :: os :: raw :: c_char) -> MaaBool , pub MaaAgentServerShutDown : unsafe extern "C" fn () , pub MaaAgentServerJoin : unsafe extern "C" fn () , pub MaaAgentServerDetach : unsafe extern "C" fn () , pub MaaToolkitAdbDeviceListCreate : unsafe extern "C" fn () -> * mut MaaToolkitAdbDeviceList , pub MaaToolkitAdbDeviceListDestroy : unsafe extern "C" fn (handle : * mut MaaToolkitAdbDeviceList) , pub MaaToolkitAdbDeviceFind : unsafe extern "C" fn (buffer : * mut MaaToolkitAdbDeviceList) -> MaaBool , pub MaaToolkitAdbDeviceFindSpecified : unsafe extern "C" fn (adb_path : * const :: std :: os :: raw :: c_char , buffer : * mut MaaToolkitAdbDeviceList ,) -> MaaBool , pub MaaToolkitAdbDeviceListSize : unsafe extern "C" fn (list : * const MaaToolkitAdbDeviceList) -> MaaSize , pub MaaToolkitAdbDeviceListAt : unsafe extern "C" fn (list : * const MaaToolkitAdbDeviceList , index : MaaSize ,) -> * const MaaToolkitAdbDevice , pub MaaToolkitAdbDeviceGetName : unsafe extern "C" fn (device : * const MaaToolkitAdbDevice) -> * const :: std :: os :: raw :: c_char , pub MaaToolkitAdbDeviceGetAdbPath : unsafe extern "C" fn (device : * const MaaToolkitAdbDevice) -> * const :: std :: os :: raw :: c_char , pub MaaToolkitAdbDeviceGetAddress : unsafe extern "C" fn (device : * const MaaToolkitAdbDevice) -> * const :: std :: os :: raw :: c_char , pub MaaToolkitAdbDeviceGetScreencapMethods : unsafe extern "C" fn (device : * const MaaToolkitAdbDevice) -> MaaAdbScreencapMethod , pub MaaToolkitAdbDeviceGetInputMethods : unsafe extern "C" fn (device : * const MaaToolkitAdbDevice) -> MaaAdbInputMethod , pub MaaToolkitAdbDeviceGetConfig : unsafe extern "C" fn (device : * const MaaToolkitAdbDevice) -> * const :: std :: os :: raw :: c_char , pub MaaToolkitDesktopWindowListCreate : unsafe extern "C" fn () -> * mut MaaToolkitDesktopWindowList , pub MaaToolkitDesktopWindowListDestroy : unsafe extern "C" fn (handle : * mut MaaToolkitDesktopWindowList) , pub MaaToolkitDesktopWindowFindAll : unsafe extern "C" fn (buffer : * mut MaaToolkitDesktopWindowList) -> MaaBool , pub MaaToolkitDesktopWindowListSize : unsafe extern "C" fn (list : * const MaaToolkitDesktopWindowList) -> MaaSize , pub MaaToolkitDesktopWindowListAt : unsafe extern "C" fn (list : * const MaaToolkitDesktopWindowList , index : MaaSize ,) -> * const MaaToolkitDesktopWindow , pub MaaToolkitDesktopWindowGetHandle : unsafe extern "C" fn (window : * const MaaToolkitDesktopWindow) -> * mut :: std :: os :: raw :: c_void , pub MaaToolkitDesktopWindowGetClassName : unsafe extern "C" fn (window : * const MaaToolkitDesktopWindow ,) -> * const :: std :: os :: raw :: c_char , pub MaaToolkitDesktopWindowGetWindowName : unsafe extern "C" fn (window : * const MaaToolkitDesktopWindow ,) -> * const :: std :: os :: raw :: c_char , pub MaaToolkitConfigInitOption : unsafe extern "C" fn (user_path : * const :: std :: os :: raw :: c_char , default_json : * const :: std :: os :: raw :: c_char ,) -> MaaBool , }
-impl MaaFramework { pub unsafe fn new < P > (path : P) -> Result < Self , :: libloading :: Error > where P : AsRef < :: std :: ffi :: OsStr > , { unsafe { let library = CompositeLibrary :: new (path) ? ; Self :: from_library (library) } } pub unsafe fn from_library < L > (library : L) -> Result < Self , :: libloading :: Error > where L : Into < CompositeLibrary > , { unsafe { let __library = library . into () ; let MaaTaskerCreate = __library . get (b"MaaTaskerCreate\0") . map (| sym | * sym) ? ; let MaaTaskerDestroy = __library . get (b"MaaTaskerDestroy\0") . map (| sym | * sym) ? ; let MaaTaskerAddSink = __library . get (b"MaaTaskerAddSink\0") . map (| sym | * sym) ? ; let MaaTaskerRemoveSink = __library . get (b"MaaTaskerRemoveSink\0") . map (| sym | * sym) ? ; let MaaTaskerClearSinks = __library . get (b"MaaTaskerClearSinks\0") . map (| sym | * sym) ? ; let MaaTaskerAddContextSink = __library . get (b"MaaTaskerAddContextSink\0") . map (| sym | * sym) ? ; let MaaTaskerRemoveContextSink = __library . get (b"MaaTaskerRemoveContextSink\0") . map (| sym | * sym) ? ; let MaaTaskerClearContextSinks = __library . get (b"MaaTaskerClearContextSinks\0") . map (| sym | * sym) ? ; let MaaTaskerSetOption = __library . get (b"MaaTaskerSetOption\0") . map (| sym | * sym) ? ; let MaaTaskerBindResource = __library . get (b"MaaTaskerBindResource\0") . map (| sym | * sym) ? ; let MaaTaskerBindController = __library . get (b"MaaTaskerBindController\0") . map (| sym | * sym) ? ; let MaaTaskerInited = __library . get (b"MaaTaskerInited\0") . map (| sym | * sym) ? ; let MaaTaskerPostTask = __library . get (b"MaaTaskerPostTask\0") . map (| sym | * sym) ? ; let MaaTaskerPostRecognition = __library . get (b"MaaTaskerPostRecognition\0") . map (| sym | * sym) ? ; let MaaTaskerPostAction = __library . get (b"MaaTaskerPostAction\0") . map (| sym | * sym) ? ; let MaaTaskerStatus = __library . get (b"MaaTaskerStatus\0") . map (| sym | * sym) ? ; let MaaTaskerWait = __library . get (b"MaaTaskerWait\0") . map (| sym | * sym) ? ; let MaaTaskerRunning = __library . get (b"MaaTaskerRunning\0") . map (| sym | * sym) ? ; let MaaTaskerPostStop = __library . get (b"MaaTaskerPostStop\0") . map (| sym | * sym) ? ; let MaaTaskerStopping = __library . get (b"MaaTaskerStopping\0") . map (| sym | * sym) ? ; let MaaTaskerGetResource = __library . get (b"MaaTaskerGetResource\0") . map (| sym | * sym) ? ; let MaaTaskerGetController = __library . get (b"MaaTaskerGetController\0") . map (| sym | * sym) ? ; let MaaTaskerClearCache = __library . get (b"MaaTaskerClearCache\0") . map (| sym | * sym) ? ; let MaaTaskerOverridePipeline = __library . get (b"MaaTaskerOverridePipeline\0") . map (| sym | * sym) ? ; let MaaTaskerGetRecognitionDetail = __library . get (b"MaaTaskerGetRecognitionDetail\0") . map (| sym | * sym) ? ; let MaaTaskerGetActionDetail = __library . get (b"MaaTaskerGetActionDetail\0") . map (| sym | * sym) ? ; let MaaTaskerGetNodeDetail = __library . get (b"MaaTaskerGetNodeDetail\0") . map (| sym | * sym) ? ; let MaaTaskerGetTaskDetail = __library . get (b"MaaTaskerGetTaskDetail\0") . map (| sym | * sym) ? ; let MaaTaskerGetLatestNode = __library . get (b"MaaTaskerGetLatestNode\0") . map (| sym | * sym) ? ; let MaaResourceCreate = __library . get (b"MaaResourceCreate\0") . map (| sym | * sym) ? ; let MaaResourceDestroy = __library . get (b"MaaResourceDestroy\0") . map (| sym | * sym) ? ; let MaaResourceAddSink = __library . get (b"MaaResourceAddSink\0") . map (| sym | * sym) ? ; let MaaResourceRemoveSink = __library . get (b"MaaResourceRemoveSink\0") . map (| sym | * sym) ? ; let MaaResourceClearSinks = __library . get (b"MaaResourceClearSinks\0") . map (| sym | * sym) ? ; let MaaResourceRegisterCustomRecognition = __library . get (b"MaaResourceRegisterCustomRecognition\0") . map (| sym | * sym) ? ; let MaaResourceUnregisterCustomRecognition = __library . get (b"MaaResourceUnregisterCustomRecognition\0") . map (| sym | * sym) ? ; let MaaResourceClearCustomRecognition = __library . get (b"MaaResourceClearCustomRecognition\0") . map (| sym | * sym) ? ; let MaaResourceRegisterCustomAction = __library . get (b"MaaResourceRegisterCustomAction\0") . map (| sym | * sym) ? ; let MaaResourceUnregisterCustomAction = __library . get (b"MaaResourceUnregisterCustomAction\0") . map (| sym | * sym) ? ; let MaaResourceClearCustomAction = __library . get (b"MaaResourceClearCustomAction\0") . map (| sym | * sym) ? ; let MaaResourcePostBundle = __library . get (b"MaaResourcePostBundle\0") . map (| sym | * sym) ? ; let MaaResourcePostOcrModel = __library . get (b"MaaResourcePostOcrModel\0") . map (| sym | * sym) ? ; let MaaResourcePostPipeline = __library . get (b"MaaResourcePostPipeline\0") . map (| sym | * sym) ? ; let MaaResourcePostImage = __library . get (b"MaaResourcePostImage\0") . map (| sym | * sym) ? ; let MaaResourceOverridePipeline = __library . get (b"MaaResourceOverridePipeline\0") . map (| sym | * sym) ? ; let MaaResourceOverrideNext = __library . get (b"MaaResourceOverrideNext\0") . map (| sym | * sym) ? ; let MaaResourceOverrideImage = __library . get (b"MaaResourceOverrideImage\0") . map (| sym | * sym) ? ; let MaaResourceGetNodeData = __library . get (b"MaaResourceGetNodeData\0") . map (| sym | * sym) ? ; let MaaResourceClear = __library . get (b"MaaResourceClear\0") . map (| sym | * sym) ? ; let MaaResourceStatus = __library . get (b"MaaResourceStatus\0") . map (| sym | * sym) ? ; let MaaResourceWait = __library . get (b"MaaResourceWait\0") . map (| sym | * sym) ? ; let MaaResourceLoaded = __library . get (b"MaaResourceLoaded\0") . map (| sym | * sym) ? ; let MaaResourceSetOption = __library . get (b"MaaResourceSetOption\0") . map (| sym | * sym) ? ; let MaaResourceGetHash = __library . get (b"MaaResourceGetHash\0") . map (| sym | * sym) ? ; let MaaResourceGetNodeList = __library . get (b"MaaResourceGetNodeList\0") . map (| sym | * sym) ? ; let MaaResourceGetCustomRecognitionList = __library . get (b"MaaResourceGetCustomRecognitionList\0") . map (| sym | * sym) ? ; let MaaResourceGetCustomActionList = __library . get (b"MaaResourceGetCustomActionList\0") . map (| sym | * sym) ? ; let MaaResourceGetDefaultRecognitionParam = __library . get (b"MaaResourceGetDefaultRecognitionParam\0") . map (| sym | * sym) ? ; let MaaResourceGetDefaultActionParam = __library . get (b"MaaResourceGetDefaultActionParam\0") . map (| sym | * sym) ? ; let MaaAdbControllerCreate = __library . get (b"MaaAdbControllerCreate\0") . map (| sym | * sym) ? ; let MaaWin32ControllerCreate = __library . get (b"MaaWin32ControllerCreate\0") . map (| sym | * sym) ? ; let MaaCustomControllerCreate = __library . get (b"MaaCustomControllerCreate\0") . map (| sym | * sym) ? ; let MaaDbgControllerCreate = __library . get (b"MaaDbgControllerCreate\0") . map (| sym | * sym) ? ; let MaaPlayCoverControllerCreate = __library . get (b"MaaPlayCoverControllerCreate\0") . map (| sym | * sym) ? ; let MaaGamepadControllerCreate = __library . get (b"MaaGamepadControllerCreate\0") . map (| sym | * sym) ? ; let MaaControllerDestroy = __library . get (b"MaaControllerDestroy\0") . map (| sym | * sym) ? ; let MaaControllerAddSink = __library . get (b"MaaControllerAddSink\0") . map (| sym | * sym) ? ; let MaaControllerRemoveSink = __library . get (b"MaaControllerRemoveSink\0") . map (| sym | * sym) ? ; let MaaControllerClearSinks = __library . get (b"MaaControllerClearSinks\0") . map (| sym | * sym) ? ; let MaaControllerSetOption = __library . get (b"MaaControllerSetOption\0") . map (| sym | * sym) ? ; let MaaControllerPostConnection = __library . get (b"MaaControllerPostConnection\0") . map (| sym | * sym) ? ; let MaaControllerPostClick = __library . get (b"MaaControllerPostClick\0") . map (| sym | * sym) ? ; let MaaControllerPostClickV2 = __library . get (b"MaaControllerPostClickV2\0") . map (| sym | * sym) ? ; let MaaControllerPostSwipe = __library . get (b"MaaControllerPostSwipe\0") . map (| sym | * sym) ? ; let MaaControllerPostSwipeV2 = __library . get (b"MaaControllerPostSwipeV2\0") . map (| sym | * sym) ? ; let MaaControllerPostClickKey = __library . get (b"MaaControllerPostClickKey\0") . map (| sym | * sym) ? ; let MaaControllerPostInputText = __library . get (b"MaaControllerPostInputText\0") . map (| sym | * sym) ? ; let MaaControllerPostStartApp = __library . get (b"MaaControllerPostStartApp\0") . map (| sym | * sym) ? ; let MaaControllerPostStopApp = __library . get (b"MaaControllerPostStopApp\0") . map (| sym | * sym) ? ; let MaaControllerPostTouchDown = __library . get (b"MaaControllerPostTouchDown\0") . map (| sym | * sym) ? ; let MaaControllerPostTouchMove = __library . get (b"MaaControllerPostTouchMove\0") . map (| sym | * sym) ? ; let MaaControllerPostTouchUp = __library . get (b"MaaControllerPostTouchUp\0") . map (| sym | * sym) ? ; let MaaControllerPostKeyDown = __library . get (b"MaaControllerPostKeyDown\0") . map (| sym | * sym) ? ; let MaaControllerPostKeyUp = __library . get (b"MaaControllerPostKeyUp\0") . map (| sym | * sym) ? ; let MaaControllerPostScreencap = __library . get (b"MaaControllerPostScreencap\0") . map (| sym | * sym) ? ; let MaaControllerPostScroll = __library . get (b"MaaControllerPostScroll\0") . map (| sym | * sym) ? ; let MaaControllerPostShell = __library . get (b"MaaControllerPostShell\0") . map (| sym | * sym) ? ; let MaaControllerGetShellOutput = __library . get (b"MaaControllerGetShellOutput\0") . map (| sym | * sym) ? ; let MaaControllerStatus = __library . get (b"MaaControllerStatus\0") . map (| sym | * sym) ? ; let MaaControllerWait = __library . get (b"MaaControllerWait\0") . map (| sym | * sym) ? ; let MaaControllerConnected = __library . get (b"MaaControllerConnected\0") . map (| sym | * sym) ? ; let MaaControllerCachedImage = __library . get (b"MaaControllerCachedImage\0") . map (| sym | * sym) ? ; let MaaControllerGetUuid = __library . get (b"MaaControllerGetUuid\0") . map (| sym | * sym) ? ; let MaaControllerGetResolution = __library . get (b"MaaControllerGetResolution\0") . map (| sym | * sym) ? ; let MaaControllerPostPressKey = __library . get (b"MaaControllerPostPressKey\0") . map (| sym | * sym) ? ; let MaaContextRunTask = __library . get (b"MaaContextRunTask\0") . map (| sym | * sym) ? ; let MaaContextRunRecognition = __library . get (b"MaaContextRunRecognition\0") . map (| sym | * sym) ? ; let MaaContextRunAction = __library . get (b"MaaContextRunAction\0") . map (| sym | * sym) ? ; let MaaContextRunRecognitionDirect = __library . get (b"MaaContextRunRecognitionDirect\0") . map (| sym | * sym) ? ; let MaaContextRunActionDirect = __library . get (b"MaaContextRunActionDirect\0") . map (| sym | * sym) ? ; let MaaContextWaitFreezes = __library . get (b"MaaContextWaitFreezes\0") . map (| sym | * sym) ? ; let MaaContextOverridePipeline = __library . get (b"MaaContextOverridePipeline\0") . map (| sym | * sym) ? ; let MaaContextOverrideNext = __library . get (b"MaaContextOverrideNext\0") . map (| sym | * sym) ? ; let MaaContextOverrideImage = __library . get (b"MaaContextOverrideImage\0") . map (| sym | * sym) ? ; let MaaContextGetNodeData = __library . get (b"MaaContextGetNodeData\0") . map (| sym | * sym) ? ; let MaaContextGetTaskId = __library . get (b"MaaContextGetTaskId\0") . map (| sym | * sym) ? ; let MaaContextGetTasker = __library . get (b"MaaContextGetTasker\0") . map (| sym | * sym) ? ; let MaaContextClone = __library . get (b"MaaContextClone\0") . map (| sym | * sym) ? ; let MaaContextSetAnchor = __library . get (b"MaaContextSetAnchor\0") . map (| sym | * sym) ? ; let MaaContextGetAnchor = __library . get (b"MaaContextGetAnchor\0") . map (| sym | * sym) ? ; let MaaContextGetHitCount = __library . get (b"MaaContextGetHitCount\0") . map (| sym | * sym) ? ; let MaaContextClearHitCount = __library . get (b"MaaContextClearHitCount\0") . map (| sym | * sym) ? ; let MaaGlobalSetOption = __library . get (b"MaaGlobalSetOption\0") . map (| sym | * sym) ? ; let MaaGlobalLoadPlugin = __library . get (b"MaaGlobalLoadPlugin\0") . map (| sym | * sym) ? ; let MaaSetGlobalOption = __library . get (b"MaaSetGlobalOption\0") . map (| sym | * sym) ? ; let MaaStringBufferCreate = __library . get (b"MaaStringBufferCreate\0") . map (| sym | * sym) ? ; let MaaStringBufferDestroy = __library . get (b"MaaStringBufferDestroy\0") . map (| sym | * sym) ? ; let MaaStringBufferIsEmpty = __library . get (b"MaaStringBufferIsEmpty\0") . map (| sym | * sym) ? ; let MaaStringBufferClear = __library . get (b"MaaStringBufferClear\0") . map (| sym | * sym) ? ; let MaaStringBufferGet = __library . get (b"MaaStringBufferGet\0") . map (| sym | * sym) ? ; let MaaStringBufferSize = __library . get (b"MaaStringBufferSize\0") . map (| sym | * sym) ? ; let MaaStringBufferSet = __library . get (b"MaaStringBufferSet\0") . map (| sym | * sym) ? ; let MaaStringBufferSetEx = __library . get (b"MaaStringBufferSetEx\0") . map (| sym | * sym) ? ; let MaaStringListBufferCreate = __library . get (b"MaaStringListBufferCreate\0") . map (| sym | * sym) ? ; let MaaStringListBufferDestroy = __library . get (b"MaaStringListBufferDestroy\0") . map (| sym | * sym) ? ; let MaaStringListBufferIsEmpty = __library . get (b"MaaStringListBufferIsEmpty\0") . map (| sym | * sym) ? ; let MaaStringListBufferSize = __library . get (b"MaaStringListBufferSize\0") . map (| sym | * sym) ? ; let MaaStringListBufferAt = __library . get (b"MaaStringListBufferAt\0") . map (| sym | * sym) ? ; let MaaStringListBufferAppend = __library . get (b"MaaStringListBufferAppend\0") . map (| sym | * sym) ? ; let MaaStringListBufferRemove = __library . get (b"MaaStringListBufferRemove\0") . map (| sym | * sym) ? ; let MaaStringListBufferClear = __library . get (b"MaaStringListBufferClear\0") . map (| sym | * sym) ? ; let MaaImageBufferCreate = __library . get (b"MaaImageBufferCreate\0") . map (| sym | * sym) ? ; let MaaImageBufferDestroy = __library . get (b"MaaImageBufferDestroy\0") . map (| sym | * sym) ? ; let MaaImageBufferIsEmpty = __library . get (b"MaaImageBufferIsEmpty\0") . map (| sym | * sym) ? ; let MaaImageBufferClear = __library . get (b"MaaImageBufferClear\0") . map (| sym | * sym) ? ; let MaaImageBufferGetRawData = __library . get (b"MaaImageBufferGetRawData\0") . map (| sym | * sym) ? ; let MaaImageBufferWidth = __library . get (b"MaaImageBufferWidth\0") . map (| sym | * sym) ? ; let MaaImageBufferHeight = __library . get (b"MaaImageBufferHeight\0") . map (| sym | * sym) ? ; let MaaImageBufferChannels = __library . get (b"MaaImageBufferChannels\0") . map (| sym | * sym) ? ; let MaaImageBufferType = __library . get (b"MaaImageBufferType\0") . map (| sym | * sym) ? ; let MaaImageBufferSetRawData = __library . get (b"MaaImageBufferSetRawData\0") . map (| sym | * sym) ? ; let MaaImageBufferResize = __library . get (b"MaaImageBufferResize\0") . map (| sym | * sym) ? ; let MaaImageBufferGetEncoded = __library . get (b"MaaImageBufferGetEncoded\0") . map (| sym | * sym) ? ; let MaaImageBufferGetEncodedSize = __library . get (b"MaaImageBufferGetEncodedSize\0") . map (| sym | * sym) ? ; let MaaImageBufferSetEncoded = __library . get (b"MaaImageBufferSetEncoded\0") . map (| sym | * sym) ? ; let MaaImageListBufferCreate = __library . get (b"MaaImageListBufferCreate\0") . map (| sym | * sym) ? ; let MaaImageListBufferDestroy = __library . get (b"MaaImageListBufferDestroy\0") . map (| sym | * sym) ? ; let MaaImageListBufferIsEmpty = __library . get (b"MaaImageListBufferIsEmpty\0") . map (| sym | * sym) ? ; let MaaImageListBufferSize = __library . get (b"MaaImageListBufferSize\0") . map (| sym | * sym) ? ; let MaaImageListBufferAt = __library . get (b"MaaImageListBufferAt\0") . map (| sym | * sym) ? ; let MaaImageListBufferAppend = __library . get (b"MaaImageListBufferAppend\0") . map (| sym | * sym) ? ; let MaaImageListBufferRemove = __library . get (b"MaaImageListBufferRemove\0") . map (| sym | * sym) ? ; let MaaImageListBufferClear = __library . get (b"MaaImageListBufferClear\0") . map (| sym | * sym) ? ; let MaaRectCreate = __library . get (b"MaaRectCreate\0") . map (| sym | * sym) ? ; let MaaRectDestroy = __library . get (b"MaaRectDestroy\0") . map (| sym | * sym) ? ; let MaaRectGetX = __library . get (b"MaaRectGetX\0") . map (| sym | * sym) ? ; let MaaRectGetY = __library . get (b"MaaRectGetY\0") . map (| sym | * sym) ? ; let MaaRectGetW = __library . get (b"MaaRectGetW\0") . map (| sym | * sym) ? ; let MaaRectGetH = __library . get (b"MaaRectGetH\0") . map (| sym | * sym) ? ; let MaaRectSet = __library . get (b"MaaRectSet\0") . map (| sym | * sym) ? ; let MaaVersion = __library . get (b"MaaVersion\0") . map (| sym | * sym) ? ; let MaaAgentClientCreateV2 = __library . get (b"MaaAgentClientCreateV2\0") . map (| sym | * sym) ? ; let MaaAgentClientCreateTcp = __library . get (b"MaaAgentClientCreateTcp\0") . map (| sym | * sym) ? ; let MaaAgentClientDestroy = __library . get (b"MaaAgentClientDestroy\0") . map (| sym | * sym) ? ; let MaaAgentClientIdentifier = __library . get (b"MaaAgentClientIdentifier\0") . map (| sym | * sym) ? ; let MaaAgentClientBindResource = __library . get (b"MaaAgentClientBindResource\0") . map (| sym | * sym) ? ; let MaaAgentClientRegisterResourceSink = __library . get (b"MaaAgentClientRegisterResourceSink\0") . map (| sym | * sym) ? ; let MaaAgentClientRegisterControllerSink = __library . get (b"MaaAgentClientRegisterControllerSink\0") . map (| sym | * sym) ? ; let MaaAgentClientRegisterTaskerSink = __library . get (b"MaaAgentClientRegisterTaskerSink\0") . map (| sym | * sym) ? ; let MaaAgentClientConnect = __library . get (b"MaaAgentClientConnect\0") . map (| sym | * sym) ? ; let MaaAgentClientDisconnect = __library . get (b"MaaAgentClientDisconnect\0") . map (| sym | * sym) ? ; let MaaAgentClientConnected = __library . get (b"MaaAgentClientConnected\0") . map (| sym | * sym) ? ; let MaaAgentClientAlive = __library . get (b"MaaAgentClientAlive\0") . map (| sym | * sym) ? ; let MaaAgentClientSetTimeout = __library . get (b"MaaAgentClientSetTimeout\0") . map (| sym | * sym) ? ; let MaaAgentClientGetCustomRecognitionList = __library . get (b"MaaAgentClientGetCustomRecognitionList\0") . map (| sym | * sym) ? ; let MaaAgentClientGetCustomActionList = __library . get (b"MaaAgentClientGetCustomActionList\0") . map (| sym | * sym) ? ; let MaaAgentClientCreate = __library . get (b"MaaAgentClientCreate\0") . map (| sym | * sym) ? ; let MaaAgentClientCreateSocket = __library . get (b"MaaAgentClientCreateSocket\0") . map (| sym | * sym) ? ; let MaaAgentServerRegisterCustomRecognition = __library . get (b"MaaAgentServerRegisterCustomRecognition\0") . map (| sym | * sym) ? ; let MaaAgentServerRegisterCustomAction = __library . get (b"MaaAgentServerRegisterCustomAction\0") . map (| sym | * sym) ? ; let MaaAgentServerAddResourceSink = __library . get (b"MaaAgentServerAddResourceSink\0") . map (| sym | * sym) ? ; let MaaAgentServerAddControllerSink = __library . get (b"MaaAgentServerAddControllerSink\0") . map (| sym | * sym) ? ; let MaaAgentServerAddTaskerSink = __library . get (b"MaaAgentServerAddTaskerSink\0") . map (| sym | * sym) ? ; let MaaAgentServerAddContextSink = __library . get (b"MaaAgentServerAddContextSink\0") . map (| sym | * sym) ? ; let MaaAgentServerStartUp = __library . get (b"MaaAgentServerStartUp\0") . map (| sym | * sym) ? ; let MaaAgentServerShutDown = __library . get (b"MaaAgentServerShutDown\0") . map (| sym | * sym) ? ; let MaaAgentServerJoin = __library . get (b"MaaAgentServerJoin\0") . map (| sym | * sym) ? ; let MaaAgentServerDetach = __library . get (b"MaaAgentServerDetach\0") . map (| sym | * sym) ? ; let MaaToolkitAdbDeviceListCreate = __library . get (b"MaaToolkitAdbDeviceListCreate\0") . map (| sym | * sym) ? ; let MaaToolkitAdbDeviceListDestroy = __library . get (b"MaaToolkitAdbDeviceListDestroy\0") . map (| sym | * sym) ? ; let MaaToolkitAdbDeviceFind = __library . get (b"MaaToolkitAdbDeviceFind\0") . map (| sym | * sym) ? ; let MaaToolkitAdbDeviceFindSpecified = __library . get (b"MaaToolkitAdbDeviceFindSpecified\0") . map (| sym | * sym) ? ; let MaaToolkitAdbDeviceListSize = __library . get (b"MaaToolkitAdbDeviceListSize\0") . map (| sym | * sym) ? ; let MaaToolkitAdbDeviceListAt = __library . get (b"MaaToolkitAdbDeviceListAt\0") . map (| sym | * sym) ? ; let MaaToolkitAdbDeviceGetName = __library . get (b"MaaToolkitAdbDeviceGetName\0") . map (| sym | * sym) ? ; let MaaToolkitAdbDeviceGetAdbPath = __library . get (b"MaaToolkitAdbDeviceGetAdbPath\0") . map (| sym | * sym) ? ; let MaaToolkitAdbDeviceGetAddress = __library . get (b"MaaToolkitAdbDeviceGetAddress\0") . map (| sym | * sym) ? ; let MaaToolkitAdbDeviceGetScreencapMethods = __library . get (b"MaaToolkitAdbDeviceGetScreencapMethods\0") . map (| sym | * sym) ? ; let MaaToolkitAdbDeviceGetInputMethods = __library . get (b"MaaToolkitAdbDeviceGetInputMethods\0") . map (| sym | * sym) ? ; let MaaToolkitAdbDeviceGetConfig = __library . get (b"MaaToolkitAdbDeviceGetConfig\0") . map (| sym | * sym) ? ; let MaaToolkitDesktopWindowListCreate = __library . get (b"MaaToolkitDesktopWindowListCreate\0") . map (| sym | * sym) ? ; let MaaToolkitDesktopWindowListDestroy = __library . get (b"MaaToolkitDesktopWindowListDestroy\0") . map (| sym | * sym) ? ; let MaaToolkitDesktopWindowFindAll = __library . get (b"MaaToolkitDesktopWindowFindAll\0") . map (| sym | * sym) ? ; let MaaToolkitDesktopWindowListSize = __library . get (b"MaaToolkitDesktopWindowListSize\0") . map (| sym | * sym) ? ; let MaaToolkitDesktopWindowListAt = __library . get (b"MaaToolkitDesktopWindowListAt\0") . map (| sym | * sym) ? ; let MaaToolkitDesktopWindowGetHandle = __library . get (b"MaaToolkitDesktopWindowGetHandle\0") . map (| sym | * sym) ? ; let MaaToolkitDesktopWindowGetClassName = __library . get (b"MaaToolkitDesktopWindowGetClassName\0") . map (| sym | * sym) ? ; let MaaToolkitDesktopWindowGetWindowName = __library . get (b"MaaToolkitDesktopWindowGetWindowName\0") . map (| sym | * sym) ? ; let MaaToolkitConfigInitOption = __library . get (b"MaaToolkitConfigInitOption\0") . map (| sym | * sym) ? ; Ok (MaaFramework { __library , MaaTaskerCreate , MaaTaskerDestroy , MaaTaskerAddSink , MaaTaskerRemoveSink , MaaTaskerClearSinks , MaaTaskerAddContextSink , MaaTaskerRemoveContextSink , MaaTaskerClearContextSinks , MaaTaskerSetOption , MaaTaskerBindResource , MaaTaskerBindController , MaaTaskerInited , MaaTaskerPostTask , MaaTaskerPostRecognition , MaaTaskerPostAction , MaaTaskerStatus , MaaTaskerWait , MaaTaskerRunning , MaaTaskerPostStop , MaaTaskerStopping , MaaTaskerGetResource , MaaTaskerGetController , MaaTaskerClearCache , MaaTaskerOverridePipeline , MaaTaskerGetRecognitionDetail , MaaTaskerGetActionDetail , MaaTaskerGetNodeDetail , MaaTaskerGetTaskDetail , MaaTaskerGetLatestNode , MaaResourceCreate , MaaResourceDestroy , MaaResourceAddSink , MaaResourceRemoveSink , MaaResourceClearSinks , MaaResourceRegisterCustomRecognition , MaaResourceUnregisterCustomRecognition , MaaResourceClearCustomRecognition , MaaResourceRegisterCustomAction , MaaResourceUnregisterCustomAction , MaaResourceClearCustomAction , MaaResourcePostBundle , MaaResourcePostOcrModel , MaaResourcePostPipeline , MaaResourcePostImage , MaaResourceOverridePipeline , MaaResourceOverrideNext , MaaResourceOverrideImage , MaaResourceGetNodeData , MaaResourceClear , MaaResourceStatus , MaaResourceWait , MaaResourceLoaded , MaaResourceSetOption , MaaResourceGetHash , MaaResourceGetNodeList , MaaResourceGetCustomRecognitionList , MaaResourceGetCustomActionList , MaaResourceGetDefaultRecognitionParam , MaaResourceGetDefaultActionParam , MaaAdbControllerCreate , MaaWin32ControllerCreate , MaaCustomControllerCreate , MaaDbgControllerCreate , MaaPlayCoverControllerCreate , MaaGamepadControllerCreate , MaaControllerDestroy , MaaControllerAddSink , MaaControllerRemoveSink , MaaControllerClearSinks , MaaControllerSetOption , MaaControllerPostConnection , MaaControllerPostClick , MaaControllerPostClickV2 , MaaControllerPostSwipe , MaaControllerPostSwipeV2 , MaaControllerPostClickKey , MaaControllerPostInputText , MaaControllerPostStartApp , MaaControllerPostStopApp , MaaControllerPostTouchDown , MaaControllerPostTouchMove , MaaControllerPostTouchUp , MaaControllerPostKeyDown , MaaControllerPostKeyUp , MaaControllerPostScreencap , MaaControllerPostScroll , MaaControllerPostShell , MaaControllerGetShellOutput , MaaControllerStatus , MaaControllerWait , MaaControllerConnected , MaaControllerCachedImage , MaaControllerGetUuid , MaaControllerGetResolution , MaaControllerPostPressKey , MaaContextRunTask , MaaContextRunRecognition , MaaContextRunAction , MaaContextRunRecognitionDirect , MaaContextRunActionDirect , MaaContextWaitFreezes , MaaContextOverridePipeline , MaaContextOverrideNext , MaaContextOverrideImage , MaaContextGetNodeData , MaaContextGetTaskId , MaaContextGetTasker , MaaContextClone , MaaContextSetAnchor , MaaContextGetAnchor , MaaContextGetHitCount , MaaContextClearHitCount , MaaGlobalSetOption , MaaGlobalLoadPlugin , MaaSetGlobalOption , MaaStringBufferCreate , MaaStringBufferDestroy , MaaStringBufferIsEmpty , MaaStringBufferClear , MaaStringBufferGet , MaaStringBufferSize , MaaStringBufferSet , MaaStringBufferSetEx , MaaStringListBufferCreate , MaaStringListBufferDestroy , MaaStringListBufferIsEmpty , MaaStringListBufferSize , MaaStringListBufferAt , MaaStringListBufferAppend , MaaStringListBufferRemove , MaaStringListBufferClear , MaaImageBufferCreate , MaaImageBufferDestroy , MaaImageBufferIsEmpty , MaaImageBufferClear , MaaImageBufferGetRawData , MaaImageBufferWidth , MaaImageBufferHeight , MaaImageBufferChannels , MaaImageBufferType , MaaImageBufferSetRawData , MaaImageBufferResize , MaaImageBufferGetEncoded , MaaImageBufferGetEncodedSize , MaaImageBufferSetEncoded , MaaImageListBufferCreate , MaaImageListBufferDestroy , MaaImageListBufferIsEmpty , MaaImageListBufferSize , MaaImageListBufferAt , MaaImageListBufferAppend , MaaImageListBufferRemove , MaaImageListBufferClear , MaaRectCreate , MaaRectDestroy , MaaRectGetX , MaaRectGetY , MaaRectGetW , MaaRectGetH , MaaRectSet , MaaVersion , MaaAgentClientCreateV2 , MaaAgentClientCreateTcp , MaaAgentClientDestroy , MaaAgentClientIdentifier , MaaAgentClientBindResource , MaaAgentClientRegisterResourceSink , MaaAgentClientRegisterControllerSink , MaaAgentClientRegisterTaskerSink , MaaAgentClientConnect , MaaAgentClientDisconnect , MaaAgentClientConnected , MaaAgentClientAlive , MaaAgentClientSetTimeout , MaaAgentClientGetCustomRecognitionList , MaaAgentClientGetCustomActionList , MaaAgentClientCreate , MaaAgentClientCreateSocket , MaaAgentServerRegisterCustomRecognition , MaaAgentServerRegisterCustomAction , MaaAgentServerAddResourceSink , MaaAgentServerAddControllerSink , MaaAgentServerAddTaskerSink , MaaAgentServerAddContextSink , MaaAgentServerStartUp , MaaAgentServerShutDown , MaaAgentServerJoin , MaaAgentServerDetach , MaaToolkitAdbDeviceListCreate , MaaToolkitAdbDeviceListDestroy , MaaToolkitAdbDeviceFind , MaaToolkitAdbDeviceFindSpecified , MaaToolkitAdbDeviceListSize , MaaToolkitAdbDeviceListAt , MaaToolkitAdbDeviceGetName , MaaToolkitAdbDeviceGetAdbPath , MaaToolkitAdbDeviceGetAddress , MaaToolkitAdbDeviceGetScreencapMethods , MaaToolkitAdbDeviceGetInputMethods , MaaToolkitAdbDeviceGetConfig , MaaToolkitDesktopWindowListCreate , MaaToolkitDesktopWindowListDestroy , MaaToolkitDesktopWindowFindAll , MaaToolkitDesktopWindowListSize , MaaToolkitDesktopWindowListAt , MaaToolkitDesktopWindowGetHandle , MaaToolkitDesktopWindowGetClassName , MaaToolkitDesktopWindowGetWindowName , MaaToolkitConfigInitOption , }) } } pub unsafe fn MaaTaskerCreate (& self) -> * mut MaaTasker { unsafe { (self . MaaTaskerCreate) () } } pub unsafe fn MaaTaskerDestroy (& self , tasker : * mut MaaTasker) { unsafe { (self . MaaTaskerDestroy) (tasker) } } pub unsafe fn MaaTaskerAddSink (& self , tasker : * mut MaaTasker , sink : MaaEventCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaSinkId { unsafe { (self . MaaTaskerAddSink) (tasker , sink , trans_arg) } } pub unsafe fn MaaTaskerRemoveSink (& self , tasker : * mut MaaTasker , sink_id : MaaSinkId) { unsafe { (self . MaaTaskerRemoveSink) (tasker , sink_id) } } pub unsafe fn MaaTaskerClearSinks (& self , tasker : * mut MaaTasker) { unsafe { (self . MaaTaskerClearSinks) (tasker) } } pub unsafe fn MaaTaskerAddContextSink (& self , tasker : * mut MaaTasker , sink : MaaEventCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaSinkId { unsafe { (self . MaaTaskerAddContextSink) (tasker , sink , trans_arg) } } pub unsafe fn MaaTaskerRemoveContextSink (& self , tasker : * mut MaaTasker , sink_id : MaaSinkId) { unsafe { (self . MaaTaskerRemoveContextSink) (tasker , sink_id) } } pub unsafe fn MaaTaskerClearContextSinks (& self , tasker : * mut MaaTasker) { unsafe { (self . MaaTaskerClearContextSinks) (tasker) } } # [doc = " @param[in] value"] pub unsafe fn MaaTaskerSetOption (& self , tasker : * mut MaaTasker , key : MaaTaskerOption , value : MaaOptionValue , val_size : MaaOptionValueSize ,) -> MaaBool { unsafe { (self . MaaTaskerSetOption) (tasker , key , value , val_size) } } pub unsafe fn MaaTaskerBindResource (& self , tasker : * mut MaaTasker , res : * mut MaaResource ,) -> MaaBool { unsafe { (self . MaaTaskerBindResource) (tasker , res) } } pub unsafe fn MaaTaskerBindController (& self , tasker : * mut MaaTasker , ctrl : * mut MaaController ,) -> MaaBool { unsafe { (self . MaaTaskerBindController) (tasker , ctrl) } } pub unsafe fn MaaTaskerInited (& self , tasker : * const MaaTasker) -> MaaBool { unsafe { (self . MaaTaskerInited) (tasker) } } pub unsafe fn MaaTaskerPostTask (& self , tasker : * mut MaaTasker , entry : * const :: std :: os :: raw :: c_char , pipeline_override : * const :: std :: os :: raw :: c_char ,) -> MaaTaskId { unsafe { (self . MaaTaskerPostTask) (tasker , entry , pipeline_override) } } # [doc = " @param reco_type Recognition type string\n @param reco_param Recognition parameters json\n @param image Previous screenshot"] pub unsafe fn MaaTaskerPostRecognition (& self , tasker : * mut MaaTasker , reco_type : * const :: std :: os :: raw :: c_char , reco_param : * const :: std :: os :: raw :: c_char , image : * const MaaImageBuffer ,) -> MaaTaskId { unsafe { (self . MaaTaskerPostRecognition) (tasker , reco_type , reco_param , image) } } # [doc = " @param action_type Action type string\n @param action_param Action parameters json\n @param box Previous recognition position\n @param reco_detail Previous recognition details"] pub unsafe fn MaaTaskerPostAction (& self , tasker : * mut MaaTasker , action_type : * const :: std :: os :: raw :: c_char , action_param : * const :: std :: os :: raw :: c_char , box_ : * const MaaRect , reco_detail : * const :: std :: os :: raw :: c_char ,) -> MaaTaskId { unsafe { (self . MaaTaskerPostAction) (tasker , action_type , action_param , box_ , reco_detail) } } pub unsafe fn MaaTaskerStatus (& self , tasker : * const MaaTasker , id : MaaTaskId) -> MaaStatus { unsafe { (self . MaaTaskerStatus) (tasker , id) } } pub unsafe fn MaaTaskerWait (& self , tasker : * const MaaTasker , id : MaaTaskId) -> MaaStatus { unsafe { (self . MaaTaskerWait) (tasker , id) } } pub unsafe fn MaaTaskerRunning (& self , tasker : * const MaaTasker) -> MaaBool { unsafe { (self . MaaTaskerRunning) (tasker) } } pub unsafe fn MaaTaskerPostStop (& self , tasker : * mut MaaTasker) -> MaaTaskId { unsafe { (self . MaaTaskerPostStop) (tasker) } } pub unsafe fn MaaTaskerStopping (& self , tasker : * const MaaTasker) -> MaaBool { unsafe { (self . MaaTaskerStopping) (tasker) } } pub unsafe fn MaaTaskerGetResource (& self , tasker : * const MaaTasker) -> * mut MaaResource { unsafe { (self . MaaTaskerGetResource) (tasker) } } pub unsafe fn MaaTaskerGetController (& self , tasker : * const MaaTasker) -> * mut MaaController { unsafe { (self . MaaTaskerGetController) (tasker) } } pub unsafe fn MaaTaskerClearCache (& self , tasker : * mut MaaTasker) -> MaaBool { unsafe { (self . MaaTaskerClearCache) (tasker) } } pub unsafe fn MaaTaskerOverridePipeline (& self , tasker : * mut MaaTasker , task_id : MaaTaskId , pipeline_override : * const :: std :: os :: raw :: c_char ,) -> MaaBool { unsafe { (self . MaaTaskerOverridePipeline) (tasker , task_id , pipeline_override) } } # [doc = " @param[out] hit"] pub unsafe fn MaaTaskerGetRecognitionDetail (& self , tasker : * const MaaTasker , reco_id : MaaRecoId , node_name : * mut MaaStringBuffer , algorithm : * mut MaaStringBuffer , hit : * mut MaaBool , box_ : * mut MaaRect , detail_json : * mut MaaStringBuffer , raw : * mut MaaImageBuffer , draws : * mut MaaImageListBuffer ,) -> MaaBool { unsafe { (self . MaaTaskerGetRecognitionDetail) (tasker , reco_id , node_name , algorithm , hit , box_ , detail_json , raw , draws ,) } } # [doc = " @param[out] action\n @param[out] box\n @param[out] success\n @param[out] detail_json"] pub unsafe fn MaaTaskerGetActionDetail (& self , tasker : * const MaaTasker , action_id : MaaActId , node_name : * mut MaaStringBuffer , action : * mut MaaStringBuffer , box_ : * mut MaaRect , success : * mut MaaBool , detail_json : * mut MaaStringBuffer ,) -> MaaBool { unsafe { (self . MaaTaskerGetActionDetail) (tasker , action_id , node_name , action , box_ , success , detail_json ,) } } # [doc = " @param[out] reco_id\n @param[out] action_id\n @param[out] completed"] pub unsafe fn MaaTaskerGetNodeDetail (& self , tasker : * const MaaTasker , node_id : MaaNodeId , node_name : * mut MaaStringBuffer , reco_id : * mut MaaRecoId , action_id : * mut MaaActId , completed : * mut MaaBool ,) -> MaaBool { unsafe { (self . MaaTaskerGetNodeDetail) (tasker , node_id , node_name , reco_id , action_id , completed) } } # [doc = " @param[out] node_id_list\n @param[in, out] node_id_list_size\n @param[out] status"] pub unsafe fn MaaTaskerGetTaskDetail (& self , tasker : * const MaaTasker , task_id : MaaTaskId , entry : * mut MaaStringBuffer , node_id_list : * mut MaaNodeId , node_id_list_size : * mut MaaSize , status : * mut MaaStatus ,) -> MaaBool { unsafe { (self . MaaTaskerGetTaskDetail) (tasker , task_id , entry , node_id_list , node_id_list_size , status ,) } } # [doc = " @param[out] latest_id"] pub unsafe fn MaaTaskerGetLatestNode (& self , tasker : * const MaaTasker , node_name : * const :: std :: os :: raw :: c_char , latest_id : * mut MaaNodeId ,) -> MaaBool { unsafe { (self . MaaTaskerGetLatestNode) (tasker , node_name , latest_id) } } pub unsafe fn MaaResourceCreate (& self) -> * mut MaaResource { unsafe { (self . MaaResourceCreate) () } } pub unsafe fn MaaResourceDestroy (& self , res : * mut MaaResource) { unsafe { (self . MaaResourceDestroy) (res) } } pub unsafe fn MaaResourceAddSink (& self , res : * mut MaaResource , sink : MaaEventCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaSinkId { unsafe { (self . MaaResourceAddSink) (res , sink , trans_arg) } } pub unsafe fn MaaResourceRemoveSink (& self , res : * mut MaaResource , sink_id : MaaSinkId) { unsafe { (self . MaaResourceRemoveSink) (res , sink_id) } } pub unsafe fn MaaResourceClearSinks (& self , res : * mut MaaResource) { unsafe { (self . MaaResourceClearSinks) (res) } } pub unsafe fn MaaResourceRegisterCustomRecognition (& self , res : * mut MaaResource , name : * const :: std :: os :: raw :: c_char , recognition : MaaCustomRecognitionCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaBool { unsafe { (self . MaaResourceRegisterCustomRecognition) (res , name , recognition , trans_arg) } } pub unsafe fn MaaResourceUnregisterCustomRecognition (& self , res : * mut MaaResource , name : * const :: std :: os :: raw :: c_char ,) -> MaaBool { unsafe { (self . MaaResourceUnregisterCustomRecognition) (res , name) } } pub unsafe fn MaaResourceClearCustomRecognition (& self , res : * mut MaaResource) -> MaaBool { unsafe { (self . MaaResourceClearCustomRecognition) (res) } } pub unsafe fn MaaResourceRegisterCustomAction (& self , res : * mut MaaResource , name : * const :: std :: os :: raw :: c_char , action : MaaCustomActionCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaBool { unsafe { (self . MaaResourceRegisterCustomAction) (res , name , action , trans_arg) } } pub unsafe fn MaaResourceUnregisterCustomAction (& self , res : * mut MaaResource , name : * const :: std :: os :: raw :: c_char ,) -> MaaBool { unsafe { (self . MaaResourceUnregisterCustomAction) (res , name) } } pub unsafe fn MaaResourceClearCustomAction (& self , res : * mut MaaResource) -> MaaBool { unsafe { (self . MaaResourceClearCustomAction) (res) } } pub unsafe fn MaaResourcePostBundle (& self , res : * mut MaaResource , path : * const :: std :: os :: raw :: c_char ,) -> MaaResId { unsafe { (self . MaaResourcePostBundle) (res , path) } } pub unsafe fn MaaResourcePostOcrModel (& self , res : * mut MaaResource , path : * const :: std :: os :: raw :: c_char ,) -> MaaResId { unsafe { (self . MaaResourcePostOcrModel) (res , path) } } pub unsafe fn MaaResourcePostPipeline (& self , res : * mut MaaResource , path : * const :: std :: os :: raw :: c_char ,) -> MaaResId { unsafe { (self . MaaResourcePostPipeline) (res , path) } } pub unsafe fn MaaResourcePostImage (& self , res : * mut MaaResource , path : * const :: std :: os :: raw :: c_char ,) -> MaaResId { unsafe { (self . MaaResourcePostImage) (res , path) } } pub unsafe fn MaaResourceOverridePipeline (& self , res : * mut MaaResource , pipeline_override : * const :: std :: os :: raw :: c_char ,) -> MaaBool { unsafe { (self . MaaResourceOverridePipeline) (res , pipeline_override) } } pub unsafe fn MaaResourceOverrideNext (& self , res : * mut MaaResource , node_name : * const :: std :: os :: raw :: c_char , next_list : * const MaaStringListBuffer ,) -> MaaBool { unsafe { (self . MaaResourceOverrideNext) (res , node_name , next_list) } } pub unsafe fn MaaResourceOverrideImage (& self , res : * mut MaaResource , image_name : * const :: std :: os :: raw :: c_char , image : * const MaaImageBuffer ,) -> MaaBool { unsafe { (self . MaaResourceOverrideImage) (res , image_name , image) } } pub unsafe fn MaaResourceGetNodeData (& self , res : * mut MaaResource , node_name : * const :: std :: os :: raw :: c_char , buffer : * mut MaaStringBuffer ,) -> MaaBool { unsafe { (self . MaaResourceGetNodeData) (res , node_name , buffer) } } pub unsafe fn MaaResourceClear (& self , res : * mut MaaResource) -> MaaBool { unsafe { (self . MaaResourceClear) (res) } } pub unsafe fn MaaResourceStatus (& self , res : * const MaaResource , id : MaaResId) -> MaaStatus { unsafe { (self . MaaResourceStatus) (res , id) } } pub unsafe fn MaaResourceWait (& self , res : * const MaaResource , id : MaaResId) -> MaaStatus { unsafe { (self . MaaResourceWait) (res , id) } } pub unsafe fn MaaResourceLoaded (& self , res : * const MaaResource) -> MaaBool { unsafe { (self . MaaResourceLoaded) (res) } } pub unsafe fn MaaResourceSetOption (& self , res : * mut MaaResource , key : MaaResOption , value : MaaOptionValue , val_size : MaaOptionValueSize ,) -> MaaBool { unsafe { (self . MaaResourceSetOption) (res , key , value , val_size) } } pub unsafe fn MaaResourceGetHash (& self , res : * const MaaResource , buffer : * mut MaaStringBuffer ,) -> MaaBool { unsafe { (self . MaaResourceGetHash) (res , buffer) } } pub unsafe fn MaaResourceGetNodeList (& self , res : * const MaaResource , buffer : * mut MaaStringListBuffer ,) -> MaaBool { unsafe { (self . MaaResourceGetNodeList) (res , buffer) } } pub unsafe fn MaaResourceGetCustomRecognitionList (& self , res : * const MaaResource , buffer : * mut MaaStringListBuffer ,) -> MaaBool { unsafe { (self . MaaResourceGetCustomRecognitionList) (res , buffer) } } pub unsafe fn MaaResourceGetCustomActionList (& self , res : * const MaaResource , buffer : * mut MaaStringListBuffer ,) -> MaaBool { unsafe { (self . MaaResourceGetCustomActionList) (res , buffer) } } # [doc = " @brief Get default recognition parameters for the specified type from DefaultPipelineMgr.\n\n @param reco_type Recognition type string (e.g., \"OCR\", \"TemplateMatch\")\n @param buffer [out] Output buffer for the JSON string of recognition parameters"] pub unsafe fn MaaResourceGetDefaultRecognitionParam (& self , res : * const MaaResource , reco_type : * const :: std :: os :: raw :: c_char , buffer : * mut MaaStringBuffer ,) -> MaaBool { unsafe { (self . MaaResourceGetDefaultRecognitionParam) (res , reco_type , buffer) } } # [doc = " @brief Get default action parameters for the specified type from DefaultPipelineMgr.\n\n @param action_type Action type string (e.g., \"Click\", \"Swipe\")\n @param buffer [out] Output buffer for the JSON string of action parameters"] pub unsafe fn MaaResourceGetDefaultActionParam (& self , res : * const MaaResource , action_type : * const :: std :: os :: raw :: c_char , buffer : * mut MaaStringBuffer ,) -> MaaBool { unsafe { (self . MaaResourceGetDefaultActionParam) (res , action_type , buffer) } } pub unsafe fn MaaAdbControllerCreate (& self , adb_path : * const :: std :: os :: raw :: c_char , address : * const :: std :: os :: raw :: c_char , screencap_methods : MaaAdbScreencapMethod , input_methods : MaaAdbInputMethod , config : * const :: std :: os :: raw :: c_char , agent_path : * const :: std :: os :: raw :: c_char ,) -> * mut MaaController { unsafe { (self . MaaAdbControllerCreate) (adb_path , address , screencap_methods , input_methods , config , agent_path ,) } } pub unsafe fn MaaWin32ControllerCreate (& self , hWnd : * mut :: std :: os :: raw :: c_void , screencap_method : MaaWin32ScreencapMethod , mouse_method : MaaWin32InputMethod , keyboard_method : MaaWin32InputMethod ,) -> * mut MaaController { unsafe { (self . MaaWin32ControllerCreate) (hWnd , screencap_method , mouse_method , keyboard_method) } } pub unsafe fn MaaCustomControllerCreate (& self , controller : * mut MaaCustomControllerCallbacks , controller_arg : * mut :: std :: os :: raw :: c_void ,) -> * mut MaaController { unsafe { (self . MaaCustomControllerCreate) (controller , controller_arg) } } pub unsafe fn MaaDbgControllerCreate (& self , read_path : * const :: std :: os :: raw :: c_char , write_path : * const :: std :: os :: raw :: c_char , type_ : MaaDbgControllerType , config : * const :: std :: os :: raw :: c_char ,) -> * mut MaaController { unsafe { (self . MaaDbgControllerCreate) (read_path , write_path , type_ , config) } } # [doc = " @brief Create a PlayCover controller for macOS.\n\n @param address The PlayTools service address in \"host:port\" format.\n @param uuid The application bundle identifier (e.g., \"com.hypergryph.arknights\").\n @return The controller handle, or nullptr on failure.\n\n @note This controller is designed for PlayCover on macOS.\n @note Some features are not supported: start_app, input_text, click_key, key_down, key_up, scroll.\n @note Only single touch is supported (contact must be 0)."] pub unsafe fn MaaPlayCoverControllerCreate (& self , address : * const :: std :: os :: raw :: c_char , uuid : * const :: std :: os :: raw :: c_char ,) -> * mut MaaController { unsafe { (self . MaaPlayCoverControllerCreate) (address , uuid) } } # [doc = " @brief Create a virtual gamepad controller for Windows.\n\n @param hWnd Window handle for screencap (optional, can be nullptr if screencap not needed).\n @param gamepad_type Type of virtual gamepad (MaaGamepadType_Xbox360 or MaaGamepadType_DualShock4).\n @param screencap_method Win32 screencap method to use. Ignored if hWnd is nullptr.\n @return The controller handle, or nullptr on failure.\n\n @note Requires ViGEm Bus Driver to be installed on the system.\n @note For gamepad control, use:\n       - click_key/key_down/key_up: For digital buttons (A, B, X, Y, LB, RB, etc.)\n         See MaaGamepadButton_* constants for available buttons.\n       - touch_down/touch_move/touch_up: For analog inputs (sticks and triggers)\n         - contact 0 (MaaGamepadTouch_LeftStick): Left stick (x: -32768~32767, y: -32768~32767)\n         - contact 1 (MaaGamepadTouch_RightStick): Right stick (x: -32768~32767, y: -32768~32767)\n         - contact 2 (MaaGamepadTouch_LeftTrigger): Left trigger (pressure: 0~255, x/y ignored)\n         - contact 3 (MaaGamepadTouch_RightTrigger): Right trigger (pressure: 0~255, x/y ignored)\n @note click and swipe are not directly supported for gamepad.\n @note input_text, start_app, stop_app, scroll are not supported.\n @see MaaGamepadButton, MaaGamepadTouch, MaaGamepadType"] pub unsafe fn MaaGamepadControllerCreate (& self , hWnd : * mut :: std :: os :: raw :: c_void , gamepad_type : MaaGamepadType , screencap_method : MaaWin32ScreencapMethod ,) -> * mut MaaController { unsafe { (self . MaaGamepadControllerCreate) (hWnd , gamepad_type , screencap_method) } } pub unsafe fn MaaControllerDestroy (& self , ctrl : * mut MaaController) { unsafe { (self . MaaControllerDestroy) (ctrl) } } pub unsafe fn MaaControllerAddSink (& self , ctrl : * mut MaaController , sink : MaaEventCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaSinkId { unsafe { (self . MaaControllerAddSink) (ctrl , sink , trans_arg) } } pub unsafe fn MaaControllerRemoveSink (& self , ctrl : * mut MaaController , sink_id : MaaSinkId) { unsafe { (self . MaaControllerRemoveSink) (ctrl , sink_id) } } pub unsafe fn MaaControllerClearSinks (& self , ctrl : * mut MaaController) { unsafe { (self . MaaControllerClearSinks) (ctrl) } } # [doc = " @param[in] value"] pub unsafe fn MaaControllerSetOption (& self , ctrl : * mut MaaController , key : MaaCtrlOption , value : MaaOptionValue , val_size : MaaOptionValueSize ,) -> MaaBool { unsafe { (self . MaaControllerSetOption) (ctrl , key , value , val_size) } } pub unsafe fn MaaControllerPostConnection (& self , ctrl : * mut MaaController) -> MaaCtrlId { unsafe { (self . MaaControllerPostConnection) (ctrl) } } pub unsafe fn MaaControllerPostClick (& self , ctrl : * mut MaaController , x : i32 , y : i32 ,) -> MaaCtrlId { unsafe { (self . MaaControllerPostClick) (ctrl , x , y) } } pub unsafe fn MaaControllerPostClickV2 (& self , ctrl : * mut MaaController , x : i32 , y : i32 , contact : i32 , pressure : i32 ,) -> MaaCtrlId { unsafe { (self . MaaControllerPostClickV2) (ctrl , x , y , contact , pressure) } } pub unsafe fn MaaControllerPostSwipe (& self , ctrl : * mut MaaController , x1 : i32 , y1 : i32 , x2 : i32 , y2 : i32 , duration : i32 ,) -> MaaCtrlId { unsafe { (self . MaaControllerPostSwipe) (ctrl , x1 , y1 , x2 , y2 , duration) } } pub unsafe fn MaaControllerPostSwipeV2 (& self , ctrl : * mut MaaController , x1 : i32 , y1 : i32 , x2 : i32 , y2 : i32 , duration : i32 , contact : i32 , pressure : i32 ,) -> MaaCtrlId { unsafe { (self . MaaControllerPostSwipeV2) (ctrl , x1 , y1 , x2 , y2 , duration , contact , pressure) } } pub unsafe fn MaaControllerPostClickKey (& self , ctrl : * mut MaaController , keycode : i32 ,) -> MaaCtrlId { unsafe { (self . MaaControllerPostClickKey) (ctrl , keycode) } } pub unsafe fn MaaControllerPostInputText (& self , ctrl : * mut MaaController , text : * const :: std :: os :: raw :: c_char ,) -> MaaCtrlId { unsafe { (self . MaaControllerPostInputText) (ctrl , text) } } pub unsafe fn MaaControllerPostStartApp (& self , ctrl : * mut MaaController , intent : * const :: std :: os :: raw :: c_char ,) -> MaaCtrlId { unsafe { (self . MaaControllerPostStartApp) (ctrl , intent) } } pub unsafe fn MaaControllerPostStopApp (& self , ctrl : * mut MaaController , intent : * const :: std :: os :: raw :: c_char ,) -> MaaCtrlId { unsafe { (self . MaaControllerPostStopApp) (ctrl , intent) } } pub unsafe fn MaaControllerPostTouchDown (& self , ctrl : * mut MaaController , contact : i32 , x : i32 , y : i32 , pressure : i32 ,) -> MaaCtrlId { unsafe { (self . MaaControllerPostTouchDown) (ctrl , contact , x , y , pressure) } } pub unsafe fn MaaControllerPostTouchMove (& self , ctrl : * mut MaaController , contact : i32 , x : i32 , y : i32 , pressure : i32 ,) -> MaaCtrlId { unsafe { (self . MaaControllerPostTouchMove) (ctrl , contact , x , y , pressure) } } pub unsafe fn MaaControllerPostTouchUp (& self , ctrl : * mut MaaController , contact : i32 ,) -> MaaCtrlId { unsafe { (self . MaaControllerPostTouchUp) (ctrl , contact) } } pub unsafe fn MaaControllerPostKeyDown (& self , ctrl : * mut MaaController , keycode : i32 ,) -> MaaCtrlId { unsafe { (self . MaaControllerPostKeyDown) (ctrl , keycode) } } pub unsafe fn MaaControllerPostKeyUp (& self , ctrl : * mut MaaController , keycode : i32 ,) -> MaaCtrlId { unsafe { (self . MaaControllerPostKeyUp) (ctrl , keycode) } } # [doc = " @brief Post a screenshot request to the controller.\n\n @param ctrl The controller handle.\n @return The control id of the screenshot action.\n\n @note The screenshot image is scaled according to the screenshot target size settings (long side / short side).\n       Use MaaControllerGetResolution to get the raw (unscaled) device resolution.\n @see MaaControllerCachedImage, MaaControllerSetOption, MaaControllerGetResolution"] pub unsafe fn MaaControllerPostScreencap (& self , ctrl : * mut MaaController) -> MaaCtrlId { unsafe { (self . MaaControllerPostScreencap) (ctrl) } } # [doc = " @brief Post a scroll action to the controller.\n\n @param ctrl The controller handle.\n @param dx The horizontal scroll delta. Positive values scroll right, negative values scroll left.\n @param dy The vertical scroll delta. Positive values scroll up, negative values scroll down.\n @return The control id of the scroll action.\n\n @note Not all controllers support scroll. If not supported, the action will fail.\n @note The dx/dy values are sent directly as scroll increments. Using multiples of 120 (WHEEL_DELTA) is\n recommended for best compatibility."] pub unsafe fn MaaControllerPostScroll (& self , ctrl : * mut MaaController , dx : i32 , dy : i32 ,) -> MaaCtrlId { unsafe { (self . MaaControllerPostScroll) (ctrl , dx , dy) } } # [doc = " @brief Post a shell command to the controller.\n\n @param ctrl The controller handle.\n @param cmd The shell command to execute.\n @param timeout Timeout in milliseconds. Default is 20000 (20 seconds).\n @return The control id of the shell action.\n\n @note This is only valid for ADB controllers. If the controller is not an ADB controller, the action will fail.\n @see MaaControllerGetShellOutput"] pub unsafe fn MaaControllerPostShell (& self , ctrl : * mut MaaController , cmd : * const :: std :: os :: raw :: c_char , timeout : i64 ,) -> MaaCtrlId { unsafe { (self . MaaControllerPostShell) (ctrl , cmd , timeout) } } # [doc = " @brief Get the cached shell command output.\n\n @param ctrl The controller handle.\n @param buffer The output buffer to store the command result.\n @return true if the output is available, false otherwise.\n\n @note This returns the output from the most recent shell command execution."] pub unsafe fn MaaControllerGetShellOutput (& self , ctrl : * const MaaController , buffer : * mut MaaStringBuffer ,) -> MaaBool { unsafe { (self . MaaControllerGetShellOutput) (ctrl , buffer) } } pub unsafe fn MaaControllerStatus (& self , ctrl : * const MaaController , id : MaaCtrlId ,) -> MaaStatus { unsafe { (self . MaaControllerStatus) (ctrl , id) } } pub unsafe fn MaaControllerWait (& self , ctrl : * const MaaController , id : MaaCtrlId) -> MaaStatus { unsafe { (self . MaaControllerWait) (ctrl , id) } } pub unsafe fn MaaControllerConnected (& self , ctrl : * const MaaController) -> MaaBool { unsafe { (self . MaaControllerConnected) (ctrl) } } # [doc = " @brief Get the cached screenshot image.\n\n @param ctrl The controller handle.\n @param buffer The output buffer to store the screenshot image.\n @return true if the screenshot is available, false otherwise.\n\n @note The returned image is scaled according to the screenshot target size settings (long side / short side).\n       The image dimensions may differ from the raw device resolution.\n       Use MaaControllerGetResolution to get the raw (unscaled) device resolution.\n @see MaaControllerPostScreencap, MaaControllerSetOption, MaaControllerGetResolution"] pub unsafe fn MaaControllerCachedImage (& self , ctrl : * const MaaController , buffer : * mut MaaImageBuffer ,) -> MaaBool { unsafe { (self . MaaControllerCachedImage) (ctrl , buffer) } } pub unsafe fn MaaControllerGetUuid (& self , ctrl : * mut MaaController , buffer : * mut MaaStringBuffer ,) -> MaaBool { unsafe { (self . MaaControllerGetUuid) (ctrl , buffer) } } # [doc = " @brief Get the raw (unscaled) device resolution.\n\n @param ctrl The controller handle.\n @param[out] width Output parameter for the raw width.\n @param[out] height Output parameter for the raw height.\n @return true if the resolution is available, false otherwise (e.g., not connected or no screenshot taken yet).\n\n @note This returns the actual device screen resolution before any scaling.\n       The screenshot obtained via MaaControllerCachedImage is scaled according to the screenshot target size settings,\n       so its dimensions may differ from this raw resolution.\n @see MaaControllerCachedImage, MaaControllerPostScreencap"] pub unsafe fn MaaControllerGetResolution (& self , ctrl : * const MaaController , width : * mut i32 , height : * mut i32 ,) -> MaaBool { unsafe { (self . MaaControllerGetResolution) (ctrl , width , height) } } pub unsafe fn MaaControllerPostPressKey (& self , ctrl : * mut MaaController , keycode : i32 ,) -> MaaCtrlId { unsafe { (self . MaaControllerPostPressKey) (ctrl , keycode) } } pub unsafe fn MaaContextRunTask (& self , context : * mut MaaContext , entry : * const :: std :: os :: raw :: c_char , pipeline_override : * const :: std :: os :: raw :: c_char ,) -> MaaTaskId { unsafe { (self . MaaContextRunTask) (context , entry , pipeline_override) } } pub unsafe fn MaaContextRunRecognition (& self , context : * mut MaaContext , entry : * const :: std :: os :: raw :: c_char , pipeline_override : * const :: std :: os :: raw :: c_char , image : * const MaaImageBuffer ,) -> MaaRecoId { unsafe { (self . MaaContextRunRecognition) (context , entry , pipeline_override , image) } } pub unsafe fn MaaContextRunAction (& self , context : * mut MaaContext , entry : * const :: std :: os :: raw :: c_char , pipeline_override : * const :: std :: os :: raw :: c_char , box_ : * const MaaRect , reco_detail : * const :: std :: os :: raw :: c_char ,) -> MaaActId { unsafe { (self . MaaContextRunAction) (context , entry , pipeline_override , box_ , reco_detail) } } # [doc = " @brief Run recognition directly with type and parameters, without requiring a pipeline entry.\n\n @param reco_type Recognition type string (e.g., \"OCR\", \"TemplateMatch\")\n @param reco_param Recognition parameters json\n @param image Image to recognize"] pub unsafe fn MaaContextRunRecognitionDirect (& self , context : * mut MaaContext , reco_type : * const :: std :: os :: raw :: c_char , reco_param : * const :: std :: os :: raw :: c_char , image : * const MaaImageBuffer ,) -> MaaRecoId { unsafe { (self . MaaContextRunRecognitionDirect) (context , reco_type , reco_param , image) } } # [doc = " @brief Run action directly with type and parameters, without requiring a pipeline entry.\n\n @param action_type Action type string (e.g., \"Click\", \"Swipe\")\n @param action_param Action parameters json\n @param box Previous recognition position\n @param reco_detail Previous recognition details"] pub unsafe fn MaaContextRunActionDirect (& self , context : * mut MaaContext , action_type : * const :: std :: os :: raw :: c_char , action_param : * const :: std :: os :: raw :: c_char , box_ : * const MaaRect , reco_detail : * const :: std :: os :: raw :: c_char ,) -> MaaActId { unsafe { (self . MaaContextRunActionDirect) (context , action_type , action_param , box_ , reco_detail) } } pub unsafe fn MaaContextWaitFreezes (& self , context : * mut MaaContext , time : MaaSize , box_ : * const MaaRect , wait_freezes_param : * const :: std :: os :: raw :: c_char ,) -> MaaBool { unsafe { (self . MaaContextWaitFreezes) (context , time , box_ , wait_freezes_param) } } pub unsafe fn MaaContextOverridePipeline (& self , context : * mut MaaContext , pipeline_override : * const :: std :: os :: raw :: c_char ,) -> MaaBool { unsafe { (self . MaaContextOverridePipeline) (context , pipeline_override) } } pub unsafe fn MaaContextOverrideNext (& self , context : * mut MaaContext , node_name : * const :: std :: os :: raw :: c_char , next_list : * const MaaStringListBuffer ,) -> MaaBool { unsafe { (self . MaaContextOverrideNext) (context , node_name , next_list) } } pub unsafe fn MaaContextOverrideImage (& self , context : * mut MaaContext , image_name : * const :: std :: os :: raw :: c_char , image : * const MaaImageBuffer ,) -> MaaBool { unsafe { (self . MaaContextOverrideImage) (context , image_name , image) } } pub unsafe fn MaaContextGetNodeData (& self , context : * mut MaaContext , node_name : * const :: std :: os :: raw :: c_char , buffer : * mut MaaStringBuffer ,) -> MaaBool { unsafe { (self . MaaContextGetNodeData) (context , node_name , buffer) } } pub unsafe fn MaaContextGetTaskId (& self , context : * const MaaContext) -> MaaTaskId { unsafe { (self . MaaContextGetTaskId) (context) } } pub unsafe fn MaaContextGetTasker (& self , context : * const MaaContext) -> * mut MaaTasker { unsafe { (self . MaaContextGetTasker) (context) } } pub unsafe fn MaaContextClone (& self , context : * const MaaContext) -> * mut MaaContext { unsafe { (self . MaaContextClone) (context) } } pub unsafe fn MaaContextSetAnchor (& self , context : * mut MaaContext , anchor_name : * const :: std :: os :: raw :: c_char , node_name : * const :: std :: os :: raw :: c_char ,) -> MaaBool { unsafe { (self . MaaContextSetAnchor) (context , anchor_name , node_name) } } pub unsafe fn MaaContextGetAnchor (& self , context : * mut MaaContext , anchor_name : * const :: std :: os :: raw :: c_char , buffer : * mut MaaStringBuffer ,) -> MaaBool { unsafe { (self . MaaContextGetAnchor) (context , anchor_name , buffer) } } pub unsafe fn MaaContextGetHitCount (& self , context : * mut MaaContext , node_name : * const :: std :: os :: raw :: c_char , count : * mut MaaSize ,) -> MaaBool { unsafe { (self . MaaContextGetHitCount) (context , node_name , count) } } pub unsafe fn MaaContextClearHitCount (& self , context : * mut MaaContext , node_name : * const :: std :: os :: raw :: c_char ,) -> MaaBool { unsafe { (self . MaaContextClearHitCount) (context , node_name) } } # [doc = " @param[in] value"] pub unsafe fn MaaGlobalSetOption (& self , key : MaaGlobalOption , value : MaaOptionValue , val_size : MaaOptionValueSize ,) -> MaaBool { unsafe { (self . MaaGlobalSetOption) (key , value , val_size) } } # [doc = " load a plugin with full path or name only, name only will search in system directory and current directory\n or\n load plugins with recursive search in the directory"] pub unsafe fn MaaGlobalLoadPlugin (& self , library_path : * const :: std :: os :: raw :: c_char ,) -> MaaBool { unsafe { (self . MaaGlobalLoadPlugin) (library_path) } } pub unsafe fn MaaSetGlobalOption (& self , key : MaaGlobalOption , value : MaaOptionValue , val_size : MaaOptionValueSize ,) -> MaaBool { unsafe { (self . MaaSetGlobalOption) (key , value , val_size) } } pub unsafe fn MaaStringBufferCreate (& self) -> * mut MaaStringBuffer { unsafe { (self . MaaStringBufferCreate) () } } pub unsafe fn MaaStringBufferDestroy (& self , handle : * mut MaaStringBuffer) { unsafe { (self . MaaStringBufferDestroy) (handle) } } pub unsafe fn MaaStringBufferIsEmpty (& self , handle : * const MaaStringBuffer) -> MaaBool { unsafe { (self . MaaStringBufferIsEmpty) (handle) } } pub unsafe fn MaaStringBufferClear (& self , handle : * mut MaaStringBuffer) -> MaaBool { unsafe { (self . MaaStringBufferClear) (handle) } } pub unsafe fn MaaStringBufferGet (& self , handle : * const MaaStringBuffer ,) -> * const :: std :: os :: raw :: c_char { unsafe { (self . MaaStringBufferGet) (handle) } } pub unsafe fn MaaStringBufferSize (& self , handle : * const MaaStringBuffer) -> MaaSize { unsafe { (self . MaaStringBufferSize) (handle) } } pub unsafe fn MaaStringBufferSet (& self , handle : * mut MaaStringBuffer , str_ : * const :: std :: os :: raw :: c_char ,) -> MaaBool { unsafe { (self . MaaStringBufferSet) (handle , str_) } } pub unsafe fn MaaStringBufferSetEx (& self , handle : * mut MaaStringBuffer , str_ : * const :: std :: os :: raw :: c_char , size : MaaSize ,) -> MaaBool { unsafe { (self . MaaStringBufferSetEx) (handle , str_ , size) } } pub unsafe fn MaaStringListBufferCreate (& self) -> * mut MaaStringListBuffer { unsafe { (self . MaaStringListBufferCreate) () } } pub unsafe fn MaaStringListBufferDestroy (& self , handle : * mut MaaStringListBuffer) { unsafe { (self . MaaStringListBufferDestroy) (handle) } } pub unsafe fn MaaStringListBufferIsEmpty (& self , handle : * const MaaStringListBuffer) -> MaaBool { unsafe { (self . MaaStringListBufferIsEmpty) (handle) } } pub unsafe fn MaaStringListBufferSize (& self , handle : * const MaaStringListBuffer) -> MaaSize { unsafe { (self . MaaStringListBufferSize) (handle) } } pub unsafe fn MaaStringListBufferAt (& self , handle : * const MaaStringListBuffer , index : MaaSize ,) -> * const MaaStringBuffer { unsafe { (self . MaaStringListBufferAt) (handle , index) } } pub unsafe fn MaaStringListBufferAppend (& self , handle : * mut MaaStringListBuffer , value : * const MaaStringBuffer ,) -> MaaBool { unsafe { (self . MaaStringListBufferAppend) (handle , value) } } pub unsafe fn MaaStringListBufferRemove (& self , handle : * mut MaaStringListBuffer , index : MaaSize ,) -> MaaBool { unsafe { (self . MaaStringListBufferRemove) (handle , index) } } pub unsafe fn MaaStringListBufferClear (& self , handle : * mut MaaStringListBuffer) -> MaaBool { unsafe { (self . MaaStringListBufferClear) (handle) } } pub unsafe fn MaaImageBufferCreate (& self) -> * mut MaaImageBuffer { unsafe { (self . MaaImageBufferCreate) () } } pub unsafe fn MaaImageBufferDestroy (& self , handle : * mut MaaImageBuffer) { unsafe { (self . MaaImageBufferDestroy) (handle) } } pub unsafe fn MaaImageBufferIsEmpty (& self , handle : * const MaaImageBuffer) -> MaaBool { unsafe { (self . MaaImageBufferIsEmpty) (handle) } } pub unsafe fn MaaImageBufferClear (& self , handle : * mut MaaImageBuffer) -> MaaBool { unsafe { (self . MaaImageBufferClear) (handle) } } pub unsafe fn MaaImageBufferGetRawData (& self , handle : * const MaaImageBuffer ,) -> MaaImageRawData { unsafe { (self . MaaImageBufferGetRawData) (handle) } } pub unsafe fn MaaImageBufferWidth (& self , handle : * const MaaImageBuffer) -> i32 { unsafe { (self . MaaImageBufferWidth) (handle) } } pub unsafe fn MaaImageBufferHeight (& self , handle : * const MaaImageBuffer) -> i32 { unsafe { (self . MaaImageBufferHeight) (handle) } } pub unsafe fn MaaImageBufferChannels (& self , handle : * const MaaImageBuffer) -> i32 { unsafe { (self . MaaImageBufferChannels) (handle) } } pub unsafe fn MaaImageBufferType (& self , handle : * const MaaImageBuffer) -> i32 { unsafe { (self . MaaImageBufferType) (handle) } } pub unsafe fn MaaImageBufferSetRawData (& self , handle : * mut MaaImageBuffer , data : MaaImageRawData , width : i32 , height : i32 , type_ : i32 ,) -> MaaBool { unsafe { (self . MaaImageBufferSetRawData) (handle , data , width , height , type_) } } pub unsafe fn MaaImageBufferResize (& self , handle : * mut MaaImageBuffer , width : i32 , height : i32 ,) -> MaaBool { unsafe { (self . MaaImageBufferResize) (handle , width , height) } } pub unsafe fn MaaImageBufferGetEncoded (& self , handle : * const MaaImageBuffer ,) -> MaaImageEncodedData { unsafe { (self . MaaImageBufferGetEncoded) (handle) } } pub unsafe fn MaaImageBufferGetEncodedSize (& self , handle : * const MaaImageBuffer) -> MaaSize { unsafe { (self . MaaImageBufferGetEncodedSize) (handle) } } pub unsafe fn MaaImageBufferSetEncoded (& self , handle : * mut MaaImageBuffer , data : MaaImageEncodedData , size : MaaSize ,) -> MaaBool { unsafe { (self . MaaImageBufferSetEncoded) (handle , data , size) } } pub unsafe fn MaaImageListBufferCreate (& self) -> * mut MaaImageListBuffer { unsafe { (self . MaaImageListBufferCreate) () } } pub unsafe fn MaaImageListBufferDestroy (& self , handle : * mut MaaImageListBuffer) { unsafe { (self . MaaImageListBufferDestroy) (handle) } } pub unsafe fn MaaImageListBufferIsEmpty (& self , handle : * const MaaImageListBuffer) -> MaaBool { unsafe { (self . MaaImageListBufferIsEmpty) (handle) } } pub unsafe fn MaaImageListBufferSize (& self , handle : * const MaaImageListBuffer) -> MaaSize { unsafe { (self . MaaImageListBufferSize) (handle) } } pub unsafe fn MaaImageListBufferAt (& self , handle : * const MaaImageListBuffer , index : MaaSize ,) -> * const MaaImageBuffer { unsafe { (self . MaaImageListBufferAt) (handle , index) } } pub unsafe fn MaaImageListBufferAppend (& self , handle : * mut MaaImageListBuffer , value : * const MaaImageBuffer ,) -> MaaBool { unsafe { (self . MaaImageListBufferAppend) (handle , value) } } pub unsafe fn MaaImageListBufferRemove (& self , handle : * mut MaaImageListBuffer , index : MaaSize ,) -> MaaBool { unsafe { (self . MaaImageListBufferRemove) (handle , index) } } pub unsafe fn MaaImageListBufferClear (& self , handle : * mut MaaImageListBuffer) -> MaaBool { unsafe { (self . MaaImageListBufferClear) (handle) } } pub unsafe fn MaaRectCreate (& self) -> * mut MaaRect { unsafe { (self . MaaRectCreate) () } } pub unsafe fn MaaRectDestroy (& self , handle : * mut MaaRect) { unsafe { (self . MaaRectDestroy) (handle) } } pub unsafe fn MaaRectGetX (& self , handle : * const MaaRect) -> i32 { unsafe { (self . MaaRectGetX) (handle) } } pub unsafe fn MaaRectGetY (& self , handle : * const MaaRect) -> i32 { unsafe { (self . MaaRectGetY) (handle) } } pub unsafe fn MaaRectGetW (& self , handle : * const MaaRect) -> i32 { unsafe { (self . MaaRectGetW) (handle) } } pub unsafe fn MaaRectGetH (& self , handle : * const MaaRect) -> i32 { unsafe { (self . MaaRectGetH) (handle) } } pub unsafe fn MaaRectSet (& self , handle : * mut MaaRect , x : i32 , y : i32 , w : i32 , h : i32 ,) -> MaaBool { unsafe { (self . MaaRectSet) (handle , x , y , w , h) } } pub unsafe fn MaaVersion (& self) -> * const :: std :: os :: raw :: c_char { unsafe { (self . MaaVersion) () } } pub unsafe fn MaaAgentClientCreateV2 (& self , identifier : * const MaaStringBuffer ,) -> * mut MaaAgentClient { unsafe { (self . MaaAgentClientCreateV2) (identifier) } } pub unsafe fn MaaAgentClientCreateTcp (& self , port : u16) -> * mut MaaAgentClient { unsafe { (self . MaaAgentClientCreateTcp) (port) } } pub unsafe fn MaaAgentClientDestroy (& self , client : * mut MaaAgentClient) { unsafe { (self . MaaAgentClientDestroy) (client) } } pub unsafe fn MaaAgentClientIdentifier (& self , client : * mut MaaAgentClient , identifier : * mut MaaStringBuffer ,) -> MaaBool { unsafe { (self . MaaAgentClientIdentifier) (client , identifier) } } pub unsafe fn MaaAgentClientBindResource (& self , client : * mut MaaAgentClient , res : * mut MaaResource ,) -> MaaBool { unsafe { (self . MaaAgentClientBindResource) (client , res) } } pub unsafe fn MaaAgentClientRegisterResourceSink (& self , client : * mut MaaAgentClient , res : * mut MaaResource ,) -> MaaBool { unsafe { (self . MaaAgentClientRegisterResourceSink) (client , res) } } pub unsafe fn MaaAgentClientRegisterControllerSink (& self , client : * mut MaaAgentClient , ctrl : * mut MaaController ,) -> MaaBool { unsafe { (self . MaaAgentClientRegisterControllerSink) (client , ctrl) } } pub unsafe fn MaaAgentClientRegisterTaskerSink (& self , client : * mut MaaAgentClient , tasker : * mut MaaTasker ,) -> MaaBool { unsafe { (self . MaaAgentClientRegisterTaskerSink) (client , tasker) } } pub unsafe fn MaaAgentClientConnect (& self , client : * mut MaaAgentClient) -> MaaBool { unsafe { (self . MaaAgentClientConnect) (client) } } pub unsafe fn MaaAgentClientDisconnect (& self , client : * mut MaaAgentClient) -> MaaBool { unsafe { (self . MaaAgentClientDisconnect) (client) } } pub unsafe fn MaaAgentClientConnected (& self , client : * mut MaaAgentClient) -> MaaBool { unsafe { (self . MaaAgentClientConnected) (client) } } pub unsafe fn MaaAgentClientAlive (& self , client : * mut MaaAgentClient) -> MaaBool { unsafe { (self . MaaAgentClientAlive) (client) } } pub unsafe fn MaaAgentClientSetTimeout (& self , client : * mut MaaAgentClient , milliseconds : i64 ,) -> MaaBool { unsafe { (self . MaaAgentClientSetTimeout) (client , milliseconds) } } pub unsafe fn MaaAgentClientGetCustomRecognitionList (& self , client : * mut MaaAgentClient , buffer : * mut MaaStringListBuffer ,) -> MaaBool { unsafe { (self . MaaAgentClientGetCustomRecognitionList) (client , buffer) } } pub unsafe fn MaaAgentClientGetCustomActionList (& self , client : * mut MaaAgentClient , buffer : * mut MaaStringListBuffer ,) -> MaaBool { unsafe { (self . MaaAgentClientGetCustomActionList) (client , buffer) } } pub unsafe fn MaaAgentClientCreate (& self) -> * mut MaaAgentClient { unsafe { (self . MaaAgentClientCreate) () } } pub unsafe fn MaaAgentClientCreateSocket (& self , client : * mut MaaAgentClient , identifier : * mut MaaStringBuffer ,) -> MaaBool { unsafe { (self . MaaAgentClientCreateSocket) (client , identifier) } } pub unsafe fn MaaAgentServerRegisterCustomRecognition (& self , name : * const :: std :: os :: raw :: c_char , recognition : MaaCustomRecognitionCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaBool { unsafe { (self . MaaAgentServerRegisterCustomRecognition) (name , recognition , trans_arg) } } pub unsafe fn MaaAgentServerRegisterCustomAction (& self , name : * const :: std :: os :: raw :: c_char , action : MaaCustomActionCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaBool { unsafe { (self . MaaAgentServerRegisterCustomAction) (name , action , trans_arg) } } pub unsafe fn MaaAgentServerAddResourceSink (& self , sink : MaaEventCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaSinkId { unsafe { (self . MaaAgentServerAddResourceSink) (sink , trans_arg) } } pub unsafe fn MaaAgentServerAddControllerSink (& self , sink : MaaEventCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaSinkId { unsafe { (self . MaaAgentServerAddControllerSink) (sink , trans_arg) } } pub unsafe fn MaaAgentServerAddTaskerSink (& self , sink : MaaEventCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaSinkId { unsafe { (self . MaaAgentServerAddTaskerSink) (sink , trans_arg) } } pub unsafe fn MaaAgentServerAddContextSink (& self , sink : MaaEventCallback , trans_arg : * mut :: std :: os :: raw :: c_void ,) -> MaaSinkId { unsafe { (self . MaaAgentServerAddContextSink) (sink , trans_arg) } } pub unsafe fn MaaAgentServerStartUp (& self , identifier : * const :: std :: os :: raw :: c_char ,) -> MaaBool { unsafe { (self . MaaAgentServerStartUp) (identifier) } } pub unsafe fn MaaAgentServerShutDown (& self) { unsafe { (self . MaaAgentServerShutDown) () } } pub unsafe fn MaaAgentServerJoin (& self) { unsafe { (self . MaaAgentServerJoin) () } } pub unsafe fn MaaAgentServerDetach (& self) { unsafe { (self . MaaAgentServerDetach) () } } pub unsafe fn MaaToolkitAdbDeviceListCreate (& self) -> * mut MaaToolkitAdbDeviceList { unsafe { (self . MaaToolkitAdbDeviceListCreate) () } } pub unsafe fn MaaToolkitAdbDeviceListDestroy (& self , handle : * mut MaaToolkitAdbDeviceList) { unsafe { (self . MaaToolkitAdbDeviceListDestroy) (handle) } } pub unsafe fn MaaToolkitAdbDeviceFind (& self , buffer : * mut MaaToolkitAdbDeviceList) -> MaaBool { unsafe { (self . MaaToolkitAdbDeviceFind) (buffer) } } pub unsafe fn MaaToolkitAdbDeviceFindSpecified (& self , adb_path : * const :: std :: os :: raw :: c_char , buffer : * mut MaaToolkitAdbDeviceList ,) -> MaaBool { unsafe { (self . MaaToolkitAdbDeviceFindSpecified) (adb_path , buffer) } } pub unsafe fn MaaToolkitAdbDeviceListSize (& self , list : * const MaaToolkitAdbDeviceList ,) -> MaaSize { unsafe { (self . MaaToolkitAdbDeviceListSize) (list) } } pub unsafe fn MaaToolkitAdbDeviceListAt (& self , list : * const MaaToolkitAdbDeviceList , index : MaaSize ,) -> * const MaaToolkitAdbDevice { unsafe { (self . MaaToolkitAdbDeviceListAt) (list , index) } } pub unsafe fn MaaToolkitAdbDeviceGetName (& self , device : * const MaaToolkitAdbDevice ,) -> * const :: std :: os :: raw :: c_char { unsafe { (self . MaaToolkitAdbDeviceGetName) (device) } } pub unsafe fn MaaToolkitAdbDeviceGetAdbPath (& self , device : * const MaaToolkitAdbDevice ,) -> * const :: std :: os :: raw :: c_char { unsafe { (self . MaaToolkitAdbDeviceGetAdbPath) (device) } } pub unsafe fn MaaToolkitAdbDeviceGetAddress (& self , device : * const MaaToolkitAdbDevice ,) -> * const :: std :: os :: raw :: c_char { unsafe { (self . MaaToolkitAdbDeviceGetAddress) (device) } } pub unsafe fn MaaToolkitAdbDeviceGetScreencapMethods (& self , device : * const MaaToolkitAdbDevice ,) -> MaaAdbScreencapMethod { unsafe { (self . MaaToolkitAdbDeviceGetScreencapMethods) (device) } } pub unsafe fn MaaToolkitAdbDeviceGetInputMethods (& self , device : * const MaaToolkitAdbDevice ,) -> MaaAdbInputMethod { unsafe { (self . MaaToolkitAdbDeviceGetInputMethods) (device) } } pub unsafe fn MaaToolkitAdbDeviceGetConfig (& self , device : * const MaaToolkitAdbDevice ,) -> * const :: std :: os :: raw :: c_char { unsafe { (self . MaaToolkitAdbDeviceGetConfig) (device) } } pub unsafe fn MaaToolkitDesktopWindowListCreate (& self) -> * mut MaaToolkitDesktopWindowList { unsafe { (self . MaaToolkitDesktopWindowListCreate) () } } pub unsafe fn MaaToolkitDesktopWindowListDestroy (& self , handle : * mut MaaToolkitDesktopWindowList ,) { unsafe { (self . MaaToolkitDesktopWindowListDestroy) (handle) } } pub unsafe fn MaaToolkitDesktopWindowFindAll (& self , buffer : * mut MaaToolkitDesktopWindowList ,) -> MaaBool { unsafe { (self . MaaToolkitDesktopWindowFindAll) (buffer) } } pub unsafe fn MaaToolkitDesktopWindowListSize (& self , list : * const MaaToolkitDesktopWindowList ,) -> MaaSize { unsafe { (self . MaaToolkitDesktopWindowListSize) (list) } } pub unsafe fn MaaToolkitDesktopWindowListAt (& self , list : * const MaaToolkitDesktopWindowList , index : MaaSize ,) -> * const MaaToolkitDesktopWindow { unsafe { (self . MaaToolkitDesktopWindowListAt) (list , index) } } pub unsafe fn MaaToolkitDesktopWindowGetHandle (& self , window : * const MaaToolkitDesktopWindow ,) -> * mut :: std :: os :: raw :: c_void { unsafe { (self . MaaToolkitDesktopWindowGetHandle) (window) } } pub unsafe fn MaaToolkitDesktopWindowGetClassName (& self , window : * const MaaToolkitDesktopWindow ,) -> * const :: std :: os :: raw :: c_char { unsafe { (self . MaaToolkitDesktopWindowGetClassName) (window) } } pub unsafe fn MaaToolkitDesktopWindowGetWindowName (& self , window : * const MaaToolkitDesktopWindow ,) -> * const :: std :: os :: raw :: c_char { unsafe { (self . MaaToolkitDesktopWindowGetWindowName) (window) } } pub unsafe fn MaaToolkitConfigInitOption (& self , user_path : * const :: std :: os :: raw :: c_char , default_json : * const :: std :: os :: raw :: c_char ,) -> MaaBool { unsafe { (self . MaaToolkitConfigInitOption) (user_path , default_json) } } }
+/* automatically generated by rust-bindgen 0.72.1 */
+
+unsafe impl Send for MaaFramework {}
+unsafe impl Sync for MaaFramework {}
+
+pub const MaaAdbScreencapMethod_EncodeToFileAndPull: u32 = 1;
+pub const MaaAdbScreencapMethod_Encode: u32 = 2;
+pub const MaaAdbScreencapMethod_RawWithGzip: u32 = 4;
+pub const MaaAdbScreencapMethod_RawByNetcat: u32 = 8;
+pub const MaaAdbScreencapMethod_MinicapDirect: u32 = 16;
+pub const MaaAdbScreencapMethod_MinicapStream: u32 = 32;
+pub const MaaAdbScreencapMethod_EmulatorExtras: u32 = 64;
+pub const MaaAdbScreencapMethod_None: u32 = 0;
+pub const MaaAdbScreencapMethod_All: i32 = -1;
+pub const MaaAdbScreencapMethod_Default: i32 = -57;
+pub const MaaAdbInputMethod_AdbShell: u32 = 1;
+pub const MaaAdbInputMethod_MinitouchAndAdbKey: u32 = 2;
+pub const MaaAdbInputMethod_Maatouch: u32 = 4;
+pub const MaaAdbInputMethod_EmulatorExtras: u32 = 8;
+pub const MaaAdbInputMethod_None: u32 = 0;
+pub const MaaAdbInputMethod_All: i32 = -1;
+pub const MaaAdbInputMethod_Default: i32 = -9;
+pub const MaaWin32ScreencapMethod_None: u32 = 0;
+pub const MaaWin32ScreencapMethod_GDI: u32 = 1;
+pub const MaaWin32ScreencapMethod_FramePool: u32 = 2;
+pub const MaaWin32ScreencapMethod_DXGI_DesktopDup: u32 = 4;
+pub const MaaWin32ScreencapMethod_DXGI_DesktopDup_Window: u32 = 8;
+pub const MaaWin32ScreencapMethod_PrintWindow: u32 = 16;
+pub const MaaWin32ScreencapMethod_ScreenDC: u32 = 32;
+pub const MaaWin32InputMethod_None: u32 = 0;
+pub const MaaWin32InputMethod_Seize: u32 = 1;
+pub const MaaWin32InputMethod_SendMessage: u32 = 2;
+pub const MaaWin32InputMethod_PostMessage: u32 = 4;
+pub const MaaWin32InputMethod_LegacyEvent: u32 = 8;
+pub const MaaWin32InputMethod_PostThreadMessage: u32 = 16;
+pub const MaaWin32InputMethod_SendMessageWithCursorPos: u32 = 32;
+pub const MaaWin32InputMethod_PostMessageWithCursorPos: u32 = 64;
+pub const MaaWin32InputMethod_SendMessageWithWindowPos: u32 = 128;
+pub const MaaWin32InputMethod_PostMessageWithWindowPos: u32 = 256;
+pub const MaaDbgControllerType_None: u32 = 0;
+pub const MaaDbgControllerType_CarouselImage: u32 = 1;
+pub const MaaDbgControllerType_ReplayRecording: u32 = 2;
+pub const MaaGamepadType_Xbox360: u32 = 0;
+pub const MaaGamepadType_DualShock4: u32 = 1;
+pub const MaaGamepadButton_A: u32 = 4096;
+pub const MaaGamepadButton_B: u32 = 8192;
+pub const MaaGamepadButton_X: u32 = 16384;
+pub const MaaGamepadButton_Y: u32 = 32768;
+pub const MaaGamepadButton_LB: u32 = 256;
+pub const MaaGamepadButton_RB: u32 = 512;
+pub const MaaGamepadButton_LEFT_THUMB: u32 = 64;
+pub const MaaGamepadButton_RIGHT_THUMB: u32 = 128;
+pub const MaaGamepadButton_START: u32 = 16;
+pub const MaaGamepadButton_BACK: u32 = 32;
+pub const MaaGamepadButton_GUIDE: u32 = 1024;
+pub const MaaGamepadButton_DPAD_UP: u32 = 1;
+pub const MaaGamepadButton_DPAD_DOWN: u32 = 2;
+pub const MaaGamepadButton_DPAD_LEFT: u32 = 4;
+pub const MaaGamepadButton_DPAD_RIGHT: u32 = 8;
+pub const MaaGamepadButton_CROSS: u32 = 4096;
+pub const MaaGamepadButton_CIRCLE: u32 = 8192;
+pub const MaaGamepadButton_SQUARE: u32 = 16384;
+pub const MaaGamepadButton_TRIANGLE: u32 = 32768;
+pub const MaaGamepadButton_L1: u32 = 256;
+pub const MaaGamepadButton_R1: u32 = 512;
+pub const MaaGamepadButton_L3: u32 = 64;
+pub const MaaGamepadButton_R3: u32 = 128;
+pub const MaaGamepadButton_OPTIONS: u32 = 16;
+pub const MaaGamepadButton_SHARE: u32 = 32;
+pub const MaaGamepadButton_PS: u32 = 65536;
+pub const MaaGamepadButton_TOUCHPAD: u32 = 131072;
+pub const MaaGamepadTouch_LeftStick: u32 = 0;
+pub const MaaGamepadTouch_RightStick: u32 = 1;
+pub const MaaGamepadTouch_LeftTrigger: u32 = 2;
+pub const MaaGamepadTouch_RightTrigger: u32 = 3;
+pub const MaaControllerFeature_None: u32 = 0;
+pub const MaaControllerFeature_UseMouseDownAndUpInsteadOfClick: u32 = 1;
+pub const MaaControllerFeature_UseKeyboardDownAndUpInsteadOfClick: u32 = 2;
+pub const MaaControllerFeature_NoScalingTouchPoints: u32 = 4;
+pub type MaaBool = u8;
+pub type MaaSize = u64;
+pub type MaaId = i64;
+pub type MaaCtrlId = MaaId;
+pub type MaaResId = MaaId;
+pub type MaaTaskId = MaaId;
+pub type MaaRecoId = MaaId;
+pub type MaaActId = MaaId;
+pub type MaaNodeId = MaaId;
+pub type MaaSinkId = MaaId;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaStringBuffer {
+    _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaImageBuffer {
+    _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaStringListBuffer {
+    _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaImageListBuffer {
+    _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaResource {
+    _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaController {
+    _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaTasker {
+    _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaContext {
+    _unused: [u8; 0],
+}
+pub type MaaStatus = i32;
+pub const MaaStatusEnum_MaaStatus_Invalid: MaaStatusEnum = 0;
+pub const MaaStatusEnum_MaaStatus_Pending: MaaStatusEnum = 1000;
+pub const MaaStatusEnum_MaaStatus_Running: MaaStatusEnum = 2000;
+pub const MaaStatusEnum_MaaStatus_Succeeded: MaaStatusEnum = 3000;
+pub const MaaStatusEnum_MaaStatus_Failed: MaaStatusEnum = 4000;
+pub type MaaStatusEnum = ::std::os::raw::c_uint;
+pub type MaaLoggingLevel = i32;
+pub const MaaLoggingLevelEnum_MaaLoggingLevel_Off: MaaLoggingLevelEnum = 0;
+pub const MaaLoggingLevelEnum_MaaLoggingLevel_Fatal: MaaLoggingLevelEnum = 1;
+pub const MaaLoggingLevelEnum_MaaLoggingLevel_Error: MaaLoggingLevelEnum = 2;
+pub const MaaLoggingLevelEnum_MaaLoggingLevel_Warn: MaaLoggingLevelEnum = 3;
+pub const MaaLoggingLevelEnum_MaaLoggingLevel_Info: MaaLoggingLevelEnum = 4;
+pub const MaaLoggingLevelEnum_MaaLoggingLevel_Debug: MaaLoggingLevelEnum = 5;
+pub const MaaLoggingLevelEnum_MaaLoggingLevel_Trace: MaaLoggingLevelEnum = 6;
+pub const MaaLoggingLevelEnum_MaaLoggingLevel_All: MaaLoggingLevelEnum = 7;
+pub type MaaLoggingLevelEnum = ::std::os::raw::c_uint;
+pub type MaaOption = i32;
+pub type MaaOptionValue = *mut ::std::os::raw::c_void;
+pub type MaaOptionValueSize = u64;
+pub type MaaGlobalOption = MaaOption;
+pub const MaaGlobalOptionEnum_MaaGlobalOption_Invalid: MaaGlobalOptionEnum = 0;
+#[doc = " Log dir\n\n value: string, eg: \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\log\"; val_size: string length"]
+pub const MaaGlobalOptionEnum_MaaGlobalOption_LogDir: MaaGlobalOptionEnum = 1;
+#[doc = " Whether to save draw\n\n value: bool, eg: true; val_size: sizeof(bool)"]
+pub const MaaGlobalOptionEnum_MaaGlobalOption_SaveDraw: MaaGlobalOptionEnum = 2;
+#[doc = " The level of log output to stdout\n\n value: MaaLoggingLevel, val_size: sizeof(MaaLoggingLevel)\n default value is MaaLoggingLevel_Error"]
+pub const MaaGlobalOptionEnum_MaaGlobalOption_StdoutLevel: MaaGlobalOptionEnum = 4;
+#[doc = " Whether to debug\n\n value: bool, eg: true; val_size: sizeof(bool)"]
+pub const MaaGlobalOptionEnum_MaaGlobalOption_DebugMode: MaaGlobalOptionEnum = 6;
+#[doc = " Whether to save screenshot on error\n\n value: bool, eg: true; val_size: sizeof(bool)"]
+pub const MaaGlobalOptionEnum_MaaGlobalOption_SaveOnError: MaaGlobalOptionEnum = 7;
+#[doc = " Image quality for draw images\n\n value: int, eg: 85; val_size: sizeof(int)\n default value is 85, range: [0, 100]"]
+pub const MaaGlobalOptionEnum_MaaGlobalOption_DrawQuality: MaaGlobalOptionEnum = 8;
+#[doc = " Recognition image cache limit\n\n value: size_t, eg: 4096; val_size: sizeof(size_t)\n default value is 4096"]
+pub const MaaGlobalOptionEnum_MaaGlobalOption_RecoImageCacheLimit: MaaGlobalOptionEnum = 9;
+pub type MaaGlobalOptionEnum = ::std::os::raw::c_uint;
+pub type MaaResOption = MaaOption;
+pub type MaaInferenceDevice = i32;
+pub type MaaInferenceExecutionProvider = i32;
+pub const MaaInferenceDeviceEnum_MaaInferenceDevice_CPU: MaaInferenceDeviceEnum = -2;
+pub const MaaInferenceDeviceEnum_MaaInferenceDevice_Auto: MaaInferenceDeviceEnum = -1;
+pub const MaaInferenceDeviceEnum_MaaInferenceDevice_0: MaaInferenceDeviceEnum = 0;
+pub const MaaInferenceDeviceEnum_MaaInferenceDevice_1: MaaInferenceDeviceEnum = 1;
+pub type MaaInferenceDeviceEnum = ::std::os::raw::c_int;
+pub const MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_Auto:
+    MaaInferenceExecutionProviderEnum = 0;
+pub const MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_CPU:
+    MaaInferenceExecutionProviderEnum = 1;
+pub const MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_DirectML:
+    MaaInferenceExecutionProviderEnum = 2;
+pub const MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_CoreML:
+    MaaInferenceExecutionProviderEnum = 3;
+pub const MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_CUDA:
+    MaaInferenceExecutionProviderEnum = 4;
+pub type MaaInferenceExecutionProviderEnum = ::std::os::raw::c_uint;
+pub const MaaResOptionEnum_MaaResOption_Invalid: MaaResOptionEnum = 0;
+#[doc = " Use the specified inference device.\n Please set this option before loading the model.\n\n value: MaaInferenceDevice, eg: 0; val_size: sizeof(MaaInferenceDevice)\n default value is MaaInferenceDevice_Auto"]
+pub const MaaResOptionEnum_MaaResOption_InferenceDevice: MaaResOptionEnum = 1;
+#[doc = " Use the specified inference execution provider\n Please set this option before loading the model.\n\n value: MaaInferenceExecutionProvider, eg: 0; val_size: sizeof(MaaInferenceExecutionProvider)\n default value is MaaInferenceExecutionProvider_Auto"]
+pub const MaaResOptionEnum_MaaResOption_InferenceExecutionProvider: MaaResOptionEnum = 2;
+pub type MaaResOptionEnum = ::std::os::raw::c_uint;
+pub type MaaCtrlOption = MaaOption;
+pub const MaaCtrlOptionEnum_MaaCtrlOption_Invalid: MaaCtrlOptionEnum = 0;
+#[doc = " Only one of long and short side can be set, and the other is automatically scaled according to the aspect ratio.\n\n value: int, eg: 1280; val_size: sizeof(int)"]
+pub const MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotTargetLongSide: MaaCtrlOptionEnum = 1;
+#[doc = " Only one of long and short side can be set, and the other is automatically scaled according to the aspect ratio.\n\n value: int, eg: 720; val_size: sizeof(int)"]
+pub const MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotTargetShortSide: MaaCtrlOptionEnum = 2;
+#[doc = " Screenshot use raw size without scaling.\n Please note that this option may cause incorrect coordinates on user devices with different resolutions if scaling is not performed.\n\n value: bool, eg: true; val_size: sizeof(bool)"]
+pub const MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotUseRawSize: MaaCtrlOptionEnum = 3;
+#[doc = " @brief Option keys for controller instance options. See MaaControllerSetOption().\n"]
+pub type MaaCtrlOptionEnum = ::std::os::raw::c_uint;
+pub type MaaTaskerOption = MaaOption;
+pub const MaaTaskerOptionEnum_MaaTaskerOption_Invalid: MaaTaskerOptionEnum = 0;
+pub type MaaTaskerOptionEnum = ::std::os::raw::c_uint;
+#[doc = " @brief Adb screencap method flags\n\n Use bitwise OR to set the methods you need.\n MaaFramework will test all provided methods and use the fastest available one.\n\n Default: All methods except RawByNetcat, MinicapDirect, MinicapStream\n\n Note: MinicapDirect and MinicapStream use lossy JPEG encoding, which may\n significantly reduce template matching accuracy. Not recommended.\n\n | Method                | Speed      | Compatibility | Encoding | Notes                             |\n |-----------------------|------------|---------------|----------|-----------------------------------|\n | EncodeToFileAndPull   | Slow       | High          | Lossless |                                   |\n | Encode                | Slow       | High          | Lossless |                                   |\n | RawWithGzip           | Medium     | High          | Lossless |                                   |\n | RawByNetcat           | Fast       | Low           | Lossless |                                   |\n | MinicapDirect         | Fast       | Low           | Lossy    |                                   |\n | MinicapStream         | Very Fast  | Low           | Lossy    |                                   |\n | EmulatorExtras        | Very Fast  | Low           | Lossless | Emulators only: MuMu 12, LDPlayer 9 |"]
+pub type MaaAdbScreencapMethod = u64;
+#[doc = " @brief Adb input method flags\n\n Use bitwise OR to set the methods you need.\n MaaFramework will select the first available method according to priority.\n\n Priority (high to low): EmulatorExtras > Maatouch > MinitouchAndAdbKey > AdbShell\n\n Default: All methods except EmulatorExtras\n\n | Method               | Speed | Compatibility | Notes                                 |\n |----------------------|-------|---------------|---------------------------------------|\n | AdbShell             | Slow  | High          |                                       |\n | MinitouchAndAdbKey   | Fast  | Medium        | Key press still uses AdbShell         |\n | Maatouch             | Fast  | Medium        |                                       |\n | EmulatorExtras       | Fast  | Low           | Emulators only: MuMu 12               |"]
+pub type MaaAdbInputMethod = u64;
+#[doc = " @brief Win32 screencap method\n\n No bitwise OR, select ONE method only.\n\n No default value. Client should choose one as default.\n\n Different applications use different rendering methods, there is no universal solution.\n\n | Method                  | Speed     | Compatibility | Require Admin | Background Support | Notes                            |\n |-------------------------|-----------|---------------|---------------|--------------------|----------------------------------|\n | GDI                     | Fast      | Medium        | No            | No                 |                                  |\n | FramePool               | Very Fast | Medium        | No            | Yes                | Requires Windows 10 1903+        |\n | DXGI_DesktopDup         | Very Fast | Low           | No            | No                 | Desktop duplication (full screen)|\n | DXGI_DesktopDup_Window  | Very Fast | Low           | No            | No                 | Desktop duplication then crop    |\n | PrintWindow             | Medium    | Medium        | No            | Yes                |                                  |\n | ScreenDC                | Fast      | High          | No            | No                 |                                  |\n\n Note: When a window is minimized on Windows, all screencap methods will fail.\n Avoid minimizing the target window."]
+pub type MaaWin32ScreencapMethod = u64;
+#[doc = " @brief Win32 input method\n\n No bitwise OR, select ONE method only.\n\n No default value. Client should choose one as default.\n\n Different applications process input differently, there is no universal solution.\n\n | Method                       | Compatibility | Require Admin | Seize Mouse  | Background Support | Notes |\n |------------------------------|---------------|---------------|--------------|--------------------|-------------------------------------------------------------\n | | Seize                        | High          | No            | Yes          | No                 | | | SendMessage                  |\n Medium        | Maybe         | No           | Yes                |                                                             | |\n PostMessage                  | Medium        | Maybe         | No           | Yes                | | | LegacyEvent                  | Low\n | No            | Yes          | No                 |                                                             | | PostThreadMessage\n | Low           | Maybe         | No           | Yes                |                                                             | |\n SendMessageWithCursorPos     | Medium        | Maybe         | Briefly      | Yes                | Moves cursor to target position, then\n restores              | | PostMessageWithCursorPos     | Medium        | Maybe         | Briefly      | Yes                | Moves cursor\n to target position, then restores              | | SendMessageWithWindowPos     | Medium        | Maybe         | No           | Yes |\n Moves window to align target with cursor, then restores     | | PostMessageWithWindowPos     | Medium        | Maybe         | No | Yes |\n Moves window to align target with cursor, then restores     |\n\n Note:\n - Admin rights mainly depend on the target application's privilege level.\n   If the target runs as admin, MaaFramework should also run as admin for compatibility.\n - \"WithCursorPos\" methods briefly move the cursor to target position, send message,\n   then restore cursor position. This \"briefly\" seizes the mouse but won't block user operations.\n - \"WithWindowPos\" methods briefly move the window so the target aligns with the current cursor\n   position, send message, then restore the window position. The cursor is not moved."]
+pub type MaaWin32InputMethod = u64;
+#[doc = " No bitwise OR, just set it"]
+pub type MaaDbgControllerType = u64;
+#[doc = " @brief Virtual gamepad type\n\n Select ONE type only.\n\n | Type          | Description                                    |\n |---------------|------------------------------------------------|\n | Xbox360       | Microsoft Xbox 360 Controller (wired)          |\n | DualShock4    | Sony DualShock 4 Controller (wired)            |"]
+pub type MaaGamepadType = u64;
+#[doc = " @brief Virtual gamepad button codes for click_key/key_down/key_up\n\n Use these values with MaaControllerPostClickKey, MaaControllerPostKeyDown, MaaControllerPostKeyUp.\n Values are based on XUSB (Xbox 360) button flags. DS4 face buttons are mapped to Xbox equivalents.\n\n Xbox 360 buttons:\n\n | Value   | Button              | Description            |\n |---------|---------------------|------------------------|\n | 0x1000  | A                   | A button               |\n | 0x2000  | B                   | B button               |\n | 0x4000  | X                   | X button               |\n | 0x8000  | Y                   | Y button               |\n | 0x0100  | LB (Left Shoulder)  | Left bumper            |\n | 0x0200  | RB (Right Shoulder) | Right bumper           |\n | 0x0040  | L_THUMB             | Left stick click       |\n | 0x0080  | R_THUMB             | Right stick click      |\n | 0x0010  | START               | Start button           |\n | 0x0020  | BACK                | Back button            |\n | 0x0400  | GUIDE               | Guide/Home button      |\n | 0x0001  | DPAD_UP             | D-pad up               |\n | 0x0002  | DPAD_DOWN           | D-pad down             |\n | 0x0004  | DPAD_LEFT           | D-pad left             |\n | 0x0008  | DPAD_RIGHT          | D-pad right            |\n\n DualShock 4 buttons (aliases to Xbox buttons):\n\n | Value   | Button    | Xbox Equivalent | Description               |\n |---------|-----------|-----------------|---------------------------|\n | 0x1000  | CROSS     | A                   | Cross (X) button          |\n | 0x2000  | CIRCLE    | B                   | Circle button             |\n | 0x4000  | SQUARE    | X                   | Square button             |\n | 0x8000  | TRIANGLE  | Y                   | Triangle button           |\n | 0x0100  | L1        | LB                  | L1 button                 |\n | 0x0200  | R1        | RB                  | R1 button                 |\n | 0x0040  | L3        | L_THUMB             | Left stick click          |\n | 0x0080  | R3        | R_THUMB             | Right stick click         |\n | 0x0010  | OPTIONS   | START               | Options button            |\n | 0x0020  | SHARE     | BACK                | Share button              |\n | 0x10000 | PS        | -                   | PS button (DS4 special)   |\n | 0x20000 | TOUCHPAD  | -                   | Touchpad click (DS4 only) |"]
+pub type MaaGamepadButton = u64;
+#[doc = " @brief Virtual gamepad touch contact definitions for touch_down/touch_move/touch_up\n\n For gamepad controller, the touch functions are repurposed for analog inputs:\n - x, y: Analog stick position\n - pressure: Trigger value (0~255)\n\n Contact mapping:\n\n | Contact | Input           | x range     | y range     | pressure   | Description                    |\n |---------|-----------------|-------------|-------------|------------|--------------------------------|\n | 0       | Left Stick      | -32768~32767| -32768~32767| ignored    | Left analog stick X/Y position |\n | 1       | Right Stick     | -32768~32767| -32768~32767| ignored    | Right analog stick X/Y position|\n | 2       | Left Trigger    | ignored     | ignored     | 0~255      | Left trigger (LT/L2) value     |\n | 3       | Right Trigger   | ignored     | ignored     | 0~255      | Right trigger (RT/R2) value    |\n\n Usage:\n - touch_down(contact, x, y, pressure): Start analog input\n - touch_move(contact, x, y, pressure): Update analog input position/value\n - touch_up(contact): Release/reset analog input to center/zero"]
+pub type MaaGamepadTouch = u64;
+#[doc = " Controller feature flags returned by get_features().\n These flags indicate which input methods the controller supports/prefers."]
+pub type MaaControllerFeature = u64;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaRect {
+    pub x: i32,
+    pub y: i32,
+    pub width: i32,
+    pub height: i32,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of MaaRect"][::std::mem::size_of::<MaaRect>() - 16usize];
+    ["Alignment of MaaRect"][::std::mem::align_of::<MaaRect>() - 4usize];
+    ["Offset of field: MaaRect::x"][::std::mem::offset_of!(MaaRect, x) - 0usize];
+    ["Offset of field: MaaRect::y"][::std::mem::offset_of!(MaaRect, y) - 4usize];
+    ["Offset of field: MaaRect::width"][::std::mem::offset_of!(MaaRect, width) - 8usize];
+    ["Offset of field: MaaRect::height"][::std::mem::offset_of!(MaaRect, height) - 12usize];
+};
+pub type MaaNotificationCallback = ::std::option::Option<
+    unsafe extern "C" fn(
+        message: *const ::std::os::raw::c_char,
+        details_json: *const ::std::os::raw::c_char,
+        notify_trans_arg: *mut ::std::os::raw::c_void,
+    ),
+>;
+#[doc = " void* handle:\n - MaaTasker* for MaaTasker event\n - MaaResource* for MaaResource event\n - MaaController* for MaaController event\n - MaaContext* for MaaContext event"]
+pub type MaaEventCallback = ::std::option::Option<
+    unsafe extern "C" fn(
+        handle: *mut ::std::os::raw::c_void,
+        message: *const ::std::os::raw::c_char,
+        details_json: *const ::std::os::raw::c_char,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ),
+>;
+pub type MaaCustomRecognitionCallback = ::std::option::Option<
+    unsafe extern "C" fn(
+        context: *mut MaaContext,
+        task_id: MaaTaskId,
+        node_name: *const ::std::os::raw::c_char,
+        custom_recognition_name: *const ::std::os::raw::c_char,
+        custom_recognition_param: *const ::std::os::raw::c_char,
+        image: *const MaaImageBuffer,
+        roi: *const MaaRect,
+        trans_arg: *mut ::std::os::raw::c_void,
+        out_box: *mut MaaRect,
+        out_detail: *mut MaaStringBuffer,
+    ) -> MaaBool,
+>;
+pub type MaaCustomActionCallback = ::std::option::Option<
+    unsafe extern "C" fn(
+        context: *mut MaaContext,
+        task_id: MaaTaskId,
+        node_name: *const ::std::os::raw::c_char,
+        custom_action_name: *const ::std::os::raw::c_char,
+        custom_action_param: *const ::std::os::raw::c_char,
+        reco_id: MaaRecoId,
+        box_: *const MaaRect,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaBool,
+>;
+pub type MaaImageRawData = *mut ::std::os::raw::c_void;
+pub type MaaImageEncodedData = *mut u8;
+#[doc = " @brief The custom controller API.\n\n To create a custom controller, you need to implement this API.\n\n You do not have to implement all the functions in this API. Instead, just implement the\n functions you need. Do note that if an unimplemented function is called, the framework will\n likely crash."]
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaCustomControllerCallbacks {
+    pub connect: ::std::option::Option<
+        unsafe extern "C" fn(trans_arg: *mut ::std::os::raw::c_void) -> MaaBool,
+    >,
+    pub connected: ::std::option::Option<
+        unsafe extern "C" fn(trans_arg: *mut ::std::os::raw::c_void) -> MaaBool,
+    >,
+    #[doc = " Write result to buffer."]
+    pub request_uuid: ::std::option::Option<
+        unsafe extern "C" fn(
+            trans_arg: *mut ::std::os::raw::c_void,
+            buffer: *mut MaaStringBuffer,
+        ) -> MaaBool,
+    >,
+    pub get_features: ::std::option::Option<
+        unsafe extern "C" fn(trans_arg: *mut ::std::os::raw::c_void) -> MaaControllerFeature,
+    >,
+    pub start_app: ::std::option::Option<
+        unsafe extern "C" fn(
+            intent: *const ::std::os::raw::c_char,
+            trans_arg: *mut ::std::os::raw::c_void,
+        ) -> MaaBool,
+    >,
+    pub stop_app: ::std::option::Option<
+        unsafe extern "C" fn(
+            intent: *const ::std::os::raw::c_char,
+            trans_arg: *mut ::std::os::raw::c_void,
+        ) -> MaaBool,
+    >,
+    #[doc = " Write result to buffer."]
+    pub screencap: ::std::option::Option<
+        unsafe extern "C" fn(
+            trans_arg: *mut ::std::os::raw::c_void,
+            buffer: *mut MaaImageBuffer,
+        ) -> MaaBool,
+    >,
+    pub click: ::std::option::Option<
+        unsafe extern "C" fn(x: i32, y: i32, trans_arg: *mut ::std::os::raw::c_void) -> MaaBool,
+    >,
+    pub swipe: ::std::option::Option<
+        unsafe extern "C" fn(
+            x1: i32,
+            y1: i32,
+            x2: i32,
+            y2: i32,
+            duration: i32,
+            trans_arg: *mut ::std::os::raw::c_void,
+        ) -> MaaBool,
+    >,
+    pub touch_down: ::std::option::Option<
+        unsafe extern "C" fn(
+            contact: i32,
+            x: i32,
+            y: i32,
+            pressure: i32,
+            trans_arg: *mut ::std::os::raw::c_void,
+        ) -> MaaBool,
+    >,
+    pub touch_move: ::std::option::Option<
+        unsafe extern "C" fn(
+            contact: i32,
+            x: i32,
+            y: i32,
+            pressure: i32,
+            trans_arg: *mut ::std::os::raw::c_void,
+        ) -> MaaBool,
+    >,
+    pub touch_up: ::std::option::Option<
+        unsafe extern "C" fn(contact: i32, trans_arg: *mut ::std::os::raw::c_void) -> MaaBool,
+    >,
+    pub click_key: ::std::option::Option<
+        unsafe extern "C" fn(keycode: i32, trans_arg: *mut ::std::os::raw::c_void) -> MaaBool,
+    >,
+    pub input_text: ::std::option::Option<
+        unsafe extern "C" fn(
+            text: *const ::std::os::raw::c_char,
+            trans_arg: *mut ::std::os::raw::c_void,
+        ) -> MaaBool,
+    >,
+    pub key_down: ::std::option::Option<
+        unsafe extern "C" fn(keycode: i32, trans_arg: *mut ::std::os::raw::c_void) -> MaaBool,
+    >,
+    pub key_up: ::std::option::Option<
+        unsafe extern "C" fn(keycode: i32, trans_arg: *mut ::std::os::raw::c_void) -> MaaBool,
+    >,
+    pub scroll: ::std::option::Option<
+        unsafe extern "C" fn(dx: i32, dy: i32, trans_arg: *mut ::std::os::raw::c_void) -> MaaBool,
+    >,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of MaaCustomControllerCallbacks"]
+        [::std::mem::size_of::<MaaCustomControllerCallbacks>() - 136usize];
+    ["Alignment of MaaCustomControllerCallbacks"]
+        [::std::mem::align_of::<MaaCustomControllerCallbacks>() - 8usize];
+    ["Offset of field: MaaCustomControllerCallbacks::connect"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, connect) - 0usize];
+    ["Offset of field: MaaCustomControllerCallbacks::connected"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, connected) - 8usize];
+    ["Offset of field: MaaCustomControllerCallbacks::request_uuid"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, request_uuid) - 16usize];
+    ["Offset of field: MaaCustomControllerCallbacks::get_features"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, get_features) - 24usize];
+    ["Offset of field: MaaCustomControllerCallbacks::start_app"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, start_app) - 32usize];
+    ["Offset of field: MaaCustomControllerCallbacks::stop_app"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, stop_app) - 40usize];
+    ["Offset of field: MaaCustomControllerCallbacks::screencap"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, screencap) - 48usize];
+    ["Offset of field: MaaCustomControllerCallbacks::click"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, click) - 56usize];
+    ["Offset of field: MaaCustomControllerCallbacks::swipe"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, swipe) - 64usize];
+    ["Offset of field: MaaCustomControllerCallbacks::touch_down"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, touch_down) - 72usize];
+    ["Offset of field: MaaCustomControllerCallbacks::touch_move"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, touch_move) - 80usize];
+    ["Offset of field: MaaCustomControllerCallbacks::touch_up"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, touch_up) - 88usize];
+    ["Offset of field: MaaCustomControllerCallbacks::click_key"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, click_key) - 96usize];
+    ["Offset of field: MaaCustomControllerCallbacks::input_text"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, input_text) - 104usize];
+    ["Offset of field: MaaCustomControllerCallbacks::key_down"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, key_down) - 112usize];
+    ["Offset of field: MaaCustomControllerCallbacks::key_up"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, key_up) - 120usize];
+    ["Offset of field: MaaCustomControllerCallbacks::scroll"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, scroll) - 128usize];
+};
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaAgentClient {
+    _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaToolkitAdbDevice {
+    _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaToolkitAdbDeviceList {
+    _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaToolkitDesktopWindow {
+    _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaToolkitDesktopWindowList {
+    _unused: [u8; 0],
+}
+pub struct MaaFramework {
+    __library: CompositeLibrary,
+    pub MaaTaskerCreate: unsafe extern "C" fn() -> *mut MaaTasker,
+    pub MaaTaskerDestroy: unsafe extern "C" fn(tasker: *mut MaaTasker),
+    pub MaaTaskerAddSink: unsafe extern "C" fn(
+        tasker: *mut MaaTasker,
+        sink: MaaEventCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaSinkId,
+    pub MaaTaskerRemoveSink: unsafe extern "C" fn(tasker: *mut MaaTasker, sink_id: MaaSinkId),
+    pub MaaTaskerClearSinks: unsafe extern "C" fn(tasker: *mut MaaTasker),
+    pub MaaTaskerAddContextSink: unsafe extern "C" fn(
+        tasker: *mut MaaTasker,
+        sink: MaaEventCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaSinkId,
+    pub MaaTaskerRemoveContextSink:
+        unsafe extern "C" fn(tasker: *mut MaaTasker, sink_id: MaaSinkId),
+    pub MaaTaskerClearContextSinks: unsafe extern "C" fn(tasker: *mut MaaTasker),
+    pub MaaTaskerSetOption: unsafe extern "C" fn(
+        tasker: *mut MaaTasker,
+        key: MaaTaskerOption,
+        value: MaaOptionValue,
+        val_size: MaaOptionValueSize,
+    ) -> MaaBool,
+    pub MaaTaskerBindResource:
+        unsafe extern "C" fn(tasker: *mut MaaTasker, res: *mut MaaResource) -> MaaBool,
+    pub MaaTaskerBindController:
+        unsafe extern "C" fn(tasker: *mut MaaTasker, ctrl: *mut MaaController) -> MaaBool,
+    pub MaaTaskerInited: unsafe extern "C" fn(tasker: *const MaaTasker) -> MaaBool,
+    pub MaaTaskerPostTask: unsafe extern "C" fn(
+        tasker: *mut MaaTasker,
+        entry: *const ::std::os::raw::c_char,
+        pipeline_override: *const ::std::os::raw::c_char,
+    ) -> MaaTaskId,
+    pub MaaTaskerPostRecognition: unsafe extern "C" fn(
+        tasker: *mut MaaTasker,
+        reco_type: *const ::std::os::raw::c_char,
+        reco_param: *const ::std::os::raw::c_char,
+        image: *const MaaImageBuffer,
+    ) -> MaaTaskId,
+    pub MaaTaskerPostAction: unsafe extern "C" fn(
+        tasker: *mut MaaTasker,
+        action_type: *const ::std::os::raw::c_char,
+        action_param: *const ::std::os::raw::c_char,
+        box_: *const MaaRect,
+        reco_detail: *const ::std::os::raw::c_char,
+    ) -> MaaTaskId,
+    pub MaaTaskerStatus: unsafe extern "C" fn(tasker: *const MaaTasker, id: MaaTaskId) -> MaaStatus,
+    pub MaaTaskerWait: unsafe extern "C" fn(tasker: *const MaaTasker, id: MaaTaskId) -> MaaStatus,
+    pub MaaTaskerRunning: unsafe extern "C" fn(tasker: *const MaaTasker) -> MaaBool,
+    pub MaaTaskerPostStop: unsafe extern "C" fn(tasker: *mut MaaTasker) -> MaaTaskId,
+    pub MaaTaskerStopping: unsafe extern "C" fn(tasker: *const MaaTasker) -> MaaBool,
+    pub MaaTaskerGetResource: unsafe extern "C" fn(tasker: *const MaaTasker) -> *mut MaaResource,
+    pub MaaTaskerGetController:
+        unsafe extern "C" fn(tasker: *const MaaTasker) -> *mut MaaController,
+    pub MaaTaskerClearCache: unsafe extern "C" fn(tasker: *mut MaaTasker) -> MaaBool,
+    pub MaaTaskerOverridePipeline: unsafe extern "C" fn(
+        tasker: *mut MaaTasker,
+        task_id: MaaTaskId,
+        pipeline_override: *const ::std::os::raw::c_char,
+    ) -> MaaBool,
+    pub MaaTaskerGetRecognitionDetail: unsafe extern "C" fn(
+        tasker: *const MaaTasker,
+        reco_id: MaaRecoId,
+        node_name: *mut MaaStringBuffer,
+        algorithm: *mut MaaStringBuffer,
+        hit: *mut MaaBool,
+        box_: *mut MaaRect,
+        detail_json: *mut MaaStringBuffer,
+        raw: *mut MaaImageBuffer,
+        draws: *mut MaaImageListBuffer,
+    ) -> MaaBool,
+    pub MaaTaskerGetActionDetail: unsafe extern "C" fn(
+        tasker: *const MaaTasker,
+        action_id: MaaActId,
+        node_name: *mut MaaStringBuffer,
+        action: *mut MaaStringBuffer,
+        box_: *mut MaaRect,
+        success: *mut MaaBool,
+        detail_json: *mut MaaStringBuffer,
+    ) -> MaaBool,
+    pub MaaTaskerGetNodeDetail: unsafe extern "C" fn(
+        tasker: *const MaaTasker,
+        node_id: MaaNodeId,
+        node_name: *mut MaaStringBuffer,
+        reco_id: *mut MaaRecoId,
+        action_id: *mut MaaActId,
+        completed: *mut MaaBool,
+    ) -> MaaBool,
+    pub MaaTaskerGetTaskDetail: unsafe extern "C" fn(
+        tasker: *const MaaTasker,
+        task_id: MaaTaskId,
+        entry: *mut MaaStringBuffer,
+        node_id_list: *mut MaaNodeId,
+        node_id_list_size: *mut MaaSize,
+        status: *mut MaaStatus,
+    ) -> MaaBool,
+    pub MaaTaskerGetLatestNode: unsafe extern "C" fn(
+        tasker: *const MaaTasker,
+        node_name: *const ::std::os::raw::c_char,
+        latest_id: *mut MaaNodeId,
+    ) -> MaaBool,
+    pub MaaResourceCreate: unsafe extern "C" fn() -> *mut MaaResource,
+    pub MaaResourceDestroy: unsafe extern "C" fn(res: *mut MaaResource),
+    pub MaaResourceAddSink: unsafe extern "C" fn(
+        res: *mut MaaResource,
+        sink: MaaEventCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaSinkId,
+    pub MaaResourceRemoveSink: unsafe extern "C" fn(res: *mut MaaResource, sink_id: MaaSinkId),
+    pub MaaResourceClearSinks: unsafe extern "C" fn(res: *mut MaaResource),
+    pub MaaResourceRegisterCustomRecognition: unsafe extern "C" fn(
+        res: *mut MaaResource,
+        name: *const ::std::os::raw::c_char,
+        recognition: MaaCustomRecognitionCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaBool,
+    pub MaaResourceUnregisterCustomRecognition:
+        unsafe extern "C" fn(res: *mut MaaResource, name: *const ::std::os::raw::c_char) -> MaaBool,
+    pub MaaResourceClearCustomRecognition: unsafe extern "C" fn(res: *mut MaaResource) -> MaaBool,
+    pub MaaResourceRegisterCustomAction: unsafe extern "C" fn(
+        res: *mut MaaResource,
+        name: *const ::std::os::raw::c_char,
+        action: MaaCustomActionCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaBool,
+    pub MaaResourceUnregisterCustomAction:
+        unsafe extern "C" fn(res: *mut MaaResource, name: *const ::std::os::raw::c_char) -> MaaBool,
+    pub MaaResourceClearCustomAction: unsafe extern "C" fn(res: *mut MaaResource) -> MaaBool,
+    pub MaaResourcePostBundle: unsafe extern "C" fn(
+        res: *mut MaaResource,
+        path: *const ::std::os::raw::c_char,
+    ) -> MaaResId,
+    pub MaaResourcePostOcrModel: unsafe extern "C" fn(
+        res: *mut MaaResource,
+        path: *const ::std::os::raw::c_char,
+    ) -> MaaResId,
+    pub MaaResourcePostPipeline: unsafe extern "C" fn(
+        res: *mut MaaResource,
+        path: *const ::std::os::raw::c_char,
+    ) -> MaaResId,
+    pub MaaResourcePostImage: unsafe extern "C" fn(
+        res: *mut MaaResource,
+        path: *const ::std::os::raw::c_char,
+    ) -> MaaResId,
+    pub MaaResourceOverridePipeline: unsafe extern "C" fn(
+        res: *mut MaaResource,
+        pipeline_override: *const ::std::os::raw::c_char,
+    ) -> MaaBool,
+    pub MaaResourceOverrideNext: unsafe extern "C" fn(
+        res: *mut MaaResource,
+        node_name: *const ::std::os::raw::c_char,
+        next_list: *const MaaStringListBuffer,
+    ) -> MaaBool,
+    pub MaaResourceOverrideImage: unsafe extern "C" fn(
+        res: *mut MaaResource,
+        image_name: *const ::std::os::raw::c_char,
+        image: *const MaaImageBuffer,
+    ) -> MaaBool,
+    pub MaaResourceGetNodeData: unsafe extern "C" fn(
+        res: *mut MaaResource,
+        node_name: *const ::std::os::raw::c_char,
+        buffer: *mut MaaStringBuffer,
+    ) -> MaaBool,
+    pub MaaResourceClear: unsafe extern "C" fn(res: *mut MaaResource) -> MaaBool,
+    pub MaaResourceStatus: unsafe extern "C" fn(res: *const MaaResource, id: MaaResId) -> MaaStatus,
+    pub MaaResourceWait: unsafe extern "C" fn(res: *const MaaResource, id: MaaResId) -> MaaStatus,
+    pub MaaResourceLoaded: unsafe extern "C" fn(res: *const MaaResource) -> MaaBool,
+    pub MaaResourceSetOption: unsafe extern "C" fn(
+        res: *mut MaaResource,
+        key: MaaResOption,
+        value: MaaOptionValue,
+        val_size: MaaOptionValueSize,
+    ) -> MaaBool,
+    pub MaaResourceGetHash:
+        unsafe extern "C" fn(res: *const MaaResource, buffer: *mut MaaStringBuffer) -> MaaBool,
+    pub MaaResourceGetNodeList:
+        unsafe extern "C" fn(res: *const MaaResource, buffer: *mut MaaStringListBuffer) -> MaaBool,
+    pub MaaResourceGetCustomRecognitionList:
+        unsafe extern "C" fn(res: *const MaaResource, buffer: *mut MaaStringListBuffer) -> MaaBool,
+    pub MaaResourceGetCustomActionList:
+        unsafe extern "C" fn(res: *const MaaResource, buffer: *mut MaaStringListBuffer) -> MaaBool,
+    pub MaaResourceGetDefaultRecognitionParam: unsafe extern "C" fn(
+        res: *const MaaResource,
+        reco_type: *const ::std::os::raw::c_char,
+        buffer: *mut MaaStringBuffer,
+    ) -> MaaBool,
+    pub MaaResourceGetDefaultActionParam: unsafe extern "C" fn(
+        res: *const MaaResource,
+        action_type: *const ::std::os::raw::c_char,
+        buffer: *mut MaaStringBuffer,
+    ) -> MaaBool,
+    pub MaaAdbControllerCreate: unsafe extern "C" fn(
+        adb_path: *const ::std::os::raw::c_char,
+        address: *const ::std::os::raw::c_char,
+        screencap_methods: MaaAdbScreencapMethod,
+        input_methods: MaaAdbInputMethod,
+        config: *const ::std::os::raw::c_char,
+        agent_path: *const ::std::os::raw::c_char,
+    ) -> *mut MaaController,
+    pub MaaWin32ControllerCreate: unsafe extern "C" fn(
+        hWnd: *mut ::std::os::raw::c_void,
+        screencap_method: MaaWin32ScreencapMethod,
+        mouse_method: MaaWin32InputMethod,
+        keyboard_method: MaaWin32InputMethod,
+    ) -> *mut MaaController,
+    pub MaaCustomControllerCreate: unsafe extern "C" fn(
+        controller: *mut MaaCustomControllerCallbacks,
+        controller_arg: *mut ::std::os::raw::c_void,
+    ) -> *mut MaaController,
+    pub MaaDbgControllerCreate: unsafe extern "C" fn(
+        read_path: *const ::std::os::raw::c_char,
+        write_path: *const ::std::os::raw::c_char,
+        type_: MaaDbgControllerType,
+        config: *const ::std::os::raw::c_char,
+    ) -> *mut MaaController,
+    pub MaaPlayCoverControllerCreate: unsafe extern "C" fn(
+        address: *const ::std::os::raw::c_char,
+        uuid: *const ::std::os::raw::c_char,
+    ) -> *mut MaaController,
+    pub MaaGamepadControllerCreate: unsafe extern "C" fn(
+        hWnd: *mut ::std::os::raw::c_void,
+        gamepad_type: MaaGamepadType,
+        screencap_method: MaaWin32ScreencapMethod,
+    ) -> *mut MaaController,
+    pub MaaControllerDestroy: unsafe extern "C" fn(ctrl: *mut MaaController),
+    pub MaaControllerAddSink: unsafe extern "C" fn(
+        ctrl: *mut MaaController,
+        sink: MaaEventCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaSinkId,
+    pub MaaControllerRemoveSink: unsafe extern "C" fn(ctrl: *mut MaaController, sink_id: MaaSinkId),
+    pub MaaControllerClearSinks: unsafe extern "C" fn(ctrl: *mut MaaController),
+    pub MaaControllerSetOption: unsafe extern "C" fn(
+        ctrl: *mut MaaController,
+        key: MaaCtrlOption,
+        value: MaaOptionValue,
+        val_size: MaaOptionValueSize,
+    ) -> MaaBool,
+    pub MaaControllerPostConnection: unsafe extern "C" fn(ctrl: *mut MaaController) -> MaaCtrlId,
+    pub MaaControllerPostClick:
+        unsafe extern "C" fn(ctrl: *mut MaaController, x: i32, y: i32) -> MaaCtrlId,
+    pub MaaControllerPostClickV2: unsafe extern "C" fn(
+        ctrl: *mut MaaController,
+        x: i32,
+        y: i32,
+        contact: i32,
+        pressure: i32,
+    ) -> MaaCtrlId,
+    pub MaaControllerPostSwipe: unsafe extern "C" fn(
+        ctrl: *mut MaaController,
+        x1: i32,
+        y1: i32,
+        x2: i32,
+        y2: i32,
+        duration: i32,
+    ) -> MaaCtrlId,
+    pub MaaControllerPostSwipeV2: unsafe extern "C" fn(
+        ctrl: *mut MaaController,
+        x1: i32,
+        y1: i32,
+        x2: i32,
+        y2: i32,
+        duration: i32,
+        contact: i32,
+        pressure: i32,
+    ) -> MaaCtrlId,
+    pub MaaControllerPostClickKey:
+        unsafe extern "C" fn(ctrl: *mut MaaController, keycode: i32) -> MaaCtrlId,
+    pub MaaControllerPostInputText: unsafe extern "C" fn(
+        ctrl: *mut MaaController,
+        text: *const ::std::os::raw::c_char,
+    ) -> MaaCtrlId,
+    pub MaaControllerPostStartApp: unsafe extern "C" fn(
+        ctrl: *mut MaaController,
+        intent: *const ::std::os::raw::c_char,
+    ) -> MaaCtrlId,
+    pub MaaControllerPostStopApp: unsafe extern "C" fn(
+        ctrl: *mut MaaController,
+        intent: *const ::std::os::raw::c_char,
+    ) -> MaaCtrlId,
+    pub MaaControllerPostTouchDown: unsafe extern "C" fn(
+        ctrl: *mut MaaController,
+        contact: i32,
+        x: i32,
+        y: i32,
+        pressure: i32,
+    ) -> MaaCtrlId,
+    pub MaaControllerPostTouchMove: unsafe extern "C" fn(
+        ctrl: *mut MaaController,
+        contact: i32,
+        x: i32,
+        y: i32,
+        pressure: i32,
+    ) -> MaaCtrlId,
+    pub MaaControllerPostTouchUp:
+        unsafe extern "C" fn(ctrl: *mut MaaController, contact: i32) -> MaaCtrlId,
+    pub MaaControllerPostKeyDown:
+        unsafe extern "C" fn(ctrl: *mut MaaController, keycode: i32) -> MaaCtrlId,
+    pub MaaControllerPostKeyUp:
+        unsafe extern "C" fn(ctrl: *mut MaaController, keycode: i32) -> MaaCtrlId,
+    pub MaaControllerPostScreencap: unsafe extern "C" fn(ctrl: *mut MaaController) -> MaaCtrlId,
+    pub MaaControllerPostScroll:
+        unsafe extern "C" fn(ctrl: *mut MaaController, dx: i32, dy: i32) -> MaaCtrlId,
+    pub MaaControllerPostShell: unsafe extern "C" fn(
+        ctrl: *mut MaaController,
+        cmd: *const ::std::os::raw::c_char,
+        timeout: i64,
+    ) -> MaaCtrlId,
+    pub MaaControllerGetShellOutput:
+        unsafe extern "C" fn(ctrl: *const MaaController, buffer: *mut MaaStringBuffer) -> MaaBool,
+    pub MaaControllerStatus:
+        unsafe extern "C" fn(ctrl: *const MaaController, id: MaaCtrlId) -> MaaStatus,
+    pub MaaControllerWait:
+        unsafe extern "C" fn(ctrl: *const MaaController, id: MaaCtrlId) -> MaaStatus,
+    pub MaaControllerConnected: unsafe extern "C" fn(ctrl: *const MaaController) -> MaaBool,
+    pub MaaControllerCachedImage:
+        unsafe extern "C" fn(ctrl: *const MaaController, buffer: *mut MaaImageBuffer) -> MaaBool,
+    pub MaaControllerGetUuid:
+        unsafe extern "C" fn(ctrl: *mut MaaController, buffer: *mut MaaStringBuffer) -> MaaBool,
+    pub MaaControllerGetResolution: unsafe extern "C" fn(
+        ctrl: *const MaaController,
+        width: *mut i32,
+        height: *mut i32,
+    ) -> MaaBool,
+    pub MaaControllerPostPressKey:
+        unsafe extern "C" fn(ctrl: *mut MaaController, keycode: i32) -> MaaCtrlId,
+    pub MaaContextRunTask: unsafe extern "C" fn(
+        context: *mut MaaContext,
+        entry: *const ::std::os::raw::c_char,
+        pipeline_override: *const ::std::os::raw::c_char,
+    ) -> MaaTaskId,
+    pub MaaContextRunRecognition: unsafe extern "C" fn(
+        context: *mut MaaContext,
+        entry: *const ::std::os::raw::c_char,
+        pipeline_override: *const ::std::os::raw::c_char,
+        image: *const MaaImageBuffer,
+    ) -> MaaRecoId,
+    pub MaaContextRunAction: unsafe extern "C" fn(
+        context: *mut MaaContext,
+        entry: *const ::std::os::raw::c_char,
+        pipeline_override: *const ::std::os::raw::c_char,
+        box_: *const MaaRect,
+        reco_detail: *const ::std::os::raw::c_char,
+    ) -> MaaActId,
+    pub MaaContextRunRecognitionDirect: unsafe extern "C" fn(
+        context: *mut MaaContext,
+        reco_type: *const ::std::os::raw::c_char,
+        reco_param: *const ::std::os::raw::c_char,
+        image: *const MaaImageBuffer,
+    ) -> MaaRecoId,
+    pub MaaContextRunActionDirect: unsafe extern "C" fn(
+        context: *mut MaaContext,
+        action_type: *const ::std::os::raw::c_char,
+        action_param: *const ::std::os::raw::c_char,
+        box_: *const MaaRect,
+        reco_detail: *const ::std::os::raw::c_char,
+    ) -> MaaActId,
+    pub MaaContextWaitFreezes: unsafe extern "C" fn(
+        context: *mut MaaContext,
+        time: MaaSize,
+        box_: *const MaaRect,
+        wait_freezes_param: *const ::std::os::raw::c_char,
+    ) -> MaaBool,
+    pub MaaContextOverridePipeline: unsafe extern "C" fn(
+        context: *mut MaaContext,
+        pipeline_override: *const ::std::os::raw::c_char,
+    ) -> MaaBool,
+    pub MaaContextOverrideNext: unsafe extern "C" fn(
+        context: *mut MaaContext,
+        node_name: *const ::std::os::raw::c_char,
+        next_list: *const MaaStringListBuffer,
+    ) -> MaaBool,
+    pub MaaContextOverrideImage: unsafe extern "C" fn(
+        context: *mut MaaContext,
+        image_name: *const ::std::os::raw::c_char,
+        image: *const MaaImageBuffer,
+    ) -> MaaBool,
+    pub MaaContextGetNodeData: unsafe extern "C" fn(
+        context: *mut MaaContext,
+        node_name: *const ::std::os::raw::c_char,
+        buffer: *mut MaaStringBuffer,
+    ) -> MaaBool,
+    pub MaaContextGetTaskId: unsafe extern "C" fn(context: *const MaaContext) -> MaaTaskId,
+    pub MaaContextGetTasker: unsafe extern "C" fn(context: *const MaaContext) -> *mut MaaTasker,
+    pub MaaContextClone: unsafe extern "C" fn(context: *const MaaContext) -> *mut MaaContext,
+    pub MaaContextSetAnchor: unsafe extern "C" fn(
+        context: *mut MaaContext,
+        anchor_name: *const ::std::os::raw::c_char,
+        node_name: *const ::std::os::raw::c_char,
+    ) -> MaaBool,
+    pub MaaContextGetAnchor: unsafe extern "C" fn(
+        context: *mut MaaContext,
+        anchor_name: *const ::std::os::raw::c_char,
+        buffer: *mut MaaStringBuffer,
+    ) -> MaaBool,
+    pub MaaContextGetHitCount: unsafe extern "C" fn(
+        context: *mut MaaContext,
+        node_name: *const ::std::os::raw::c_char,
+        count: *mut MaaSize,
+    ) -> MaaBool,
+    pub MaaContextClearHitCount: unsafe extern "C" fn(
+        context: *mut MaaContext,
+        node_name: *const ::std::os::raw::c_char,
+    ) -> MaaBool,
+    pub MaaGlobalSetOption: unsafe extern "C" fn(
+        key: MaaGlobalOption,
+        value: MaaOptionValue,
+        val_size: MaaOptionValueSize,
+    ) -> MaaBool,
+    pub MaaGlobalLoadPlugin:
+        unsafe extern "C" fn(library_path: *const ::std::os::raw::c_char) -> MaaBool,
+    pub MaaSetGlobalOption: unsafe extern "C" fn(
+        key: MaaGlobalOption,
+        value: MaaOptionValue,
+        val_size: MaaOptionValueSize,
+    ) -> MaaBool,
+    pub MaaStringBufferCreate: unsafe extern "C" fn() -> *mut MaaStringBuffer,
+    pub MaaStringBufferDestroy: unsafe extern "C" fn(handle: *mut MaaStringBuffer),
+    pub MaaStringBufferIsEmpty: unsafe extern "C" fn(handle: *const MaaStringBuffer) -> MaaBool,
+    pub MaaStringBufferClear: unsafe extern "C" fn(handle: *mut MaaStringBuffer) -> MaaBool,
+    pub MaaStringBufferGet:
+        unsafe extern "C" fn(handle: *const MaaStringBuffer) -> *const ::std::os::raw::c_char,
+    pub MaaStringBufferSize: unsafe extern "C" fn(handle: *const MaaStringBuffer) -> MaaSize,
+    pub MaaStringBufferSet: unsafe extern "C" fn(
+        handle: *mut MaaStringBuffer,
+        str_: *const ::std::os::raw::c_char,
+    ) -> MaaBool,
+    pub MaaStringBufferSetEx: unsafe extern "C" fn(
+        handle: *mut MaaStringBuffer,
+        str_: *const ::std::os::raw::c_char,
+        size: MaaSize,
+    ) -> MaaBool,
+    pub MaaStringListBufferCreate: unsafe extern "C" fn() -> *mut MaaStringListBuffer,
+    pub MaaStringListBufferDestroy: unsafe extern "C" fn(handle: *mut MaaStringListBuffer),
+    pub MaaStringListBufferIsEmpty:
+        unsafe extern "C" fn(handle: *const MaaStringListBuffer) -> MaaBool,
+    pub MaaStringListBufferSize:
+        unsafe extern "C" fn(handle: *const MaaStringListBuffer) -> MaaSize,
+    pub MaaStringListBufferAt: unsafe extern "C" fn(
+        handle: *const MaaStringListBuffer,
+        index: MaaSize,
+    ) -> *const MaaStringBuffer,
+    pub MaaStringListBufferAppend: unsafe extern "C" fn(
+        handle: *mut MaaStringListBuffer,
+        value: *const MaaStringBuffer,
+    ) -> MaaBool,
+    pub MaaStringListBufferRemove:
+        unsafe extern "C" fn(handle: *mut MaaStringListBuffer, index: MaaSize) -> MaaBool,
+    pub MaaStringListBufferClear: unsafe extern "C" fn(handle: *mut MaaStringListBuffer) -> MaaBool,
+    pub MaaImageBufferCreate: unsafe extern "C" fn() -> *mut MaaImageBuffer,
+    pub MaaImageBufferDestroy: unsafe extern "C" fn(handle: *mut MaaImageBuffer),
+    pub MaaImageBufferIsEmpty: unsafe extern "C" fn(handle: *const MaaImageBuffer) -> MaaBool,
+    pub MaaImageBufferClear: unsafe extern "C" fn(handle: *mut MaaImageBuffer) -> MaaBool,
+    pub MaaImageBufferGetRawData:
+        unsafe extern "C" fn(handle: *const MaaImageBuffer) -> MaaImageRawData,
+    pub MaaImageBufferWidth: unsafe extern "C" fn(handle: *const MaaImageBuffer) -> i32,
+    pub MaaImageBufferHeight: unsafe extern "C" fn(handle: *const MaaImageBuffer) -> i32,
+    pub MaaImageBufferChannels: unsafe extern "C" fn(handle: *const MaaImageBuffer) -> i32,
+    pub MaaImageBufferType: unsafe extern "C" fn(handle: *const MaaImageBuffer) -> i32,
+    pub MaaImageBufferSetRawData: unsafe extern "C" fn(
+        handle: *mut MaaImageBuffer,
+        data: MaaImageRawData,
+        width: i32,
+        height: i32,
+        type_: i32,
+    ) -> MaaBool,
+    pub MaaImageBufferResize:
+        unsafe extern "C" fn(handle: *mut MaaImageBuffer, width: i32, height: i32) -> MaaBool,
+    pub MaaImageBufferGetEncoded:
+        unsafe extern "C" fn(handle: *const MaaImageBuffer) -> MaaImageEncodedData,
+    pub MaaImageBufferGetEncodedSize:
+        unsafe extern "C" fn(handle: *const MaaImageBuffer) -> MaaSize,
+    pub MaaImageBufferSetEncoded: unsafe extern "C" fn(
+        handle: *mut MaaImageBuffer,
+        data: MaaImageEncodedData,
+        size: MaaSize,
+    ) -> MaaBool,
+    pub MaaImageListBufferCreate: unsafe extern "C" fn() -> *mut MaaImageListBuffer,
+    pub MaaImageListBufferDestroy: unsafe extern "C" fn(handle: *mut MaaImageListBuffer),
+    pub MaaImageListBufferIsEmpty:
+        unsafe extern "C" fn(handle: *const MaaImageListBuffer) -> MaaBool,
+    pub MaaImageListBufferSize: unsafe extern "C" fn(handle: *const MaaImageListBuffer) -> MaaSize,
+    pub MaaImageListBufferAt: unsafe extern "C" fn(
+        handle: *const MaaImageListBuffer,
+        index: MaaSize,
+    ) -> *const MaaImageBuffer,
+    pub MaaImageListBufferAppend: unsafe extern "C" fn(
+        handle: *mut MaaImageListBuffer,
+        value: *const MaaImageBuffer,
+    ) -> MaaBool,
+    pub MaaImageListBufferRemove:
+        unsafe extern "C" fn(handle: *mut MaaImageListBuffer, index: MaaSize) -> MaaBool,
+    pub MaaImageListBufferClear: unsafe extern "C" fn(handle: *mut MaaImageListBuffer) -> MaaBool,
+    pub MaaRectCreate: unsafe extern "C" fn() -> *mut MaaRect,
+    pub MaaRectDestroy: unsafe extern "C" fn(handle: *mut MaaRect),
+    pub MaaRectGetX: unsafe extern "C" fn(handle: *const MaaRect) -> i32,
+    pub MaaRectGetY: unsafe extern "C" fn(handle: *const MaaRect) -> i32,
+    pub MaaRectGetW: unsafe extern "C" fn(handle: *const MaaRect) -> i32,
+    pub MaaRectGetH: unsafe extern "C" fn(handle: *const MaaRect) -> i32,
+    pub MaaRectSet:
+        unsafe extern "C" fn(handle: *mut MaaRect, x: i32, y: i32, w: i32, h: i32) -> MaaBool,
+    pub MaaVersion: unsafe extern "C" fn() -> *const ::std::os::raw::c_char,
+    pub MaaAgentClientCreateV2:
+        unsafe extern "C" fn(identifier: *const MaaStringBuffer) -> *mut MaaAgentClient,
+    pub MaaAgentClientCreateTcp: unsafe extern "C" fn(port: u16) -> *mut MaaAgentClient,
+    pub MaaAgentClientDestroy: unsafe extern "C" fn(client: *mut MaaAgentClient),
+    pub MaaAgentClientIdentifier: unsafe extern "C" fn(
+        client: *mut MaaAgentClient,
+        identifier: *mut MaaStringBuffer,
+    ) -> MaaBool,
+    pub MaaAgentClientBindResource:
+        unsafe extern "C" fn(client: *mut MaaAgentClient, res: *mut MaaResource) -> MaaBool,
+    pub MaaAgentClientRegisterResourceSink:
+        unsafe extern "C" fn(client: *mut MaaAgentClient, res: *mut MaaResource) -> MaaBool,
+    pub MaaAgentClientRegisterControllerSink:
+        unsafe extern "C" fn(client: *mut MaaAgentClient, ctrl: *mut MaaController) -> MaaBool,
+    pub MaaAgentClientRegisterTaskerSink:
+        unsafe extern "C" fn(client: *mut MaaAgentClient, tasker: *mut MaaTasker) -> MaaBool,
+    pub MaaAgentClientConnect: unsafe extern "C" fn(client: *mut MaaAgentClient) -> MaaBool,
+    pub MaaAgentClientDisconnect: unsafe extern "C" fn(client: *mut MaaAgentClient) -> MaaBool,
+    pub MaaAgentClientConnected: unsafe extern "C" fn(client: *mut MaaAgentClient) -> MaaBool,
+    pub MaaAgentClientAlive: unsafe extern "C" fn(client: *mut MaaAgentClient) -> MaaBool,
+    pub MaaAgentClientSetTimeout:
+        unsafe extern "C" fn(client: *mut MaaAgentClient, milliseconds: i64) -> MaaBool,
+    pub MaaAgentClientGetCustomRecognitionList: unsafe extern "C" fn(
+        client: *mut MaaAgentClient,
+        buffer: *mut MaaStringListBuffer,
+    ) -> MaaBool,
+    pub MaaAgentClientGetCustomActionList: unsafe extern "C" fn(
+        client: *mut MaaAgentClient,
+        buffer: *mut MaaStringListBuffer,
+    ) -> MaaBool,
+    pub MaaAgentClientCreate: unsafe extern "C" fn() -> *mut MaaAgentClient,
+    pub MaaAgentClientCreateSocket: unsafe extern "C" fn(
+        client: *mut MaaAgentClient,
+        identifier: *mut MaaStringBuffer,
+    ) -> MaaBool,
+    pub MaaAgentServerRegisterCustomRecognition: unsafe extern "C" fn(
+        name: *const ::std::os::raw::c_char,
+        recognition: MaaCustomRecognitionCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaBool,
+    pub MaaAgentServerRegisterCustomAction: unsafe extern "C" fn(
+        name: *const ::std::os::raw::c_char,
+        action: MaaCustomActionCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaBool,
+    pub MaaAgentServerAddResourceSink: unsafe extern "C" fn(
+        sink: MaaEventCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaSinkId,
+    pub MaaAgentServerAddControllerSink: unsafe extern "C" fn(
+        sink: MaaEventCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaSinkId,
+    pub MaaAgentServerAddTaskerSink: unsafe extern "C" fn(
+        sink: MaaEventCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaSinkId,
+    pub MaaAgentServerAddContextSink: unsafe extern "C" fn(
+        sink: MaaEventCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaSinkId,
+    pub MaaAgentServerStartUp:
+        unsafe extern "C" fn(identifier: *const ::std::os::raw::c_char) -> MaaBool,
+    pub MaaAgentServerShutDown: unsafe extern "C" fn(),
+    pub MaaAgentServerJoin: unsafe extern "C" fn(),
+    pub MaaAgentServerDetach: unsafe extern "C" fn(),
+    pub MaaToolkitAdbDeviceListCreate: unsafe extern "C" fn() -> *mut MaaToolkitAdbDeviceList,
+    pub MaaToolkitAdbDeviceListDestroy: unsafe extern "C" fn(handle: *mut MaaToolkitAdbDeviceList),
+    pub MaaToolkitAdbDeviceFind:
+        unsafe extern "C" fn(buffer: *mut MaaToolkitAdbDeviceList) -> MaaBool,
+    pub MaaToolkitAdbDeviceFindSpecified: unsafe extern "C" fn(
+        adb_path: *const ::std::os::raw::c_char,
+        buffer: *mut MaaToolkitAdbDeviceList,
+    ) -> MaaBool,
+    pub MaaToolkitAdbDeviceListSize:
+        unsafe extern "C" fn(list: *const MaaToolkitAdbDeviceList) -> MaaSize,
+    pub MaaToolkitAdbDeviceListAt: unsafe extern "C" fn(
+        list: *const MaaToolkitAdbDeviceList,
+        index: MaaSize,
+    ) -> *const MaaToolkitAdbDevice,
+    pub MaaToolkitAdbDeviceGetName:
+        unsafe extern "C" fn(device: *const MaaToolkitAdbDevice) -> *const ::std::os::raw::c_char,
+    pub MaaToolkitAdbDeviceGetAdbPath:
+        unsafe extern "C" fn(device: *const MaaToolkitAdbDevice) -> *const ::std::os::raw::c_char,
+    pub MaaToolkitAdbDeviceGetAddress:
+        unsafe extern "C" fn(device: *const MaaToolkitAdbDevice) -> *const ::std::os::raw::c_char,
+    pub MaaToolkitAdbDeviceGetScreencapMethods:
+        unsafe extern "C" fn(device: *const MaaToolkitAdbDevice) -> MaaAdbScreencapMethod,
+    pub MaaToolkitAdbDeviceGetInputMethods:
+        unsafe extern "C" fn(device: *const MaaToolkitAdbDevice) -> MaaAdbInputMethod,
+    pub MaaToolkitAdbDeviceGetConfig:
+        unsafe extern "C" fn(device: *const MaaToolkitAdbDevice) -> *const ::std::os::raw::c_char,
+    pub MaaToolkitDesktopWindowListCreate:
+        unsafe extern "C" fn() -> *mut MaaToolkitDesktopWindowList,
+    pub MaaToolkitDesktopWindowListDestroy:
+        unsafe extern "C" fn(handle: *mut MaaToolkitDesktopWindowList),
+    pub MaaToolkitDesktopWindowFindAll:
+        unsafe extern "C" fn(buffer: *mut MaaToolkitDesktopWindowList) -> MaaBool,
+    pub MaaToolkitDesktopWindowListSize:
+        unsafe extern "C" fn(list: *const MaaToolkitDesktopWindowList) -> MaaSize,
+    pub MaaToolkitDesktopWindowListAt: unsafe extern "C" fn(
+        list: *const MaaToolkitDesktopWindowList,
+        index: MaaSize,
+    ) -> *const MaaToolkitDesktopWindow,
+    pub MaaToolkitDesktopWindowGetHandle:
+        unsafe extern "C" fn(window: *const MaaToolkitDesktopWindow) -> *mut ::std::os::raw::c_void,
+    pub MaaToolkitDesktopWindowGetClassName: unsafe extern "C" fn(
+        window: *const MaaToolkitDesktopWindow,
+    )
+        -> *const ::std::os::raw::c_char,
+    pub MaaToolkitDesktopWindowGetWindowName: unsafe extern "C" fn(
+        window: *const MaaToolkitDesktopWindow,
+    )
+        -> *const ::std::os::raw::c_char,
+    pub MaaToolkitConfigInitOption: unsafe extern "C" fn(
+        user_path: *const ::std::os::raw::c_char,
+        default_json: *const ::std::os::raw::c_char,
+    ) -> MaaBool,
+}
+impl MaaFramework {
+    pub unsafe fn new<P>(path: P) -> Result<Self, ::libloading::Error>
+    where
+        P: AsRef<::std::ffi::OsStr>,
+    {
+        let library = CompositeLibrary::new(path)?;
+        Self::from_library(library)
+    }
+    pub unsafe fn from_library<L>(library: L) -> Result<Self, ::libloading::Error>
+    where
+        L: Into<CompositeLibrary>,
+    {
+        let __library = library.into();
+        let MaaTaskerCreate = __library.get(b"MaaTaskerCreate\0").map(|sym| *sym)?;
+        let MaaTaskerDestroy = __library.get(b"MaaTaskerDestroy\0").map(|sym| *sym)?;
+        let MaaTaskerAddSink = __library.get(b"MaaTaskerAddSink\0").map(|sym| *sym)?;
+        let MaaTaskerRemoveSink = __library.get(b"MaaTaskerRemoveSink\0").map(|sym| *sym)?;
+        let MaaTaskerClearSinks = __library.get(b"MaaTaskerClearSinks\0").map(|sym| *sym)?;
+        let MaaTaskerAddContextSink = __library
+            .get(b"MaaTaskerAddContextSink\0")
+            .map(|sym| *sym)?;
+        let MaaTaskerRemoveContextSink = __library
+            .get(b"MaaTaskerRemoveContextSink\0")
+            .map(|sym| *sym)?;
+        let MaaTaskerClearContextSinks = __library
+            .get(b"MaaTaskerClearContextSinks\0")
+            .map(|sym| *sym)?;
+        let MaaTaskerSetOption = __library.get(b"MaaTaskerSetOption\0").map(|sym| *sym)?;
+        let MaaTaskerBindResource = __library.get(b"MaaTaskerBindResource\0").map(|sym| *sym)?;
+        let MaaTaskerBindController = __library
+            .get(b"MaaTaskerBindController\0")
+            .map(|sym| *sym)?;
+        let MaaTaskerInited = __library.get(b"MaaTaskerInited\0").map(|sym| *sym)?;
+        let MaaTaskerPostTask = __library.get(b"MaaTaskerPostTask\0").map(|sym| *sym)?;
+        let MaaTaskerPostRecognition = __library
+            .get(b"MaaTaskerPostRecognition\0")
+            .map(|sym| *sym)?;
+        let MaaTaskerPostAction = __library.get(b"MaaTaskerPostAction\0").map(|sym| *sym)?;
+        let MaaTaskerStatus = __library.get(b"MaaTaskerStatus\0").map(|sym| *sym)?;
+        let MaaTaskerWait = __library.get(b"MaaTaskerWait\0").map(|sym| *sym)?;
+        let MaaTaskerRunning = __library.get(b"MaaTaskerRunning\0").map(|sym| *sym)?;
+        let MaaTaskerPostStop = __library.get(b"MaaTaskerPostStop\0").map(|sym| *sym)?;
+        let MaaTaskerStopping = __library.get(b"MaaTaskerStopping\0").map(|sym| *sym)?;
+        let MaaTaskerGetResource = __library.get(b"MaaTaskerGetResource\0").map(|sym| *sym)?;
+        let MaaTaskerGetController = __library.get(b"MaaTaskerGetController\0").map(|sym| *sym)?;
+        let MaaTaskerClearCache = __library.get(b"MaaTaskerClearCache\0").map(|sym| *sym)?;
+        let MaaTaskerOverridePipeline = __library
+            .get(b"MaaTaskerOverridePipeline\0")
+            .map(|sym| *sym)?;
+        let MaaTaskerGetRecognitionDetail = __library
+            .get(b"MaaTaskerGetRecognitionDetail\0")
+            .map(|sym| *sym)?;
+        let MaaTaskerGetActionDetail = __library
+            .get(b"MaaTaskerGetActionDetail\0")
+            .map(|sym| *sym)?;
+        let MaaTaskerGetNodeDetail = __library.get(b"MaaTaskerGetNodeDetail\0").map(|sym| *sym)?;
+        let MaaTaskerGetTaskDetail = __library.get(b"MaaTaskerGetTaskDetail\0").map(|sym| *sym)?;
+        let MaaTaskerGetLatestNode = __library.get(b"MaaTaskerGetLatestNode\0").map(|sym| *sym)?;
+        let MaaResourceCreate = __library.get(b"MaaResourceCreate\0").map(|sym| *sym)?;
+        let MaaResourceDestroy = __library.get(b"MaaResourceDestroy\0").map(|sym| *sym)?;
+        let MaaResourceAddSink = __library.get(b"MaaResourceAddSink\0").map(|sym| *sym)?;
+        let MaaResourceRemoveSink = __library.get(b"MaaResourceRemoveSink\0").map(|sym| *sym)?;
+        let MaaResourceClearSinks = __library.get(b"MaaResourceClearSinks\0").map(|sym| *sym)?;
+        let MaaResourceRegisterCustomRecognition = __library
+            .get(b"MaaResourceRegisterCustomRecognition\0")
+            .map(|sym| *sym)?;
+        let MaaResourceUnregisterCustomRecognition = __library
+            .get(b"MaaResourceUnregisterCustomRecognition\0")
+            .map(|sym| *sym)?;
+        let MaaResourceClearCustomRecognition = __library
+            .get(b"MaaResourceClearCustomRecognition\0")
+            .map(|sym| *sym)?;
+        let MaaResourceRegisterCustomAction = __library
+            .get(b"MaaResourceRegisterCustomAction\0")
+            .map(|sym| *sym)?;
+        let MaaResourceUnregisterCustomAction = __library
+            .get(b"MaaResourceUnregisterCustomAction\0")
+            .map(|sym| *sym)?;
+        let MaaResourceClearCustomAction = __library
+            .get(b"MaaResourceClearCustomAction\0")
+            .map(|sym| *sym)?;
+        let MaaResourcePostBundle = __library.get(b"MaaResourcePostBundle\0").map(|sym| *sym)?;
+        let MaaResourcePostOcrModel = __library
+            .get(b"MaaResourcePostOcrModel\0")
+            .map(|sym| *sym)?;
+        let MaaResourcePostPipeline = __library
+            .get(b"MaaResourcePostPipeline\0")
+            .map(|sym| *sym)?;
+        let MaaResourcePostImage = __library.get(b"MaaResourcePostImage\0").map(|sym| *sym)?;
+        let MaaResourceOverridePipeline = __library
+            .get(b"MaaResourceOverridePipeline\0")
+            .map(|sym| *sym)?;
+        let MaaResourceOverrideNext = __library
+            .get(b"MaaResourceOverrideNext\0")
+            .map(|sym| *sym)?;
+        let MaaResourceOverrideImage = __library
+            .get(b"MaaResourceOverrideImage\0")
+            .map(|sym| *sym)?;
+        let MaaResourceGetNodeData = __library.get(b"MaaResourceGetNodeData\0").map(|sym| *sym)?;
+        let MaaResourceClear = __library.get(b"MaaResourceClear\0").map(|sym| *sym)?;
+        let MaaResourceStatus = __library.get(b"MaaResourceStatus\0").map(|sym| *sym)?;
+        let MaaResourceWait = __library.get(b"MaaResourceWait\0").map(|sym| *sym)?;
+        let MaaResourceLoaded = __library.get(b"MaaResourceLoaded\0").map(|sym| *sym)?;
+        let MaaResourceSetOption = __library.get(b"MaaResourceSetOption\0").map(|sym| *sym)?;
+        let MaaResourceGetHash = __library.get(b"MaaResourceGetHash\0").map(|sym| *sym)?;
+        let MaaResourceGetNodeList = __library.get(b"MaaResourceGetNodeList\0").map(|sym| *sym)?;
+        let MaaResourceGetCustomRecognitionList = __library
+            .get(b"MaaResourceGetCustomRecognitionList\0")
+            .map(|sym| *sym)?;
+        let MaaResourceGetCustomActionList = __library
+            .get(b"MaaResourceGetCustomActionList\0")
+            .map(|sym| *sym)?;
+        let MaaResourceGetDefaultRecognitionParam = __library
+            .get(b"MaaResourceGetDefaultRecognitionParam\0")
+            .map(|sym| *sym)?;
+        let MaaResourceGetDefaultActionParam = __library
+            .get(b"MaaResourceGetDefaultActionParam\0")
+            .map(|sym| *sym)?;
+        let MaaAdbControllerCreate = __library.get(b"MaaAdbControllerCreate\0").map(|sym| *sym)?;
+        let MaaWin32ControllerCreate = __library
+            .get(b"MaaWin32ControllerCreate\0")
+            .map(|sym| *sym)?;
+        let MaaCustomControllerCreate = __library
+            .get(b"MaaCustomControllerCreate\0")
+            .map(|sym| *sym)?;
+        let MaaDbgControllerCreate = __library.get(b"MaaDbgControllerCreate\0").map(|sym| *sym)?;
+        let MaaPlayCoverControllerCreate = __library
+            .get(b"MaaPlayCoverControllerCreate\0")
+            .map(|sym| *sym)?;
+        let MaaGamepadControllerCreate = __library
+            .get(b"MaaGamepadControllerCreate\0")
+            .map(|sym| *sym)?;
+        let MaaControllerDestroy = __library.get(b"MaaControllerDestroy\0").map(|sym| *sym)?;
+        let MaaControllerAddSink = __library.get(b"MaaControllerAddSink\0").map(|sym| *sym)?;
+        let MaaControllerRemoveSink = __library
+            .get(b"MaaControllerRemoveSink\0")
+            .map(|sym| *sym)?;
+        let MaaControllerClearSinks = __library
+            .get(b"MaaControllerClearSinks\0")
+            .map(|sym| *sym)?;
+        let MaaControllerSetOption = __library.get(b"MaaControllerSetOption\0").map(|sym| *sym)?;
+        let MaaControllerPostConnection = __library
+            .get(b"MaaControllerPostConnection\0")
+            .map(|sym| *sym)?;
+        let MaaControllerPostClick = __library.get(b"MaaControllerPostClick\0").map(|sym| *sym)?;
+        let MaaControllerPostClickV2 = __library
+            .get(b"MaaControllerPostClickV2\0")
+            .map(|sym| *sym)?;
+        let MaaControllerPostSwipe = __library.get(b"MaaControllerPostSwipe\0").map(|sym| *sym)?;
+        let MaaControllerPostSwipeV2 = __library
+            .get(b"MaaControllerPostSwipeV2\0")
+            .map(|sym| *sym)?;
+        let MaaControllerPostClickKey = __library
+            .get(b"MaaControllerPostClickKey\0")
+            .map(|sym| *sym)?;
+        let MaaControllerPostInputText = __library
+            .get(b"MaaControllerPostInputText\0")
+            .map(|sym| *sym)?;
+        let MaaControllerPostStartApp = __library
+            .get(b"MaaControllerPostStartApp\0")
+            .map(|sym| *sym)?;
+        let MaaControllerPostStopApp = __library
+            .get(b"MaaControllerPostStopApp\0")
+            .map(|sym| *sym)?;
+        let MaaControllerPostTouchDown = __library
+            .get(b"MaaControllerPostTouchDown\0")
+            .map(|sym| *sym)?;
+        let MaaControllerPostTouchMove = __library
+            .get(b"MaaControllerPostTouchMove\0")
+            .map(|sym| *sym)?;
+        let MaaControllerPostTouchUp = __library
+            .get(b"MaaControllerPostTouchUp\0")
+            .map(|sym| *sym)?;
+        let MaaControllerPostKeyDown = __library
+            .get(b"MaaControllerPostKeyDown\0")
+            .map(|sym| *sym)?;
+        let MaaControllerPostKeyUp = __library.get(b"MaaControllerPostKeyUp\0").map(|sym| *sym)?;
+        let MaaControllerPostScreencap = __library
+            .get(b"MaaControllerPostScreencap\0")
+            .map(|sym| *sym)?;
+        let MaaControllerPostScroll = __library
+            .get(b"MaaControllerPostScroll\0")
+            .map(|sym| *sym)?;
+        let MaaControllerPostShell = __library.get(b"MaaControllerPostShell\0").map(|sym| *sym)?;
+        let MaaControllerGetShellOutput = __library
+            .get(b"MaaControllerGetShellOutput\0")
+            .map(|sym| *sym)?;
+        let MaaControllerStatus = __library.get(b"MaaControllerStatus\0").map(|sym| *sym)?;
+        let MaaControllerWait = __library.get(b"MaaControllerWait\0").map(|sym| *sym)?;
+        let MaaControllerConnected = __library.get(b"MaaControllerConnected\0").map(|sym| *sym)?;
+        let MaaControllerCachedImage = __library
+            .get(b"MaaControllerCachedImage\0")
+            .map(|sym| *sym)?;
+        let MaaControllerGetUuid = __library.get(b"MaaControllerGetUuid\0").map(|sym| *sym)?;
+        let MaaControllerGetResolution = __library
+            .get(b"MaaControllerGetResolution\0")
+            .map(|sym| *sym)?;
+        let MaaControllerPostPressKey = __library
+            .get(b"MaaControllerPostPressKey\0")
+            .map(|sym| *sym)?;
+        let MaaContextRunTask = __library.get(b"MaaContextRunTask\0").map(|sym| *sym)?;
+        let MaaContextRunRecognition = __library
+            .get(b"MaaContextRunRecognition\0")
+            .map(|sym| *sym)?;
+        let MaaContextRunAction = __library.get(b"MaaContextRunAction\0").map(|sym| *sym)?;
+        let MaaContextRunRecognitionDirect = __library
+            .get(b"MaaContextRunRecognitionDirect\0")
+            .map(|sym| *sym)?;
+        let MaaContextRunActionDirect = __library
+            .get(b"MaaContextRunActionDirect\0")
+            .map(|sym| *sym)?;
+        let MaaContextWaitFreezes = __library.get(b"MaaContextWaitFreezes\0").map(|sym| *sym)?;
+        let MaaContextOverridePipeline = __library
+            .get(b"MaaContextOverridePipeline\0")
+            .map(|sym| *sym)?;
+        let MaaContextOverrideNext = __library.get(b"MaaContextOverrideNext\0").map(|sym| *sym)?;
+        let MaaContextOverrideImage = __library
+            .get(b"MaaContextOverrideImage\0")
+            .map(|sym| *sym)?;
+        let MaaContextGetNodeData = __library.get(b"MaaContextGetNodeData\0").map(|sym| *sym)?;
+        let MaaContextGetTaskId = __library.get(b"MaaContextGetTaskId\0").map(|sym| *sym)?;
+        let MaaContextGetTasker = __library.get(b"MaaContextGetTasker\0").map(|sym| *sym)?;
+        let MaaContextClone = __library.get(b"MaaContextClone\0").map(|sym| *sym)?;
+        let MaaContextSetAnchor = __library.get(b"MaaContextSetAnchor\0").map(|sym| *sym)?;
+        let MaaContextGetAnchor = __library.get(b"MaaContextGetAnchor\0").map(|sym| *sym)?;
+        let MaaContextGetHitCount = __library.get(b"MaaContextGetHitCount\0").map(|sym| *sym)?;
+        let MaaContextClearHitCount = __library
+            .get(b"MaaContextClearHitCount\0")
+            .map(|sym| *sym)?;
+        let MaaGlobalSetOption = __library.get(b"MaaGlobalSetOption\0").map(|sym| *sym)?;
+        let MaaGlobalLoadPlugin = __library.get(b"MaaGlobalLoadPlugin\0").map(|sym| *sym)?;
+        let MaaSetGlobalOption = __library.get(b"MaaSetGlobalOption\0").map(|sym| *sym)?;
+        let MaaStringBufferCreate = __library.get(b"MaaStringBufferCreate\0").map(|sym| *sym)?;
+        let MaaStringBufferDestroy = __library.get(b"MaaStringBufferDestroy\0").map(|sym| *sym)?;
+        let MaaStringBufferIsEmpty = __library.get(b"MaaStringBufferIsEmpty\0").map(|sym| *sym)?;
+        let MaaStringBufferClear = __library.get(b"MaaStringBufferClear\0").map(|sym| *sym)?;
+        let MaaStringBufferGet = __library.get(b"MaaStringBufferGet\0").map(|sym| *sym)?;
+        let MaaStringBufferSize = __library.get(b"MaaStringBufferSize\0").map(|sym| *sym)?;
+        let MaaStringBufferSet = __library.get(b"MaaStringBufferSet\0").map(|sym| *sym)?;
+        let MaaStringBufferSetEx = __library.get(b"MaaStringBufferSetEx\0").map(|sym| *sym)?;
+        let MaaStringListBufferCreate = __library
+            .get(b"MaaStringListBufferCreate\0")
+            .map(|sym| *sym)?;
+        let MaaStringListBufferDestroy = __library
+            .get(b"MaaStringListBufferDestroy\0")
+            .map(|sym| *sym)?;
+        let MaaStringListBufferIsEmpty = __library
+            .get(b"MaaStringListBufferIsEmpty\0")
+            .map(|sym| *sym)?;
+        let MaaStringListBufferSize = __library
+            .get(b"MaaStringListBufferSize\0")
+            .map(|sym| *sym)?;
+        let MaaStringListBufferAt = __library.get(b"MaaStringListBufferAt\0").map(|sym| *sym)?;
+        let MaaStringListBufferAppend = __library
+            .get(b"MaaStringListBufferAppend\0")
+            .map(|sym| *sym)?;
+        let MaaStringListBufferRemove = __library
+            .get(b"MaaStringListBufferRemove\0")
+            .map(|sym| *sym)?;
+        let MaaStringListBufferClear = __library
+            .get(b"MaaStringListBufferClear\0")
+            .map(|sym| *sym)?;
+        let MaaImageBufferCreate = __library.get(b"MaaImageBufferCreate\0").map(|sym| *sym)?;
+        let MaaImageBufferDestroy = __library.get(b"MaaImageBufferDestroy\0").map(|sym| *sym)?;
+        let MaaImageBufferIsEmpty = __library.get(b"MaaImageBufferIsEmpty\0").map(|sym| *sym)?;
+        let MaaImageBufferClear = __library.get(b"MaaImageBufferClear\0").map(|sym| *sym)?;
+        let MaaImageBufferGetRawData = __library
+            .get(b"MaaImageBufferGetRawData\0")
+            .map(|sym| *sym)?;
+        let MaaImageBufferWidth = __library.get(b"MaaImageBufferWidth\0").map(|sym| *sym)?;
+        let MaaImageBufferHeight = __library.get(b"MaaImageBufferHeight\0").map(|sym| *sym)?;
+        let MaaImageBufferChannels = __library.get(b"MaaImageBufferChannels\0").map(|sym| *sym)?;
+        let MaaImageBufferType = __library.get(b"MaaImageBufferType\0").map(|sym| *sym)?;
+        let MaaImageBufferSetRawData = __library
+            .get(b"MaaImageBufferSetRawData\0")
+            .map(|sym| *sym)?;
+        let MaaImageBufferResize = __library.get(b"MaaImageBufferResize\0").map(|sym| *sym)?;
+        let MaaImageBufferGetEncoded = __library
+            .get(b"MaaImageBufferGetEncoded\0")
+            .map(|sym| *sym)?;
+        let MaaImageBufferGetEncodedSize = __library
+            .get(b"MaaImageBufferGetEncodedSize\0")
+            .map(|sym| *sym)?;
+        let MaaImageBufferSetEncoded = __library
+            .get(b"MaaImageBufferSetEncoded\0")
+            .map(|sym| *sym)?;
+        let MaaImageListBufferCreate = __library
+            .get(b"MaaImageListBufferCreate\0")
+            .map(|sym| *sym)?;
+        let MaaImageListBufferDestroy = __library
+            .get(b"MaaImageListBufferDestroy\0")
+            .map(|sym| *sym)?;
+        let MaaImageListBufferIsEmpty = __library
+            .get(b"MaaImageListBufferIsEmpty\0")
+            .map(|sym| *sym)?;
+        let MaaImageListBufferSize = __library.get(b"MaaImageListBufferSize\0").map(|sym| *sym)?;
+        let MaaImageListBufferAt = __library.get(b"MaaImageListBufferAt\0").map(|sym| *sym)?;
+        let MaaImageListBufferAppend = __library
+            .get(b"MaaImageListBufferAppend\0")
+            .map(|sym| *sym)?;
+        let MaaImageListBufferRemove = __library
+            .get(b"MaaImageListBufferRemove\0")
+            .map(|sym| *sym)?;
+        let MaaImageListBufferClear = __library
+            .get(b"MaaImageListBufferClear\0")
+            .map(|sym| *sym)?;
+        let MaaRectCreate = __library.get(b"MaaRectCreate\0").map(|sym| *sym)?;
+        let MaaRectDestroy = __library.get(b"MaaRectDestroy\0").map(|sym| *sym)?;
+        let MaaRectGetX = __library.get(b"MaaRectGetX\0").map(|sym| *sym)?;
+        let MaaRectGetY = __library.get(b"MaaRectGetY\0").map(|sym| *sym)?;
+        let MaaRectGetW = __library.get(b"MaaRectGetW\0").map(|sym| *sym)?;
+        let MaaRectGetH = __library.get(b"MaaRectGetH\0").map(|sym| *sym)?;
+        let MaaRectSet = __library.get(b"MaaRectSet\0").map(|sym| *sym)?;
+        let MaaVersion = __library.get(b"MaaVersion\0").map(|sym| *sym)?;
+        let MaaAgentClientCreateV2 = __library.get(b"MaaAgentClientCreateV2\0").map(|sym| *sym)?;
+        let MaaAgentClientCreateTcp = __library
+            .get(b"MaaAgentClientCreateTcp\0")
+            .map(|sym| *sym)?;
+        let MaaAgentClientDestroy = __library.get(b"MaaAgentClientDestroy\0").map(|sym| *sym)?;
+        let MaaAgentClientIdentifier = __library
+            .get(b"MaaAgentClientIdentifier\0")
+            .map(|sym| *sym)?;
+        let MaaAgentClientBindResource = __library
+            .get(b"MaaAgentClientBindResource\0")
+            .map(|sym| *sym)?;
+        let MaaAgentClientRegisterResourceSink = __library
+            .get(b"MaaAgentClientRegisterResourceSink\0")
+            .map(|sym| *sym)?;
+        let MaaAgentClientRegisterControllerSink = __library
+            .get(b"MaaAgentClientRegisterControllerSink\0")
+            .map(|sym| *sym)?;
+        let MaaAgentClientRegisterTaskerSink = __library
+            .get(b"MaaAgentClientRegisterTaskerSink\0")
+            .map(|sym| *sym)?;
+        let MaaAgentClientConnect = __library.get(b"MaaAgentClientConnect\0").map(|sym| *sym)?;
+        let MaaAgentClientDisconnect = __library
+            .get(b"MaaAgentClientDisconnect\0")
+            .map(|sym| *sym)?;
+        let MaaAgentClientConnected = __library
+            .get(b"MaaAgentClientConnected\0")
+            .map(|sym| *sym)?;
+        let MaaAgentClientAlive = __library.get(b"MaaAgentClientAlive\0").map(|sym| *sym)?;
+        let MaaAgentClientSetTimeout = __library
+            .get(b"MaaAgentClientSetTimeout\0")
+            .map(|sym| *sym)?;
+        let MaaAgentClientGetCustomRecognitionList = __library
+            .get(b"MaaAgentClientGetCustomRecognitionList\0")
+            .map(|sym| *sym)?;
+        let MaaAgentClientGetCustomActionList = __library
+            .get(b"MaaAgentClientGetCustomActionList\0")
+            .map(|sym| *sym)?;
+        let MaaAgentClientCreate = __library.get(b"MaaAgentClientCreate\0").map(|sym| *sym)?;
+        let MaaAgentClientCreateSocket = __library
+            .get(b"MaaAgentClientCreateSocket\0")
+            .map(|sym| *sym)?;
+        let MaaAgentServerRegisterCustomRecognition = __library
+            .get(b"MaaAgentServerRegisterCustomRecognition\0")
+            .map(|sym| *sym)?;
+        let MaaAgentServerRegisterCustomAction = __library
+            .get(b"MaaAgentServerRegisterCustomAction\0")
+            .map(|sym| *sym)?;
+        let MaaAgentServerAddResourceSink = __library
+            .get(b"MaaAgentServerAddResourceSink\0")
+            .map(|sym| *sym)?;
+        let MaaAgentServerAddControllerSink = __library
+            .get(b"MaaAgentServerAddControllerSink\0")
+            .map(|sym| *sym)?;
+        let MaaAgentServerAddTaskerSink = __library
+            .get(b"MaaAgentServerAddTaskerSink\0")
+            .map(|sym| *sym)?;
+        let MaaAgentServerAddContextSink = __library
+            .get(b"MaaAgentServerAddContextSink\0")
+            .map(|sym| *sym)?;
+        let MaaAgentServerStartUp = __library.get(b"MaaAgentServerStartUp\0").map(|sym| *sym)?;
+        let MaaAgentServerShutDown = __library.get(b"MaaAgentServerShutDown\0").map(|sym| *sym)?;
+        let MaaAgentServerJoin = __library.get(b"MaaAgentServerJoin\0").map(|sym| *sym)?;
+        let MaaAgentServerDetach = __library.get(b"MaaAgentServerDetach\0").map(|sym| *sym)?;
+        let MaaToolkitAdbDeviceListCreate = __library
+            .get(b"MaaToolkitAdbDeviceListCreate\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitAdbDeviceListDestroy = __library
+            .get(b"MaaToolkitAdbDeviceListDestroy\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitAdbDeviceFind = __library
+            .get(b"MaaToolkitAdbDeviceFind\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitAdbDeviceFindSpecified = __library
+            .get(b"MaaToolkitAdbDeviceFindSpecified\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitAdbDeviceListSize = __library
+            .get(b"MaaToolkitAdbDeviceListSize\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitAdbDeviceListAt = __library
+            .get(b"MaaToolkitAdbDeviceListAt\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitAdbDeviceGetName = __library
+            .get(b"MaaToolkitAdbDeviceGetName\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitAdbDeviceGetAdbPath = __library
+            .get(b"MaaToolkitAdbDeviceGetAdbPath\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitAdbDeviceGetAddress = __library
+            .get(b"MaaToolkitAdbDeviceGetAddress\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitAdbDeviceGetScreencapMethods = __library
+            .get(b"MaaToolkitAdbDeviceGetScreencapMethods\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitAdbDeviceGetInputMethods = __library
+            .get(b"MaaToolkitAdbDeviceGetInputMethods\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitAdbDeviceGetConfig = __library
+            .get(b"MaaToolkitAdbDeviceGetConfig\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitDesktopWindowListCreate = __library
+            .get(b"MaaToolkitDesktopWindowListCreate\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitDesktopWindowListDestroy = __library
+            .get(b"MaaToolkitDesktopWindowListDestroy\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitDesktopWindowFindAll = __library
+            .get(b"MaaToolkitDesktopWindowFindAll\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitDesktopWindowListSize = __library
+            .get(b"MaaToolkitDesktopWindowListSize\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitDesktopWindowListAt = __library
+            .get(b"MaaToolkitDesktopWindowListAt\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitDesktopWindowGetHandle = __library
+            .get(b"MaaToolkitDesktopWindowGetHandle\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitDesktopWindowGetClassName = __library
+            .get(b"MaaToolkitDesktopWindowGetClassName\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitDesktopWindowGetWindowName = __library
+            .get(b"MaaToolkitDesktopWindowGetWindowName\0")
+            .map(|sym| *sym)?;
+        let MaaToolkitConfigInitOption = __library
+            .get(b"MaaToolkitConfigInitOption\0")
+            .map(|sym| *sym)?;
+        Ok(MaaFramework {
+            __library,
+            MaaTaskerCreate,
+            MaaTaskerDestroy,
+            MaaTaskerAddSink,
+            MaaTaskerRemoveSink,
+            MaaTaskerClearSinks,
+            MaaTaskerAddContextSink,
+            MaaTaskerRemoveContextSink,
+            MaaTaskerClearContextSinks,
+            MaaTaskerSetOption,
+            MaaTaskerBindResource,
+            MaaTaskerBindController,
+            MaaTaskerInited,
+            MaaTaskerPostTask,
+            MaaTaskerPostRecognition,
+            MaaTaskerPostAction,
+            MaaTaskerStatus,
+            MaaTaskerWait,
+            MaaTaskerRunning,
+            MaaTaskerPostStop,
+            MaaTaskerStopping,
+            MaaTaskerGetResource,
+            MaaTaskerGetController,
+            MaaTaskerClearCache,
+            MaaTaskerOverridePipeline,
+            MaaTaskerGetRecognitionDetail,
+            MaaTaskerGetActionDetail,
+            MaaTaskerGetNodeDetail,
+            MaaTaskerGetTaskDetail,
+            MaaTaskerGetLatestNode,
+            MaaResourceCreate,
+            MaaResourceDestroy,
+            MaaResourceAddSink,
+            MaaResourceRemoveSink,
+            MaaResourceClearSinks,
+            MaaResourceRegisterCustomRecognition,
+            MaaResourceUnregisterCustomRecognition,
+            MaaResourceClearCustomRecognition,
+            MaaResourceRegisterCustomAction,
+            MaaResourceUnregisterCustomAction,
+            MaaResourceClearCustomAction,
+            MaaResourcePostBundle,
+            MaaResourcePostOcrModel,
+            MaaResourcePostPipeline,
+            MaaResourcePostImage,
+            MaaResourceOverridePipeline,
+            MaaResourceOverrideNext,
+            MaaResourceOverrideImage,
+            MaaResourceGetNodeData,
+            MaaResourceClear,
+            MaaResourceStatus,
+            MaaResourceWait,
+            MaaResourceLoaded,
+            MaaResourceSetOption,
+            MaaResourceGetHash,
+            MaaResourceGetNodeList,
+            MaaResourceGetCustomRecognitionList,
+            MaaResourceGetCustomActionList,
+            MaaResourceGetDefaultRecognitionParam,
+            MaaResourceGetDefaultActionParam,
+            MaaAdbControllerCreate,
+            MaaWin32ControllerCreate,
+            MaaCustomControllerCreate,
+            MaaDbgControllerCreate,
+            MaaPlayCoverControllerCreate,
+            MaaGamepadControllerCreate,
+            MaaControllerDestroy,
+            MaaControllerAddSink,
+            MaaControllerRemoveSink,
+            MaaControllerClearSinks,
+            MaaControllerSetOption,
+            MaaControllerPostConnection,
+            MaaControllerPostClick,
+            MaaControllerPostClickV2,
+            MaaControllerPostSwipe,
+            MaaControllerPostSwipeV2,
+            MaaControllerPostClickKey,
+            MaaControllerPostInputText,
+            MaaControllerPostStartApp,
+            MaaControllerPostStopApp,
+            MaaControllerPostTouchDown,
+            MaaControllerPostTouchMove,
+            MaaControllerPostTouchUp,
+            MaaControllerPostKeyDown,
+            MaaControllerPostKeyUp,
+            MaaControllerPostScreencap,
+            MaaControllerPostScroll,
+            MaaControllerPostShell,
+            MaaControllerGetShellOutput,
+            MaaControllerStatus,
+            MaaControllerWait,
+            MaaControllerConnected,
+            MaaControllerCachedImage,
+            MaaControllerGetUuid,
+            MaaControllerGetResolution,
+            MaaControllerPostPressKey,
+            MaaContextRunTask,
+            MaaContextRunRecognition,
+            MaaContextRunAction,
+            MaaContextRunRecognitionDirect,
+            MaaContextRunActionDirect,
+            MaaContextWaitFreezes,
+            MaaContextOverridePipeline,
+            MaaContextOverrideNext,
+            MaaContextOverrideImage,
+            MaaContextGetNodeData,
+            MaaContextGetTaskId,
+            MaaContextGetTasker,
+            MaaContextClone,
+            MaaContextSetAnchor,
+            MaaContextGetAnchor,
+            MaaContextGetHitCount,
+            MaaContextClearHitCount,
+            MaaGlobalSetOption,
+            MaaGlobalLoadPlugin,
+            MaaSetGlobalOption,
+            MaaStringBufferCreate,
+            MaaStringBufferDestroy,
+            MaaStringBufferIsEmpty,
+            MaaStringBufferClear,
+            MaaStringBufferGet,
+            MaaStringBufferSize,
+            MaaStringBufferSet,
+            MaaStringBufferSetEx,
+            MaaStringListBufferCreate,
+            MaaStringListBufferDestroy,
+            MaaStringListBufferIsEmpty,
+            MaaStringListBufferSize,
+            MaaStringListBufferAt,
+            MaaStringListBufferAppend,
+            MaaStringListBufferRemove,
+            MaaStringListBufferClear,
+            MaaImageBufferCreate,
+            MaaImageBufferDestroy,
+            MaaImageBufferIsEmpty,
+            MaaImageBufferClear,
+            MaaImageBufferGetRawData,
+            MaaImageBufferWidth,
+            MaaImageBufferHeight,
+            MaaImageBufferChannels,
+            MaaImageBufferType,
+            MaaImageBufferSetRawData,
+            MaaImageBufferResize,
+            MaaImageBufferGetEncoded,
+            MaaImageBufferGetEncodedSize,
+            MaaImageBufferSetEncoded,
+            MaaImageListBufferCreate,
+            MaaImageListBufferDestroy,
+            MaaImageListBufferIsEmpty,
+            MaaImageListBufferSize,
+            MaaImageListBufferAt,
+            MaaImageListBufferAppend,
+            MaaImageListBufferRemove,
+            MaaImageListBufferClear,
+            MaaRectCreate,
+            MaaRectDestroy,
+            MaaRectGetX,
+            MaaRectGetY,
+            MaaRectGetW,
+            MaaRectGetH,
+            MaaRectSet,
+            MaaVersion,
+            MaaAgentClientCreateV2,
+            MaaAgentClientCreateTcp,
+            MaaAgentClientDestroy,
+            MaaAgentClientIdentifier,
+            MaaAgentClientBindResource,
+            MaaAgentClientRegisterResourceSink,
+            MaaAgentClientRegisterControllerSink,
+            MaaAgentClientRegisterTaskerSink,
+            MaaAgentClientConnect,
+            MaaAgentClientDisconnect,
+            MaaAgentClientConnected,
+            MaaAgentClientAlive,
+            MaaAgentClientSetTimeout,
+            MaaAgentClientGetCustomRecognitionList,
+            MaaAgentClientGetCustomActionList,
+            MaaAgentClientCreate,
+            MaaAgentClientCreateSocket,
+            MaaAgentServerRegisterCustomRecognition,
+            MaaAgentServerRegisterCustomAction,
+            MaaAgentServerAddResourceSink,
+            MaaAgentServerAddControllerSink,
+            MaaAgentServerAddTaskerSink,
+            MaaAgentServerAddContextSink,
+            MaaAgentServerStartUp,
+            MaaAgentServerShutDown,
+            MaaAgentServerJoin,
+            MaaAgentServerDetach,
+            MaaToolkitAdbDeviceListCreate,
+            MaaToolkitAdbDeviceListDestroy,
+            MaaToolkitAdbDeviceFind,
+            MaaToolkitAdbDeviceFindSpecified,
+            MaaToolkitAdbDeviceListSize,
+            MaaToolkitAdbDeviceListAt,
+            MaaToolkitAdbDeviceGetName,
+            MaaToolkitAdbDeviceGetAdbPath,
+            MaaToolkitAdbDeviceGetAddress,
+            MaaToolkitAdbDeviceGetScreencapMethods,
+            MaaToolkitAdbDeviceGetInputMethods,
+            MaaToolkitAdbDeviceGetConfig,
+            MaaToolkitDesktopWindowListCreate,
+            MaaToolkitDesktopWindowListDestroy,
+            MaaToolkitDesktopWindowFindAll,
+            MaaToolkitDesktopWindowListSize,
+            MaaToolkitDesktopWindowListAt,
+            MaaToolkitDesktopWindowGetHandle,
+            MaaToolkitDesktopWindowGetClassName,
+            MaaToolkitDesktopWindowGetWindowName,
+            MaaToolkitConfigInitOption,
+        })
+    }
+    pub unsafe fn MaaTaskerCreate(&self) -> *mut MaaTasker {
+        (self.MaaTaskerCreate)()
+    }
+    pub unsafe fn MaaTaskerDestroy(&self, tasker: *mut MaaTasker) {
+        (self.MaaTaskerDestroy)(tasker)
+    }
+    pub unsafe fn MaaTaskerAddSink(
+        &self,
+        tasker: *mut MaaTasker,
+        sink: MaaEventCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaSinkId {
+        (self.MaaTaskerAddSink)(tasker, sink, trans_arg)
+    }
+    pub unsafe fn MaaTaskerRemoveSink(&self, tasker: *mut MaaTasker, sink_id: MaaSinkId) {
+        (self.MaaTaskerRemoveSink)(tasker, sink_id)
+    }
+    pub unsafe fn MaaTaskerClearSinks(&self, tasker: *mut MaaTasker) {
+        (self.MaaTaskerClearSinks)(tasker)
+    }
+    pub unsafe fn MaaTaskerAddContextSink(
+        &self,
+        tasker: *mut MaaTasker,
+        sink: MaaEventCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaSinkId {
+        (self.MaaTaskerAddContextSink)(tasker, sink, trans_arg)
+    }
+    pub unsafe fn MaaTaskerRemoveContextSink(&self, tasker: *mut MaaTasker, sink_id: MaaSinkId) {
+        (self.MaaTaskerRemoveContextSink)(tasker, sink_id)
+    }
+    pub unsafe fn MaaTaskerClearContextSinks(&self, tasker: *mut MaaTasker) {
+        (self.MaaTaskerClearContextSinks)(tasker)
+    }
+    #[doc = " @param[in] value"]
+    pub unsafe fn MaaTaskerSetOption(
+        &self,
+        tasker: *mut MaaTasker,
+        key: MaaTaskerOption,
+        value: MaaOptionValue,
+        val_size: MaaOptionValueSize,
+    ) -> MaaBool {
+        (self.MaaTaskerSetOption)(tasker, key, value, val_size)
+    }
+    pub unsafe fn MaaTaskerBindResource(
+        &self,
+        tasker: *mut MaaTasker,
+        res: *mut MaaResource,
+    ) -> MaaBool {
+        (self.MaaTaskerBindResource)(tasker, res)
+    }
+    pub unsafe fn MaaTaskerBindController(
+        &self,
+        tasker: *mut MaaTasker,
+        ctrl: *mut MaaController,
+    ) -> MaaBool {
+        (self.MaaTaskerBindController)(tasker, ctrl)
+    }
+    pub unsafe fn MaaTaskerInited(&self, tasker: *const MaaTasker) -> MaaBool {
+        (self.MaaTaskerInited)(tasker)
+    }
+    pub unsafe fn MaaTaskerPostTask(
+        &self,
+        tasker: *mut MaaTasker,
+        entry: *const ::std::os::raw::c_char,
+        pipeline_override: *const ::std::os::raw::c_char,
+    ) -> MaaTaskId {
+        (self.MaaTaskerPostTask)(tasker, entry, pipeline_override)
+    }
+    #[doc = " @param reco_type Recognition type string\n @param reco_param Recognition parameters json\n @param image Previous screenshot"]
+    pub unsafe fn MaaTaskerPostRecognition(
+        &self,
+        tasker: *mut MaaTasker,
+        reco_type: *const ::std::os::raw::c_char,
+        reco_param: *const ::std::os::raw::c_char,
+        image: *const MaaImageBuffer,
+    ) -> MaaTaskId {
+        (self.MaaTaskerPostRecognition)(tasker, reco_type, reco_param, image)
+    }
+    #[doc = " @param action_type Action type string\n @param action_param Action parameters json\n @param box Previous recognition position\n @param reco_detail Previous recognition details"]
+    pub unsafe fn MaaTaskerPostAction(
+        &self,
+        tasker: *mut MaaTasker,
+        action_type: *const ::std::os::raw::c_char,
+        action_param: *const ::std::os::raw::c_char,
+        box_: *const MaaRect,
+        reco_detail: *const ::std::os::raw::c_char,
+    ) -> MaaTaskId {
+        (self.MaaTaskerPostAction)(tasker, action_type, action_param, box_, reco_detail)
+    }
+    pub unsafe fn MaaTaskerStatus(&self, tasker: *const MaaTasker, id: MaaTaskId) -> MaaStatus {
+        (self.MaaTaskerStatus)(tasker, id)
+    }
+    pub unsafe fn MaaTaskerWait(&self, tasker: *const MaaTasker, id: MaaTaskId) -> MaaStatus {
+        (self.MaaTaskerWait)(tasker, id)
+    }
+    pub unsafe fn MaaTaskerRunning(&self, tasker: *const MaaTasker) -> MaaBool {
+        (self.MaaTaskerRunning)(tasker)
+    }
+    pub unsafe fn MaaTaskerPostStop(&self, tasker: *mut MaaTasker) -> MaaTaskId {
+        (self.MaaTaskerPostStop)(tasker)
+    }
+    pub unsafe fn MaaTaskerStopping(&self, tasker: *const MaaTasker) -> MaaBool {
+        (self.MaaTaskerStopping)(tasker)
+    }
+    pub unsafe fn MaaTaskerGetResource(&self, tasker: *const MaaTasker) -> *mut MaaResource {
+        (self.MaaTaskerGetResource)(tasker)
+    }
+    pub unsafe fn MaaTaskerGetController(&self, tasker: *const MaaTasker) -> *mut MaaController {
+        (self.MaaTaskerGetController)(tasker)
+    }
+    pub unsafe fn MaaTaskerClearCache(&self, tasker: *mut MaaTasker) -> MaaBool {
+        (self.MaaTaskerClearCache)(tasker)
+    }
+    pub unsafe fn MaaTaskerOverridePipeline(
+        &self,
+        tasker: *mut MaaTasker,
+        task_id: MaaTaskId,
+        pipeline_override: *const ::std::os::raw::c_char,
+    ) -> MaaBool {
+        (self.MaaTaskerOverridePipeline)(tasker, task_id, pipeline_override)
+    }
+    #[doc = " @param[out] hit"]
+    pub unsafe fn MaaTaskerGetRecognitionDetail(
+        &self,
+        tasker: *const MaaTasker,
+        reco_id: MaaRecoId,
+        node_name: *mut MaaStringBuffer,
+        algorithm: *mut MaaStringBuffer,
+        hit: *mut MaaBool,
+        box_: *mut MaaRect,
+        detail_json: *mut MaaStringBuffer,
+        raw: *mut MaaImageBuffer,
+        draws: *mut MaaImageListBuffer,
+    ) -> MaaBool {
+        (self.MaaTaskerGetRecognitionDetail)(
+            tasker,
+            reco_id,
+            node_name,
+            algorithm,
+            hit,
+            box_,
+            detail_json,
+            raw,
+            draws,
+        )
+    }
+    #[doc = " @param[out] action\n @param[out] box\n @param[out] success\n @param[out] detail_json"]
+    pub unsafe fn MaaTaskerGetActionDetail(
+        &self,
+        tasker: *const MaaTasker,
+        action_id: MaaActId,
+        node_name: *mut MaaStringBuffer,
+        action: *mut MaaStringBuffer,
+        box_: *mut MaaRect,
+        success: *mut MaaBool,
+        detail_json: *mut MaaStringBuffer,
+    ) -> MaaBool {
+        (self.MaaTaskerGetActionDetail)(
+            tasker,
+            action_id,
+            node_name,
+            action,
+            box_,
+            success,
+            detail_json,
+        )
+    }
+    #[doc = " @param[out] reco_id\n @param[out] action_id\n @param[out] completed"]
+    pub unsafe fn MaaTaskerGetNodeDetail(
+        &self,
+        tasker: *const MaaTasker,
+        node_id: MaaNodeId,
+        node_name: *mut MaaStringBuffer,
+        reco_id: *mut MaaRecoId,
+        action_id: *mut MaaActId,
+        completed: *mut MaaBool,
+    ) -> MaaBool {
+        (self.MaaTaskerGetNodeDetail)(tasker, node_id, node_name, reco_id, action_id, completed)
+    }
+    #[doc = " @param[out] node_id_list\n @param[in, out] node_id_list_size\n @param[out] status"]
+    pub unsafe fn MaaTaskerGetTaskDetail(
+        &self,
+        tasker: *const MaaTasker,
+        task_id: MaaTaskId,
+        entry: *mut MaaStringBuffer,
+        node_id_list: *mut MaaNodeId,
+        node_id_list_size: *mut MaaSize,
+        status: *mut MaaStatus,
+    ) -> MaaBool {
+        (self.MaaTaskerGetTaskDetail)(
+            tasker,
+            task_id,
+            entry,
+            node_id_list,
+            node_id_list_size,
+            status,
+        )
+    }
+    #[doc = " @param[out] latest_id"]
+    pub unsafe fn MaaTaskerGetLatestNode(
+        &self,
+        tasker: *const MaaTasker,
+        node_name: *const ::std::os::raw::c_char,
+        latest_id: *mut MaaNodeId,
+    ) -> MaaBool {
+        (self.MaaTaskerGetLatestNode)(tasker, node_name, latest_id)
+    }
+    pub unsafe fn MaaResourceCreate(&self) -> *mut MaaResource {
+        (self.MaaResourceCreate)()
+    }
+    pub unsafe fn MaaResourceDestroy(&self, res: *mut MaaResource) {
+        (self.MaaResourceDestroy)(res)
+    }
+    pub unsafe fn MaaResourceAddSink(
+        &self,
+        res: *mut MaaResource,
+        sink: MaaEventCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaSinkId {
+        (self.MaaResourceAddSink)(res, sink, trans_arg)
+    }
+    pub unsafe fn MaaResourceRemoveSink(&self, res: *mut MaaResource, sink_id: MaaSinkId) {
+        (self.MaaResourceRemoveSink)(res, sink_id)
+    }
+    pub unsafe fn MaaResourceClearSinks(&self, res: *mut MaaResource) {
+        (self.MaaResourceClearSinks)(res)
+    }
+    pub unsafe fn MaaResourceRegisterCustomRecognition(
+        &self,
+        res: *mut MaaResource,
+        name: *const ::std::os::raw::c_char,
+        recognition: MaaCustomRecognitionCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaBool {
+        (self.MaaResourceRegisterCustomRecognition)(res, name, recognition, trans_arg)
+    }
+    pub unsafe fn MaaResourceUnregisterCustomRecognition(
+        &self,
+        res: *mut MaaResource,
+        name: *const ::std::os::raw::c_char,
+    ) -> MaaBool {
+        (self.MaaResourceUnregisterCustomRecognition)(res, name)
+    }
+    pub unsafe fn MaaResourceClearCustomRecognition(&self, res: *mut MaaResource) -> MaaBool {
+        (self.MaaResourceClearCustomRecognition)(res)
+    }
+    pub unsafe fn MaaResourceRegisterCustomAction(
+        &self,
+        res: *mut MaaResource,
+        name: *const ::std::os::raw::c_char,
+        action: MaaCustomActionCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaBool {
+        (self.MaaResourceRegisterCustomAction)(res, name, action, trans_arg)
+    }
+    pub unsafe fn MaaResourceUnregisterCustomAction(
+        &self,
+        res: *mut MaaResource,
+        name: *const ::std::os::raw::c_char,
+    ) -> MaaBool {
+        (self.MaaResourceUnregisterCustomAction)(res, name)
+    }
+    pub unsafe fn MaaResourceClearCustomAction(&self, res: *mut MaaResource) -> MaaBool {
+        (self.MaaResourceClearCustomAction)(res)
+    }
+    pub unsafe fn MaaResourcePostBundle(
+        &self,
+        res: *mut MaaResource,
+        path: *const ::std::os::raw::c_char,
+    ) -> MaaResId {
+        (self.MaaResourcePostBundle)(res, path)
+    }
+    pub unsafe fn MaaResourcePostOcrModel(
+        &self,
+        res: *mut MaaResource,
+        path: *const ::std::os::raw::c_char,
+    ) -> MaaResId {
+        (self.MaaResourcePostOcrModel)(res, path)
+    }
+    pub unsafe fn MaaResourcePostPipeline(
+        &self,
+        res: *mut MaaResource,
+        path: *const ::std::os::raw::c_char,
+    ) -> MaaResId {
+        (self.MaaResourcePostPipeline)(res, path)
+    }
+    pub unsafe fn MaaResourcePostImage(
+        &self,
+        res: *mut MaaResource,
+        path: *const ::std::os::raw::c_char,
+    ) -> MaaResId {
+        (self.MaaResourcePostImage)(res, path)
+    }
+    pub unsafe fn MaaResourceOverridePipeline(
+        &self,
+        res: *mut MaaResource,
+        pipeline_override: *const ::std::os::raw::c_char,
+    ) -> MaaBool {
+        (self.MaaResourceOverridePipeline)(res, pipeline_override)
+    }
+    pub unsafe fn MaaResourceOverrideNext(
+        &self,
+        res: *mut MaaResource,
+        node_name: *const ::std::os::raw::c_char,
+        next_list: *const MaaStringListBuffer,
+    ) -> MaaBool {
+        (self.MaaResourceOverrideNext)(res, node_name, next_list)
+    }
+    pub unsafe fn MaaResourceOverrideImage(
+        &self,
+        res: *mut MaaResource,
+        image_name: *const ::std::os::raw::c_char,
+        image: *const MaaImageBuffer,
+    ) -> MaaBool {
+        (self.MaaResourceOverrideImage)(res, image_name, image)
+    }
+    pub unsafe fn MaaResourceGetNodeData(
+        &self,
+        res: *mut MaaResource,
+        node_name: *const ::std::os::raw::c_char,
+        buffer: *mut MaaStringBuffer,
+    ) -> MaaBool {
+        (self.MaaResourceGetNodeData)(res, node_name, buffer)
+    }
+    pub unsafe fn MaaResourceClear(&self, res: *mut MaaResource) -> MaaBool {
+        (self.MaaResourceClear)(res)
+    }
+    pub unsafe fn MaaResourceStatus(&self, res: *const MaaResource, id: MaaResId) -> MaaStatus {
+        (self.MaaResourceStatus)(res, id)
+    }
+    pub unsafe fn MaaResourceWait(&self, res: *const MaaResource, id: MaaResId) -> MaaStatus {
+        (self.MaaResourceWait)(res, id)
+    }
+    pub unsafe fn MaaResourceLoaded(&self, res: *const MaaResource) -> MaaBool {
+        (self.MaaResourceLoaded)(res)
+    }
+    pub unsafe fn MaaResourceSetOption(
+        &self,
+        res: *mut MaaResource,
+        key: MaaResOption,
+        value: MaaOptionValue,
+        val_size: MaaOptionValueSize,
+    ) -> MaaBool {
+        (self.MaaResourceSetOption)(res, key, value, val_size)
+    }
+    pub unsafe fn MaaResourceGetHash(
+        &self,
+        res: *const MaaResource,
+        buffer: *mut MaaStringBuffer,
+    ) -> MaaBool {
+        (self.MaaResourceGetHash)(res, buffer)
+    }
+    pub unsafe fn MaaResourceGetNodeList(
+        &self,
+        res: *const MaaResource,
+        buffer: *mut MaaStringListBuffer,
+    ) -> MaaBool {
+        (self.MaaResourceGetNodeList)(res, buffer)
+    }
+    pub unsafe fn MaaResourceGetCustomRecognitionList(
+        &self,
+        res: *const MaaResource,
+        buffer: *mut MaaStringListBuffer,
+    ) -> MaaBool {
+        (self.MaaResourceGetCustomRecognitionList)(res, buffer)
+    }
+    pub unsafe fn MaaResourceGetCustomActionList(
+        &self,
+        res: *const MaaResource,
+        buffer: *mut MaaStringListBuffer,
+    ) -> MaaBool {
+        (self.MaaResourceGetCustomActionList)(res, buffer)
+    }
+    #[doc = " @brief Get default recognition parameters for the specified type from DefaultPipelineMgr.\n\n @param reco_type Recognition type string (e.g., \"OCR\", \"TemplateMatch\")\n @param buffer [out] Output buffer for the JSON string of recognition parameters"]
+    pub unsafe fn MaaResourceGetDefaultRecognitionParam(
+        &self,
+        res: *const MaaResource,
+        reco_type: *const ::std::os::raw::c_char,
+        buffer: *mut MaaStringBuffer,
+    ) -> MaaBool {
+        (self.MaaResourceGetDefaultRecognitionParam)(res, reco_type, buffer)
+    }
+    #[doc = " @brief Get default action parameters for the specified type from DefaultPipelineMgr.\n\n @param action_type Action type string (e.g., \"Click\", \"Swipe\")\n @param buffer [out] Output buffer for the JSON string of action parameters"]
+    pub unsafe fn MaaResourceGetDefaultActionParam(
+        &self,
+        res: *const MaaResource,
+        action_type: *const ::std::os::raw::c_char,
+        buffer: *mut MaaStringBuffer,
+    ) -> MaaBool {
+        (self.MaaResourceGetDefaultActionParam)(res, action_type, buffer)
+    }
+    pub unsafe fn MaaAdbControllerCreate(
+        &self,
+        adb_path: *const ::std::os::raw::c_char,
+        address: *const ::std::os::raw::c_char,
+        screencap_methods: MaaAdbScreencapMethod,
+        input_methods: MaaAdbInputMethod,
+        config: *const ::std::os::raw::c_char,
+        agent_path: *const ::std::os::raw::c_char,
+    ) -> *mut MaaController {
+        (self.MaaAdbControllerCreate)(
+            adb_path,
+            address,
+            screencap_methods,
+            input_methods,
+            config,
+            agent_path,
+        )
+    }
+    pub unsafe fn MaaWin32ControllerCreate(
+        &self,
+        hWnd: *mut ::std::os::raw::c_void,
+        screencap_method: MaaWin32ScreencapMethod,
+        mouse_method: MaaWin32InputMethod,
+        keyboard_method: MaaWin32InputMethod,
+    ) -> *mut MaaController {
+        (self.MaaWin32ControllerCreate)(hWnd, screencap_method, mouse_method, keyboard_method)
+    }
+    pub unsafe fn MaaCustomControllerCreate(
+        &self,
+        controller: *mut MaaCustomControllerCallbacks,
+        controller_arg: *mut ::std::os::raw::c_void,
+    ) -> *mut MaaController {
+        (self.MaaCustomControllerCreate)(controller, controller_arg)
+    }
+    pub unsafe fn MaaDbgControllerCreate(
+        &self,
+        read_path: *const ::std::os::raw::c_char,
+        write_path: *const ::std::os::raw::c_char,
+        type_: MaaDbgControllerType,
+        config: *const ::std::os::raw::c_char,
+    ) -> *mut MaaController {
+        (self.MaaDbgControllerCreate)(read_path, write_path, type_, config)
+    }
+    #[doc = " @brief Create a PlayCover controller for macOS.\n\n @param address The PlayTools service address in \"host:port\" format.\n @param uuid The application bundle identifier (e.g., \"com.hypergryph.arknights\").\n @return The controller handle, or nullptr on failure.\n\n @note This controller is designed for PlayCover on macOS.\n @note Some features are not supported: start_app, input_text, click_key, key_down, key_up, scroll.\n @note Only single touch is supported (contact must be 0)."]
+    pub unsafe fn MaaPlayCoverControllerCreate(
+        &self,
+        address: *const ::std::os::raw::c_char,
+        uuid: *const ::std::os::raw::c_char,
+    ) -> *mut MaaController {
+        (self.MaaPlayCoverControllerCreate)(address, uuid)
+    }
+    #[doc = " @brief Create a virtual gamepad controller for Windows.\n\n @param hWnd Window handle for screencap (optional, can be nullptr if screencap not needed).\n @param gamepad_type Type of virtual gamepad (MaaGamepadType_Xbox360 or MaaGamepadType_DualShock4).\n @param screencap_method Win32 screencap method to use. Ignored if hWnd is nullptr.\n @return The controller handle, or nullptr on failure.\n\n @note Requires ViGEm Bus Driver to be installed on the system.\n @note For gamepad control, use:\n       - click_key/key_down/key_up: For digital buttons (A, B, X, Y, LB, RB, etc.)\n         See MaaGamepadButton_* constants for available buttons.\n       - touch_down/touch_move/touch_up: For analog inputs (sticks and triggers)\n         - contact 0 (MaaGamepadTouch_LeftStick): Left stick (x: -32768~32767, y: -32768~32767)\n         - contact 1 (MaaGamepadTouch_RightStick): Right stick (x: -32768~32767, y: -32768~32767)\n         - contact 2 (MaaGamepadTouch_LeftTrigger): Left trigger (pressure: 0~255, x/y ignored)\n         - contact 3 (MaaGamepadTouch_RightTrigger): Right trigger (pressure: 0~255, x/y ignored)\n @note click and swipe are not directly supported for gamepad.\n @note input_text, start_app, stop_app, scroll are not supported.\n @see MaaGamepadButton, MaaGamepadTouch, MaaGamepadType"]
+    pub unsafe fn MaaGamepadControllerCreate(
+        &self,
+        hWnd: *mut ::std::os::raw::c_void,
+        gamepad_type: MaaGamepadType,
+        screencap_method: MaaWin32ScreencapMethod,
+    ) -> *mut MaaController {
+        (self.MaaGamepadControllerCreate)(hWnd, gamepad_type, screencap_method)
+    }
+    pub unsafe fn MaaControllerDestroy(&self, ctrl: *mut MaaController) {
+        (self.MaaControllerDestroy)(ctrl)
+    }
+    pub unsafe fn MaaControllerAddSink(
+        &self,
+        ctrl: *mut MaaController,
+        sink: MaaEventCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaSinkId {
+        (self.MaaControllerAddSink)(ctrl, sink, trans_arg)
+    }
+    pub unsafe fn MaaControllerRemoveSink(&self, ctrl: *mut MaaController, sink_id: MaaSinkId) {
+        (self.MaaControllerRemoveSink)(ctrl, sink_id)
+    }
+    pub unsafe fn MaaControllerClearSinks(&self, ctrl: *mut MaaController) {
+        (self.MaaControllerClearSinks)(ctrl)
+    }
+    #[doc = " @param[in] value"]
+    pub unsafe fn MaaControllerSetOption(
+        &self,
+        ctrl: *mut MaaController,
+        key: MaaCtrlOption,
+        value: MaaOptionValue,
+        val_size: MaaOptionValueSize,
+    ) -> MaaBool {
+        (self.MaaControllerSetOption)(ctrl, key, value, val_size)
+    }
+    pub unsafe fn MaaControllerPostConnection(&self, ctrl: *mut MaaController) -> MaaCtrlId {
+        (self.MaaControllerPostConnection)(ctrl)
+    }
+    pub unsafe fn MaaControllerPostClick(
+        &self,
+        ctrl: *mut MaaController,
+        x: i32,
+        y: i32,
+    ) -> MaaCtrlId {
+        (self.MaaControllerPostClick)(ctrl, x, y)
+    }
+    pub unsafe fn MaaControllerPostClickV2(
+        &self,
+        ctrl: *mut MaaController,
+        x: i32,
+        y: i32,
+        contact: i32,
+        pressure: i32,
+    ) -> MaaCtrlId {
+        (self.MaaControllerPostClickV2)(ctrl, x, y, contact, pressure)
+    }
+    pub unsafe fn MaaControllerPostSwipe(
+        &self,
+        ctrl: *mut MaaController,
+        x1: i32,
+        y1: i32,
+        x2: i32,
+        y2: i32,
+        duration: i32,
+    ) -> MaaCtrlId {
+        (self.MaaControllerPostSwipe)(ctrl, x1, y1, x2, y2, duration)
+    }
+    pub unsafe fn MaaControllerPostSwipeV2(
+        &self,
+        ctrl: *mut MaaController,
+        x1: i32,
+        y1: i32,
+        x2: i32,
+        y2: i32,
+        duration: i32,
+        contact: i32,
+        pressure: i32,
+    ) -> MaaCtrlId {
+        (self.MaaControllerPostSwipeV2)(ctrl, x1, y1, x2, y2, duration, contact, pressure)
+    }
+    pub unsafe fn MaaControllerPostClickKey(
+        &self,
+        ctrl: *mut MaaController,
+        keycode: i32,
+    ) -> MaaCtrlId {
+        (self.MaaControllerPostClickKey)(ctrl, keycode)
+    }
+    pub unsafe fn MaaControllerPostInputText(
+        &self,
+        ctrl: *mut MaaController,
+        text: *const ::std::os::raw::c_char,
+    ) -> MaaCtrlId {
+        (self.MaaControllerPostInputText)(ctrl, text)
+    }
+    pub unsafe fn MaaControllerPostStartApp(
+        &self,
+        ctrl: *mut MaaController,
+        intent: *const ::std::os::raw::c_char,
+    ) -> MaaCtrlId {
+        (self.MaaControllerPostStartApp)(ctrl, intent)
+    }
+    pub unsafe fn MaaControllerPostStopApp(
+        &self,
+        ctrl: *mut MaaController,
+        intent: *const ::std::os::raw::c_char,
+    ) -> MaaCtrlId {
+        (self.MaaControllerPostStopApp)(ctrl, intent)
+    }
+    pub unsafe fn MaaControllerPostTouchDown(
+        &self,
+        ctrl: *mut MaaController,
+        contact: i32,
+        x: i32,
+        y: i32,
+        pressure: i32,
+    ) -> MaaCtrlId {
+        (self.MaaControllerPostTouchDown)(ctrl, contact, x, y, pressure)
+    }
+    pub unsafe fn MaaControllerPostTouchMove(
+        &self,
+        ctrl: *mut MaaController,
+        contact: i32,
+        x: i32,
+        y: i32,
+        pressure: i32,
+    ) -> MaaCtrlId {
+        (self.MaaControllerPostTouchMove)(ctrl, contact, x, y, pressure)
+    }
+    pub unsafe fn MaaControllerPostTouchUp(
+        &self,
+        ctrl: *mut MaaController,
+        contact: i32,
+    ) -> MaaCtrlId {
+        (self.MaaControllerPostTouchUp)(ctrl, contact)
+    }
+    pub unsafe fn MaaControllerPostKeyDown(
+        &self,
+        ctrl: *mut MaaController,
+        keycode: i32,
+    ) -> MaaCtrlId {
+        (self.MaaControllerPostKeyDown)(ctrl, keycode)
+    }
+    pub unsafe fn MaaControllerPostKeyUp(
+        &self,
+        ctrl: *mut MaaController,
+        keycode: i32,
+    ) -> MaaCtrlId {
+        (self.MaaControllerPostKeyUp)(ctrl, keycode)
+    }
+    #[doc = " @brief Post a screenshot request to the controller.\n\n @param ctrl The controller handle.\n @return The control id of the screenshot action.\n\n @note The screenshot image is scaled according to the screenshot target size settings (long side / short side).\n       Use MaaControllerGetResolution to get the raw (unscaled) device resolution.\n @see MaaControllerCachedImage, MaaControllerSetOption, MaaControllerGetResolution"]
+    pub unsafe fn MaaControllerPostScreencap(&self, ctrl: *mut MaaController) -> MaaCtrlId {
+        (self.MaaControllerPostScreencap)(ctrl)
+    }
+    #[doc = " @brief Post a scroll action to the controller.\n\n @param ctrl The controller handle.\n @param dx The horizontal scroll delta. Positive values scroll right, negative values scroll left.\n @param dy The vertical scroll delta. Positive values scroll up, negative values scroll down.\n @return The control id of the scroll action.\n\n @note Not all controllers support scroll. If not supported, the action will fail.\n @note The dx/dy values are sent directly as scroll increments. Using multiples of 120 (WHEEL_DELTA) is\n recommended for best compatibility."]
+    pub unsafe fn MaaControllerPostScroll(
+        &self,
+        ctrl: *mut MaaController,
+        dx: i32,
+        dy: i32,
+    ) -> MaaCtrlId {
+        (self.MaaControllerPostScroll)(ctrl, dx, dy)
+    }
+    #[doc = " @brief Post a shell command to the controller.\n\n @param ctrl The controller handle.\n @param cmd The shell command to execute.\n @param timeout Timeout in milliseconds. Default is 20000 (20 seconds).\n @return The control id of the shell action.\n\n @note This is only valid for ADB controllers. If the controller is not an ADB controller, the action will fail.\n @see MaaControllerGetShellOutput"]
+    pub unsafe fn MaaControllerPostShell(
+        &self,
+        ctrl: *mut MaaController,
+        cmd: *const ::std::os::raw::c_char,
+        timeout: i64,
+    ) -> MaaCtrlId {
+        (self.MaaControllerPostShell)(ctrl, cmd, timeout)
+    }
+    #[doc = " @brief Get the cached shell command output.\n\n @param ctrl The controller handle.\n @param buffer The output buffer to store the command result.\n @return true if the output is available, false otherwise.\n\n @note This returns the output from the most recent shell command execution."]
+    pub unsafe fn MaaControllerGetShellOutput(
+        &self,
+        ctrl: *const MaaController,
+        buffer: *mut MaaStringBuffer,
+    ) -> MaaBool {
+        (self.MaaControllerGetShellOutput)(ctrl, buffer)
+    }
+    pub unsafe fn MaaControllerStatus(
+        &self,
+        ctrl: *const MaaController,
+        id: MaaCtrlId,
+    ) -> MaaStatus {
+        (self.MaaControllerStatus)(ctrl, id)
+    }
+    pub unsafe fn MaaControllerWait(&self, ctrl: *const MaaController, id: MaaCtrlId) -> MaaStatus {
+        (self.MaaControllerWait)(ctrl, id)
+    }
+    pub unsafe fn MaaControllerConnected(&self, ctrl: *const MaaController) -> MaaBool {
+        (self.MaaControllerConnected)(ctrl)
+    }
+    #[doc = " @brief Get the cached screenshot image.\n\n @param ctrl The controller handle.\n @param buffer The output buffer to store the screenshot image.\n @return true if the screenshot is available, false otherwise.\n\n @note The returned image is scaled according to the screenshot target size settings (long side / short side).\n       The image dimensions may differ from the raw device resolution.\n       Use MaaControllerGetResolution to get the raw (unscaled) device resolution.\n @see MaaControllerPostScreencap, MaaControllerSetOption, MaaControllerGetResolution"]
+    pub unsafe fn MaaControllerCachedImage(
+        &self,
+        ctrl: *const MaaController,
+        buffer: *mut MaaImageBuffer,
+    ) -> MaaBool {
+        (self.MaaControllerCachedImage)(ctrl, buffer)
+    }
+    pub unsafe fn MaaControllerGetUuid(
+        &self,
+        ctrl: *mut MaaController,
+        buffer: *mut MaaStringBuffer,
+    ) -> MaaBool {
+        (self.MaaControllerGetUuid)(ctrl, buffer)
+    }
+    #[doc = " @brief Get the raw (unscaled) device resolution.\n\n @param ctrl The controller handle.\n @param[out] width Output parameter for the raw width.\n @param[out] height Output parameter for the raw height.\n @return true if the resolution is available, false otherwise (e.g., not connected or no screenshot taken yet).\n\n @note This returns the actual device screen resolution before any scaling.\n       The screenshot obtained via MaaControllerCachedImage is scaled according to the screenshot target size settings,\n       so its dimensions may differ from this raw resolution.\n @see MaaControllerCachedImage, MaaControllerPostScreencap"]
+    pub unsafe fn MaaControllerGetResolution(
+        &self,
+        ctrl: *const MaaController,
+        width: *mut i32,
+        height: *mut i32,
+    ) -> MaaBool {
+        (self.MaaControllerGetResolution)(ctrl, width, height)
+    }
+    pub unsafe fn MaaControllerPostPressKey(
+        &self,
+        ctrl: *mut MaaController,
+        keycode: i32,
+    ) -> MaaCtrlId {
+        (self.MaaControllerPostPressKey)(ctrl, keycode)
+    }
+    pub unsafe fn MaaContextRunTask(
+        &self,
+        context: *mut MaaContext,
+        entry: *const ::std::os::raw::c_char,
+        pipeline_override: *const ::std::os::raw::c_char,
+    ) -> MaaTaskId {
+        (self.MaaContextRunTask)(context, entry, pipeline_override)
+    }
+    pub unsafe fn MaaContextRunRecognition(
+        &self,
+        context: *mut MaaContext,
+        entry: *const ::std::os::raw::c_char,
+        pipeline_override: *const ::std::os::raw::c_char,
+        image: *const MaaImageBuffer,
+    ) -> MaaRecoId {
+        (self.MaaContextRunRecognition)(context, entry, pipeline_override, image)
+    }
+    pub unsafe fn MaaContextRunAction(
+        &self,
+        context: *mut MaaContext,
+        entry: *const ::std::os::raw::c_char,
+        pipeline_override: *const ::std::os::raw::c_char,
+        box_: *const MaaRect,
+        reco_detail: *const ::std::os::raw::c_char,
+    ) -> MaaActId {
+        (self.MaaContextRunAction)(context, entry, pipeline_override, box_, reco_detail)
+    }
+    #[doc = " @brief Run recognition directly with type and parameters, without requiring a pipeline entry.\n\n @param reco_type Recognition type string (e.g., \"OCR\", \"TemplateMatch\")\n @param reco_param Recognition parameters json\n @param image Image to recognize"]
+    pub unsafe fn MaaContextRunRecognitionDirect(
+        &self,
+        context: *mut MaaContext,
+        reco_type: *const ::std::os::raw::c_char,
+        reco_param: *const ::std::os::raw::c_char,
+        image: *const MaaImageBuffer,
+    ) -> MaaRecoId {
+        (self.MaaContextRunRecognitionDirect)(context, reco_type, reco_param, image)
+    }
+    #[doc = " @brief Run action directly with type and parameters, without requiring a pipeline entry.\n\n @param action_type Action type string (e.g., \"Click\", \"Swipe\")\n @param action_param Action parameters json\n @param box Previous recognition position\n @param reco_detail Previous recognition details"]
+    pub unsafe fn MaaContextRunActionDirect(
+        &self,
+        context: *mut MaaContext,
+        action_type: *const ::std::os::raw::c_char,
+        action_param: *const ::std::os::raw::c_char,
+        box_: *const MaaRect,
+        reco_detail: *const ::std::os::raw::c_char,
+    ) -> MaaActId {
+        (self.MaaContextRunActionDirect)(context, action_type, action_param, box_, reco_detail)
+    }
+    pub unsafe fn MaaContextWaitFreezes(
+        &self,
+        context: *mut MaaContext,
+        time: MaaSize,
+        box_: *const MaaRect,
+        wait_freezes_param: *const ::std::os::raw::c_char,
+    ) -> MaaBool {
+        (self.MaaContextWaitFreezes)(context, time, box_, wait_freezes_param)
+    }
+    pub unsafe fn MaaContextOverridePipeline(
+        &self,
+        context: *mut MaaContext,
+        pipeline_override: *const ::std::os::raw::c_char,
+    ) -> MaaBool {
+        (self.MaaContextOverridePipeline)(context, pipeline_override)
+    }
+    pub unsafe fn MaaContextOverrideNext(
+        &self,
+        context: *mut MaaContext,
+        node_name: *const ::std::os::raw::c_char,
+        next_list: *const MaaStringListBuffer,
+    ) -> MaaBool {
+        (self.MaaContextOverrideNext)(context, node_name, next_list)
+    }
+    pub unsafe fn MaaContextOverrideImage(
+        &self,
+        context: *mut MaaContext,
+        image_name: *const ::std::os::raw::c_char,
+        image: *const MaaImageBuffer,
+    ) -> MaaBool {
+        (self.MaaContextOverrideImage)(context, image_name, image)
+    }
+    pub unsafe fn MaaContextGetNodeData(
+        &self,
+        context: *mut MaaContext,
+        node_name: *const ::std::os::raw::c_char,
+        buffer: *mut MaaStringBuffer,
+    ) -> MaaBool {
+        (self.MaaContextGetNodeData)(context, node_name, buffer)
+    }
+    pub unsafe fn MaaContextGetTaskId(&self, context: *const MaaContext) -> MaaTaskId {
+        (self.MaaContextGetTaskId)(context)
+    }
+    pub unsafe fn MaaContextGetTasker(&self, context: *const MaaContext) -> *mut MaaTasker {
+        (self.MaaContextGetTasker)(context)
+    }
+    pub unsafe fn MaaContextClone(&self, context: *const MaaContext) -> *mut MaaContext {
+        (self.MaaContextClone)(context)
+    }
+    pub unsafe fn MaaContextSetAnchor(
+        &self,
+        context: *mut MaaContext,
+        anchor_name: *const ::std::os::raw::c_char,
+        node_name: *const ::std::os::raw::c_char,
+    ) -> MaaBool {
+        (self.MaaContextSetAnchor)(context, anchor_name, node_name)
+    }
+    pub unsafe fn MaaContextGetAnchor(
+        &self,
+        context: *mut MaaContext,
+        anchor_name: *const ::std::os::raw::c_char,
+        buffer: *mut MaaStringBuffer,
+    ) -> MaaBool {
+        (self.MaaContextGetAnchor)(context, anchor_name, buffer)
+    }
+    pub unsafe fn MaaContextGetHitCount(
+        &self,
+        context: *mut MaaContext,
+        node_name: *const ::std::os::raw::c_char,
+        count: *mut MaaSize,
+    ) -> MaaBool {
+        (self.MaaContextGetHitCount)(context, node_name, count)
+    }
+    pub unsafe fn MaaContextClearHitCount(
+        &self,
+        context: *mut MaaContext,
+        node_name: *const ::std::os::raw::c_char,
+    ) -> MaaBool {
+        (self.MaaContextClearHitCount)(context, node_name)
+    }
+    #[doc = " @param[in] value"]
+    pub unsafe fn MaaGlobalSetOption(
+        &self,
+        key: MaaGlobalOption,
+        value: MaaOptionValue,
+        val_size: MaaOptionValueSize,
+    ) -> MaaBool {
+        (self.MaaGlobalSetOption)(key, value, val_size)
+    }
+    #[doc = " load a plugin with full path or name only, name only will search in system directory and current directory\n or\n load plugins with recursive search in the directory"]
+    pub unsafe fn MaaGlobalLoadPlugin(
+        &self,
+        library_path: *const ::std::os::raw::c_char,
+    ) -> MaaBool {
+        (self.MaaGlobalLoadPlugin)(library_path)
+    }
+    pub unsafe fn MaaSetGlobalOption(
+        &self,
+        key: MaaGlobalOption,
+        value: MaaOptionValue,
+        val_size: MaaOptionValueSize,
+    ) -> MaaBool {
+        (self.MaaSetGlobalOption)(key, value, val_size)
+    }
+    pub unsafe fn MaaStringBufferCreate(&self) -> *mut MaaStringBuffer {
+        (self.MaaStringBufferCreate)()
+    }
+    pub unsafe fn MaaStringBufferDestroy(&self, handle: *mut MaaStringBuffer) {
+        (self.MaaStringBufferDestroy)(handle)
+    }
+    pub unsafe fn MaaStringBufferIsEmpty(&self, handle: *const MaaStringBuffer) -> MaaBool {
+        (self.MaaStringBufferIsEmpty)(handle)
+    }
+    pub unsafe fn MaaStringBufferClear(&self, handle: *mut MaaStringBuffer) -> MaaBool {
+        (self.MaaStringBufferClear)(handle)
+    }
+    pub unsafe fn MaaStringBufferGet(
+        &self,
+        handle: *const MaaStringBuffer,
+    ) -> *const ::std::os::raw::c_char {
+        (self.MaaStringBufferGet)(handle)
+    }
+    pub unsafe fn MaaStringBufferSize(&self, handle: *const MaaStringBuffer) -> MaaSize {
+        (self.MaaStringBufferSize)(handle)
+    }
+    pub unsafe fn MaaStringBufferSet(
+        &self,
+        handle: *mut MaaStringBuffer,
+        str_: *const ::std::os::raw::c_char,
+    ) -> MaaBool {
+        (self.MaaStringBufferSet)(handle, str_)
+    }
+    pub unsafe fn MaaStringBufferSetEx(
+        &self,
+        handle: *mut MaaStringBuffer,
+        str_: *const ::std::os::raw::c_char,
+        size: MaaSize,
+    ) -> MaaBool {
+        (self.MaaStringBufferSetEx)(handle, str_, size)
+    }
+    pub unsafe fn MaaStringListBufferCreate(&self) -> *mut MaaStringListBuffer {
+        (self.MaaStringListBufferCreate)()
+    }
+    pub unsafe fn MaaStringListBufferDestroy(&self, handle: *mut MaaStringListBuffer) {
+        (self.MaaStringListBufferDestroy)(handle)
+    }
+    pub unsafe fn MaaStringListBufferIsEmpty(&self, handle: *const MaaStringListBuffer) -> MaaBool {
+        (self.MaaStringListBufferIsEmpty)(handle)
+    }
+    pub unsafe fn MaaStringListBufferSize(&self, handle: *const MaaStringListBuffer) -> MaaSize {
+        (self.MaaStringListBufferSize)(handle)
+    }
+    pub unsafe fn MaaStringListBufferAt(
+        &self,
+        handle: *const MaaStringListBuffer,
+        index: MaaSize,
+    ) -> *const MaaStringBuffer {
+        (self.MaaStringListBufferAt)(handle, index)
+    }
+    pub unsafe fn MaaStringListBufferAppend(
+        &self,
+        handle: *mut MaaStringListBuffer,
+        value: *const MaaStringBuffer,
+    ) -> MaaBool {
+        (self.MaaStringListBufferAppend)(handle, value)
+    }
+    pub unsafe fn MaaStringListBufferRemove(
+        &self,
+        handle: *mut MaaStringListBuffer,
+        index: MaaSize,
+    ) -> MaaBool {
+        (self.MaaStringListBufferRemove)(handle, index)
+    }
+    pub unsafe fn MaaStringListBufferClear(&self, handle: *mut MaaStringListBuffer) -> MaaBool {
+        (self.MaaStringListBufferClear)(handle)
+    }
+    pub unsafe fn MaaImageBufferCreate(&self) -> *mut MaaImageBuffer {
+        (self.MaaImageBufferCreate)()
+    }
+    pub unsafe fn MaaImageBufferDestroy(&self, handle: *mut MaaImageBuffer) {
+        (self.MaaImageBufferDestroy)(handle)
+    }
+    pub unsafe fn MaaImageBufferIsEmpty(&self, handle: *const MaaImageBuffer) -> MaaBool {
+        (self.MaaImageBufferIsEmpty)(handle)
+    }
+    pub unsafe fn MaaImageBufferClear(&self, handle: *mut MaaImageBuffer) -> MaaBool {
+        (self.MaaImageBufferClear)(handle)
+    }
+    pub unsafe fn MaaImageBufferGetRawData(
+        &self,
+        handle: *const MaaImageBuffer,
+    ) -> MaaImageRawData {
+        (self.MaaImageBufferGetRawData)(handle)
+    }
+    pub unsafe fn MaaImageBufferWidth(&self, handle: *const MaaImageBuffer) -> i32 {
+        (self.MaaImageBufferWidth)(handle)
+    }
+    pub unsafe fn MaaImageBufferHeight(&self, handle: *const MaaImageBuffer) -> i32 {
+        (self.MaaImageBufferHeight)(handle)
+    }
+    pub unsafe fn MaaImageBufferChannels(&self, handle: *const MaaImageBuffer) -> i32 {
+        (self.MaaImageBufferChannels)(handle)
+    }
+    pub unsafe fn MaaImageBufferType(&self, handle: *const MaaImageBuffer) -> i32 {
+        (self.MaaImageBufferType)(handle)
+    }
+    pub unsafe fn MaaImageBufferSetRawData(
+        &self,
+        handle: *mut MaaImageBuffer,
+        data: MaaImageRawData,
+        width: i32,
+        height: i32,
+        type_: i32,
+    ) -> MaaBool {
+        (self.MaaImageBufferSetRawData)(handle, data, width, height, type_)
+    }
+    pub unsafe fn MaaImageBufferResize(
+        &self,
+        handle: *mut MaaImageBuffer,
+        width: i32,
+        height: i32,
+    ) -> MaaBool {
+        (self.MaaImageBufferResize)(handle, width, height)
+    }
+    pub unsafe fn MaaImageBufferGetEncoded(
+        &self,
+        handle: *const MaaImageBuffer,
+    ) -> MaaImageEncodedData {
+        (self.MaaImageBufferGetEncoded)(handle)
+    }
+    pub unsafe fn MaaImageBufferGetEncodedSize(&self, handle: *const MaaImageBuffer) -> MaaSize {
+        (self.MaaImageBufferGetEncodedSize)(handle)
+    }
+    pub unsafe fn MaaImageBufferSetEncoded(
+        &self,
+        handle: *mut MaaImageBuffer,
+        data: MaaImageEncodedData,
+        size: MaaSize,
+    ) -> MaaBool {
+        (self.MaaImageBufferSetEncoded)(handle, data, size)
+    }
+    pub unsafe fn MaaImageListBufferCreate(&self) -> *mut MaaImageListBuffer {
+        (self.MaaImageListBufferCreate)()
+    }
+    pub unsafe fn MaaImageListBufferDestroy(&self, handle: *mut MaaImageListBuffer) {
+        (self.MaaImageListBufferDestroy)(handle)
+    }
+    pub unsafe fn MaaImageListBufferIsEmpty(&self, handle: *const MaaImageListBuffer) -> MaaBool {
+        (self.MaaImageListBufferIsEmpty)(handle)
+    }
+    pub unsafe fn MaaImageListBufferSize(&self, handle: *const MaaImageListBuffer) -> MaaSize {
+        (self.MaaImageListBufferSize)(handle)
+    }
+    pub unsafe fn MaaImageListBufferAt(
+        &self,
+        handle: *const MaaImageListBuffer,
+        index: MaaSize,
+    ) -> *const MaaImageBuffer {
+        (self.MaaImageListBufferAt)(handle, index)
+    }
+    pub unsafe fn MaaImageListBufferAppend(
+        &self,
+        handle: *mut MaaImageListBuffer,
+        value: *const MaaImageBuffer,
+    ) -> MaaBool {
+        (self.MaaImageListBufferAppend)(handle, value)
+    }
+    pub unsafe fn MaaImageListBufferRemove(
+        &self,
+        handle: *mut MaaImageListBuffer,
+        index: MaaSize,
+    ) -> MaaBool {
+        (self.MaaImageListBufferRemove)(handle, index)
+    }
+    pub unsafe fn MaaImageListBufferClear(&self, handle: *mut MaaImageListBuffer) -> MaaBool {
+        (self.MaaImageListBufferClear)(handle)
+    }
+    pub unsafe fn MaaRectCreate(&self) -> *mut MaaRect {
+        (self.MaaRectCreate)()
+    }
+    pub unsafe fn MaaRectDestroy(&self, handle: *mut MaaRect) {
+        (self.MaaRectDestroy)(handle)
+    }
+    pub unsafe fn MaaRectGetX(&self, handle: *const MaaRect) -> i32 {
+        (self.MaaRectGetX)(handle)
+    }
+    pub unsafe fn MaaRectGetY(&self, handle: *const MaaRect) -> i32 {
+        (self.MaaRectGetY)(handle)
+    }
+    pub unsafe fn MaaRectGetW(&self, handle: *const MaaRect) -> i32 {
+        (self.MaaRectGetW)(handle)
+    }
+    pub unsafe fn MaaRectGetH(&self, handle: *const MaaRect) -> i32 {
+        (self.MaaRectGetH)(handle)
+    }
+    pub unsafe fn MaaRectSet(
+        &self,
+        handle: *mut MaaRect,
+        x: i32,
+        y: i32,
+        w: i32,
+        h: i32,
+    ) -> MaaBool {
+        (self.MaaRectSet)(handle, x, y, w, h)
+    }
+    pub unsafe fn MaaVersion(&self) -> *const ::std::os::raw::c_char {
+        (self.MaaVersion)()
+    }
+    pub unsafe fn MaaAgentClientCreateV2(
+        &self,
+        identifier: *const MaaStringBuffer,
+    ) -> *mut MaaAgentClient {
+        (self.MaaAgentClientCreateV2)(identifier)
+    }
+    pub unsafe fn MaaAgentClientCreateTcp(&self, port: u16) -> *mut MaaAgentClient {
+        (self.MaaAgentClientCreateTcp)(port)
+    }
+    pub unsafe fn MaaAgentClientDestroy(&self, client: *mut MaaAgentClient) {
+        (self.MaaAgentClientDestroy)(client)
+    }
+    pub unsafe fn MaaAgentClientIdentifier(
+        &self,
+        client: *mut MaaAgentClient,
+        identifier: *mut MaaStringBuffer,
+    ) -> MaaBool {
+        (self.MaaAgentClientIdentifier)(client, identifier)
+    }
+    pub unsafe fn MaaAgentClientBindResource(
+        &self,
+        client: *mut MaaAgentClient,
+        res: *mut MaaResource,
+    ) -> MaaBool {
+        (self.MaaAgentClientBindResource)(client, res)
+    }
+    pub unsafe fn MaaAgentClientRegisterResourceSink(
+        &self,
+        client: *mut MaaAgentClient,
+        res: *mut MaaResource,
+    ) -> MaaBool {
+        (self.MaaAgentClientRegisterResourceSink)(client, res)
+    }
+    pub unsafe fn MaaAgentClientRegisterControllerSink(
+        &self,
+        client: *mut MaaAgentClient,
+        ctrl: *mut MaaController,
+    ) -> MaaBool {
+        (self.MaaAgentClientRegisterControllerSink)(client, ctrl)
+    }
+    pub unsafe fn MaaAgentClientRegisterTaskerSink(
+        &self,
+        client: *mut MaaAgentClient,
+        tasker: *mut MaaTasker,
+    ) -> MaaBool {
+        (self.MaaAgentClientRegisterTaskerSink)(client, tasker)
+    }
+    pub unsafe fn MaaAgentClientConnect(&self, client: *mut MaaAgentClient) -> MaaBool {
+        (self.MaaAgentClientConnect)(client)
+    }
+    pub unsafe fn MaaAgentClientDisconnect(&self, client: *mut MaaAgentClient) -> MaaBool {
+        (self.MaaAgentClientDisconnect)(client)
+    }
+    pub unsafe fn MaaAgentClientConnected(&self, client: *mut MaaAgentClient) -> MaaBool {
+        (self.MaaAgentClientConnected)(client)
+    }
+    pub unsafe fn MaaAgentClientAlive(&self, client: *mut MaaAgentClient) -> MaaBool {
+        (self.MaaAgentClientAlive)(client)
+    }
+    pub unsafe fn MaaAgentClientSetTimeout(
+        &self,
+        client: *mut MaaAgentClient,
+        milliseconds: i64,
+    ) -> MaaBool {
+        (self.MaaAgentClientSetTimeout)(client, milliseconds)
+    }
+    pub unsafe fn MaaAgentClientGetCustomRecognitionList(
+        &self,
+        client: *mut MaaAgentClient,
+        buffer: *mut MaaStringListBuffer,
+    ) -> MaaBool {
+        (self.MaaAgentClientGetCustomRecognitionList)(client, buffer)
+    }
+    pub unsafe fn MaaAgentClientGetCustomActionList(
+        &self,
+        client: *mut MaaAgentClient,
+        buffer: *mut MaaStringListBuffer,
+    ) -> MaaBool {
+        (self.MaaAgentClientGetCustomActionList)(client, buffer)
+    }
+    pub unsafe fn MaaAgentClientCreate(&self) -> *mut MaaAgentClient {
+        (self.MaaAgentClientCreate)()
+    }
+    pub unsafe fn MaaAgentClientCreateSocket(
+        &self,
+        client: *mut MaaAgentClient,
+        identifier: *mut MaaStringBuffer,
+    ) -> MaaBool {
+        (self.MaaAgentClientCreateSocket)(client, identifier)
+    }
+    pub unsafe fn MaaAgentServerRegisterCustomRecognition(
+        &self,
+        name: *const ::std::os::raw::c_char,
+        recognition: MaaCustomRecognitionCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaBool {
+        (self.MaaAgentServerRegisterCustomRecognition)(name, recognition, trans_arg)
+    }
+    pub unsafe fn MaaAgentServerRegisterCustomAction(
+        &self,
+        name: *const ::std::os::raw::c_char,
+        action: MaaCustomActionCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaBool {
+        (self.MaaAgentServerRegisterCustomAction)(name, action, trans_arg)
+    }
+    pub unsafe fn MaaAgentServerAddResourceSink(
+        &self,
+        sink: MaaEventCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaSinkId {
+        (self.MaaAgentServerAddResourceSink)(sink, trans_arg)
+    }
+    pub unsafe fn MaaAgentServerAddControllerSink(
+        &self,
+        sink: MaaEventCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaSinkId {
+        (self.MaaAgentServerAddControllerSink)(sink, trans_arg)
+    }
+    pub unsafe fn MaaAgentServerAddTaskerSink(
+        &self,
+        sink: MaaEventCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaSinkId {
+        (self.MaaAgentServerAddTaskerSink)(sink, trans_arg)
+    }
+    pub unsafe fn MaaAgentServerAddContextSink(
+        &self,
+        sink: MaaEventCallback,
+        trans_arg: *mut ::std::os::raw::c_void,
+    ) -> MaaSinkId {
+        (self.MaaAgentServerAddContextSink)(sink, trans_arg)
+    }
+    pub unsafe fn MaaAgentServerStartUp(
+        &self,
+        identifier: *const ::std::os::raw::c_char,
+    ) -> MaaBool {
+        (self.MaaAgentServerStartUp)(identifier)
+    }
+    pub unsafe fn MaaAgentServerShutDown(&self) {
+        (self.MaaAgentServerShutDown)()
+    }
+    pub unsafe fn MaaAgentServerJoin(&self) {
+        (self.MaaAgentServerJoin)()
+    }
+    pub unsafe fn MaaAgentServerDetach(&self) {
+        (self.MaaAgentServerDetach)()
+    }
+    pub unsafe fn MaaToolkitAdbDeviceListCreate(&self) -> *mut MaaToolkitAdbDeviceList {
+        (self.MaaToolkitAdbDeviceListCreate)()
+    }
+    pub unsafe fn MaaToolkitAdbDeviceListDestroy(&self, handle: *mut MaaToolkitAdbDeviceList) {
+        (self.MaaToolkitAdbDeviceListDestroy)(handle)
+    }
+    pub unsafe fn MaaToolkitAdbDeviceFind(&self, buffer: *mut MaaToolkitAdbDeviceList) -> MaaBool {
+        (self.MaaToolkitAdbDeviceFind)(buffer)
+    }
+    pub unsafe fn MaaToolkitAdbDeviceFindSpecified(
+        &self,
+        adb_path: *const ::std::os::raw::c_char,
+        buffer: *mut MaaToolkitAdbDeviceList,
+    ) -> MaaBool {
+        (self.MaaToolkitAdbDeviceFindSpecified)(adb_path, buffer)
+    }
+    pub unsafe fn MaaToolkitAdbDeviceListSize(
+        &self,
+        list: *const MaaToolkitAdbDeviceList,
+    ) -> MaaSize {
+        (self.MaaToolkitAdbDeviceListSize)(list)
+    }
+    pub unsafe fn MaaToolkitAdbDeviceListAt(
+        &self,
+        list: *const MaaToolkitAdbDeviceList,
+        index: MaaSize,
+    ) -> *const MaaToolkitAdbDevice {
+        (self.MaaToolkitAdbDeviceListAt)(list, index)
+    }
+    pub unsafe fn MaaToolkitAdbDeviceGetName(
+        &self,
+        device: *const MaaToolkitAdbDevice,
+    ) -> *const ::std::os::raw::c_char {
+        (self.MaaToolkitAdbDeviceGetName)(device)
+    }
+    pub unsafe fn MaaToolkitAdbDeviceGetAdbPath(
+        &self,
+        device: *const MaaToolkitAdbDevice,
+    ) -> *const ::std::os::raw::c_char {
+        (self.MaaToolkitAdbDeviceGetAdbPath)(device)
+    }
+    pub unsafe fn MaaToolkitAdbDeviceGetAddress(
+        &self,
+        device: *const MaaToolkitAdbDevice,
+    ) -> *const ::std::os::raw::c_char {
+        (self.MaaToolkitAdbDeviceGetAddress)(device)
+    }
+    pub unsafe fn MaaToolkitAdbDeviceGetScreencapMethods(
+        &self,
+        device: *const MaaToolkitAdbDevice,
+    ) -> MaaAdbScreencapMethod {
+        (self.MaaToolkitAdbDeviceGetScreencapMethods)(device)
+    }
+    pub unsafe fn MaaToolkitAdbDeviceGetInputMethods(
+        &self,
+        device: *const MaaToolkitAdbDevice,
+    ) -> MaaAdbInputMethod {
+        (self.MaaToolkitAdbDeviceGetInputMethods)(device)
+    }
+    pub unsafe fn MaaToolkitAdbDeviceGetConfig(
+        &self,
+        device: *const MaaToolkitAdbDevice,
+    ) -> *const ::std::os::raw::c_char {
+        (self.MaaToolkitAdbDeviceGetConfig)(device)
+    }
+    pub unsafe fn MaaToolkitDesktopWindowListCreate(&self) -> *mut MaaToolkitDesktopWindowList {
+        (self.MaaToolkitDesktopWindowListCreate)()
+    }
+    pub unsafe fn MaaToolkitDesktopWindowListDestroy(
+        &self,
+        handle: *mut MaaToolkitDesktopWindowList,
+    ) {
+        (self.MaaToolkitDesktopWindowListDestroy)(handle)
+    }
+    pub unsafe fn MaaToolkitDesktopWindowFindAll(
+        &self,
+        buffer: *mut MaaToolkitDesktopWindowList,
+    ) -> MaaBool {
+        (self.MaaToolkitDesktopWindowFindAll)(buffer)
+    }
+    pub unsafe fn MaaToolkitDesktopWindowListSize(
+        &self,
+        list: *const MaaToolkitDesktopWindowList,
+    ) -> MaaSize {
+        (self.MaaToolkitDesktopWindowListSize)(list)
+    }
+    pub unsafe fn MaaToolkitDesktopWindowListAt(
+        &self,
+        list: *const MaaToolkitDesktopWindowList,
+        index: MaaSize,
+    ) -> *const MaaToolkitDesktopWindow {
+        (self.MaaToolkitDesktopWindowListAt)(list, index)
+    }
+    pub unsafe fn MaaToolkitDesktopWindowGetHandle(
+        &self,
+        window: *const MaaToolkitDesktopWindow,
+    ) -> *mut ::std::os::raw::c_void {
+        (self.MaaToolkitDesktopWindowGetHandle)(window)
+    }
+    pub unsafe fn MaaToolkitDesktopWindowGetClassName(
+        &self,
+        window: *const MaaToolkitDesktopWindow,
+    ) -> *const ::std::os::raw::c_char {
+        (self.MaaToolkitDesktopWindowGetClassName)(window)
+    }
+    pub unsafe fn MaaToolkitDesktopWindowGetWindowName(
+        &self,
+        window: *const MaaToolkitDesktopWindow,
+    ) -> *const ::std::os::raw::c_char {
+        (self.MaaToolkitDesktopWindowGetWindowName)(window)
+    }
+    pub unsafe fn MaaToolkitConfigInitOption(
+        &self,
+        user_path: *const ::std::os::raw::c_char,
+        default_json: *const ::std::os::raw::c_char,
+    ) -> MaaBool {
+        (self.MaaToolkitConfigInitOption)(user_path, default_json)
+    }
+}

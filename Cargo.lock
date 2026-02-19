@@ -592,14 +592,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "maa-framework-examples"
-version = "0.1.0"
-dependencies = [
- "maa-framework",
- "serde_json",
-]
-
-[[package]]
 name = "maa-framework-sys"
 version = "5.6.0"
 dependencies = [
