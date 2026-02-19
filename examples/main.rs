@@ -18,7 +18,8 @@ use maa_framework::custom::{CustomAction, CustomRecognition};
 use maa_framework::resource::Resource;
 use maa_framework::tasker::Tasker;
 use maa_framework::toolkit::Toolkit;
-use maa_framework::{common, sys};
+use maa_framework::{buffer, common, sys};
+use std::path::Path;
 
 // ============================================================================
 // Custom Recognition Implementation
@@ -51,10 +52,15 @@ impl CustomRecognition for MyRecognition {
 
         // --- Context API Demo ---
 
-        // 1. Run sub-pipeline recognition with override (commented out - requires OCR model)
-        // let pp_override = r#"{"MyCustomOCR": {"recognition": "OCR", "roi": [100, 100, 200, 300]}}"#;
-        // let reco_id = context.run_recognition("MyCustomOCR", pp_override, _image);  
-        // println!("  run_recognition result: {:?}", reco_id);
+        // 1. Run sub-pipeline recognition with override (requires OCR model)
+        if !Path::new("sample/resource/ocr_model").exists() {
+            println!("找不到 OCR 模型资源，跳过 run_recognition 演示...");
+        } else if let Ok(img_buf) = buffer::MaaImageBuffer::new() {
+            let pp_override =
+                r#"{"MyCustomOCR": {"recognition": "OCR", "roi": [100, 100, 200, 300]}}"#;
+            let reco_id = context.run_recognition("MyCustomOCR", pp_override, &img_buf);
+            println!("  run_recognition result: {:?}", reco_id);
+        }
 
         // 2. Take a new screenshot via tasker's controller
         let tasker_ptr = context.tasker_handle();
@@ -96,36 +102,17 @@ impl CustomRecognition for MyRecognition {
         println!("  [Demo] Async click would complete here");
 
         // 7. Clone context for independent operations (modifications won't affect original)
-        // Commented out - demonstrates cloning but requires proper image/pipeline setup
-        /*
-        if let Ok(new_ctx) = context.clone_context() {
+        if !Path::new("sample/resource").exists() {
+            println!("找不到 sample/resource，跳过 clone_context 演示...");
+        } else if let Ok(new_ctx) = context.clone_context() {
             let _ = new_ctx.override_pipeline(r#"{"MyCustomOCR": {"roi": [100, 200, 300, 400]}}"#);
-
-            // Run recognition and use the result
             if let Ok(img_buf) = buffer::MaaImageBuffer::new() {
                 let reco_id = new_ctx.run_recognition("MyCustomOCR", "{}", &img_buf);
-
-                // If recognition succeeded, get the tasker to retrieve details
                 if reco_id.is_ok() {
-                    // In a real scenario, you would:
-                    // 1. Get recognition detail from tasker
-                    // 2. Check if it hit
-                    // 3. Use the box coordinates to click
-                    println!("  [Demo] Would get reco detail and click on result box");
-
-                    // Example of clicking on recognition result box:
-                    // if let Ok(Some(detail)) = tasker.get_recognition_detail(reco_id) {
-                    //     if detail.hit {
-                    //         let box_rect = detail.box_rect;
-                    //         controller.post_click(box_rect.x, box_rect.y).wait();
-                    //     }
-                    // }
+                    println!("  [Demo] clone_context + run_recognition 完成");
                 }
             }
-            // new_ctx changes don't affect original context
         }
-        */
-        println!("  [Demo] Context cloning and sub-recognition available (commented out)");
 
         // 8. Get current task ID
         let task_id = context.task_id();
@@ -162,7 +149,7 @@ struct MyAction;
 impl CustomAction for MyAction {
     fn run(
         &self,
-        _context: &Context,
+        context: &Context,
         _task_id: sys::MaaTaskId,
         node_name: &str,
         custom_action_name: &str,
@@ -179,24 +166,21 @@ impl CustomAction for MyAction {
             reco_id, box_rect.x, box_rect.y, box_rect.width, box_rect.height
         );
 
-        // You can use Context API here too
-        // Commented out - "Click" task needs to be defined in pipeline
-        /*
-        let _ = context.run_action(
-            "Click",
-            "{}",
-            &common::Rect {
-                x: 114,
-                y: 514,
-                width: 100,
-                height: 100,
-            },
-            "{}",
-        );
-        */
-        println!("  [Demo] Context.run_action available (requires pipeline definition)");
+        if Path::new("sample/resource").exists() {
+            let _ = context.run_action(
+                "Click",
+                "{}",
+                &common::Rect {
+                    x: 114,
+                    y: 514,
+                    width: 100,
+                    height: 100,
+                },
+                "{}",
+            );
+        }
 
-        true // Return true for success, false for failure
+        true
     }
 }
 

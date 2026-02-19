@@ -42,5 +42,9 @@ sync_context = []
 internal = []
 image = ["dep:image"]
 
+[[example]]
+name = "main"
+path = "../examples/main.rs"
+
 [dev-dependencies]
 ctor = "0.6"
