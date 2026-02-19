@@ -53,7 +53,7 @@ impl CustomRecognition for MyRecognition {
         // --- Context API Demo ---
 
         // 1. Run sub-pipeline recognition with override (requires OCR model)
-        if !Path::new("sample/resource/ocr_model").exists() {
+        if !Path::new("examples/sample/resource/ocr_model").exists() {
             println!("OCR model resource not found, skipping run_recognition demo...");
         } else if let Ok(img_buf) = buffer::MaaImageBuffer::new() {
             let pp_override =
@@ -102,7 +102,7 @@ impl CustomRecognition for MyRecognition {
         println!("  [Demo] Async click would complete here");
 
         // 7. Clone context for independent operations (modifications won't affect original)
-        if !Path::new("sample/resource").exists() {
+        if !Path::new("examples/sample/resource").exists() {
             println!("sample/resource not found, skipping clone_context demo...");
         } else if let Ok(new_ctx) = context.clone_context() {
             let _ = new_ctx.override_pipeline(r#"{"MyCustomOCR": {"roi": [100, 200, 300, 400]}}"#);
@@ -166,7 +166,7 @@ impl CustomAction for MyAction {
             reco_id, box_rect.x, box_rect.y, box_rect.width, box_rect.height
         );
 
-        if Path::new("sample/resource").exists() {
+        if Path::new("examples/sample/resource").exists() {
             let _ = context.run_action(
                 "Click",
                 "{}",
@@ -338,7 +338,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Load resource bundle (optional - commented out as sample resources don't exist)
     // Uncomment below if you have resource files
-    let resource_path = "sample/resource";
+    let resource_path = "examples/sample/resource";
     println!("    Loading resource from: {}", resource_path);
     let resource_loaded = match resource.post_bundle(resource_path) {
         Ok(job) => {
