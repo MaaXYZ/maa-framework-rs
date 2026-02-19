@@ -324,6 +324,8 @@ bitflags::bitflags! {
         const POST_THREAD_MESSAGE = 1 << 4;
         const SEND_MESSAGE_WITH_CURSOR_POS = 1 << 5;
         const POST_MESSAGE_WITH_CURSOR_POS = 1 << 6;
+        const SEND_MESSAGE_WITH_WINDOW_POS = 1 << 7;
+        const POST_MESSAGE_WITH_WINDOW_POS = 1 << 8;
     }
 }
 
