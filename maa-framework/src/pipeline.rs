@@ -2,6 +2,9 @@
 
 use serde::{de::DeserializeOwned, Deserialize, Deserializer, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
+
+pub use crate::common::Rect;
 
 // --- Custom Deserializers for Scalar/Array Polymorphism ---
 // The C API may return either a scalar or an array for some fields.
@@ -29,8 +32,6 @@ where
 
 // --- Common Types ---
 
-/// Rectangle coordinates: (x, y, width, height).
-pub type Rect = (i32, i32, i32, i32);
 /// Region of interest: (x, y, width, height). Use [0, 0, 0, 0] for full screen.
 pub type Roi = (i32, i32, i32, i32);
 
@@ -51,6 +52,26 @@ pub enum Target {
 impl Default for Target {
     fn default() -> Self {
         Target::Bool(true)
+    }
+}
+
+/// Anchor configuration.
+///
+/// Can be:
+/// - String: Set anchor to current node.
+/// - List of strings: Set multiple anchors to current node.
+/// - Map: Set anchors to specific nodes (or clear if empty).
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(untagged)]
+pub enum Anchor {
+    Name(String),
+    List(Vec<String>),
+    Map(HashMap<String, String>),
+}
+
+impl Default for Anchor {
+    fn default() -> Self {
+        Anchor::List(Vec::new())
     }
 }
 
@@ -108,7 +129,7 @@ impl Default for WaitFreezes {
         Self {
             time: default_wait_time(),
             target: Target::default(),
-            target_offset: (0, 0, 0, 0),
+            target_offset: Rect::default(),
             threshold: default_wait_threshold(),
             method: default_wait_method(),
             rate_limit: default_rate_limit(),
@@ -145,6 +166,14 @@ pub enum Recognition {
     And(And),
     Or(Or),
     Custom(CustomRecognition),
+}
+
+/// Reference to a recognition: either an inline definition or a node name.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(untagged)]
+pub enum RecognitionRef {
+    NodeName(String),
+    Inline(Recognition),
 }
 
 // --- Specific Recognition Structs ---
@@ -380,7 +409,7 @@ pub struct CustomRecognition {
 pub struct And {
     /// Sub-recognition list. All must match. Required.
     #[serde(default)]
-    pub all_of: Vec<Recognition>,
+    pub all_of: Vec<RecognitionRef>,
     /// Which sub-recognition's bounding box to use. Default: 0.
     #[serde(default)]
     pub box_index: i32,
@@ -393,7 +422,7 @@ pub struct And {
 pub struct Or {
     /// Sub-recognition list. First match wins. Required.
     #[serde(default)]
-    pub any_of: Vec<Recognition>,
+    pub any_of: Vec<RecognitionRef>,
 }
 
 // --- Action Enums ---
@@ -690,7 +719,7 @@ pub struct PipelineData {
     pub on_error: Vec<NodeAttr>,
     /// Anchor names for this node. Default: [].
     #[serde(default)]
-    pub anchor: Vec<String>,
+    pub anchor: Anchor,
     /// Invert recognition result. Default: false.
     #[serde(default)]
     pub inverse: bool,
@@ -786,7 +815,7 @@ fn default_target_list_true() -> Vec<Target> {
     vec![Target::Bool(true)]
 }
 fn default_rect_list_zero() -> Vec<Rect> {
-    vec![(0, 0, 0, 0)]
+    vec![(0, 0, 0, 0).into()]
 }
 fn default_i32_list_zero() -> Vec<i32> {
     vec![0]
@@ -810,5 +839,5 @@ fn default_max_hit() -> u32 {
     u32::MAX
 }
 fn default_roi_zero() -> Target {
-    Target::Rect((0, 0, 0, 0))
+    Target::Rect((0, 0, 0, 0).into())
 }

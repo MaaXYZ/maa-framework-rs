@@ -110,6 +110,10 @@ fn run_context_pipeline_tests(context: &Context) -> MaaResult<()> {
         println!("FAILED: test_and_or_override_inheritance: {:?}", e);
         e
     })?;
+    test_and_or_node_reference(context).map_err(|e| {
+        println!("FAILED: test_and_or_node_reference: {:?}", e);
+        e
+    })?;
     test_recognition_types(context).map_err(|e| {
         println!("FAILED: test_recognition_types: {:?}", e);
         e
@@ -120,6 +124,10 @@ fn run_context_pipeline_tests(context: &Context) -> MaaResult<()> {
     })?;
     test_node_attributes(context).map_err(|e| {
         println!("FAILED: test_node_attributes: {:?}", e);
+        e
+    })?;
+    test_anchor_object_format(context).map_err(|e| {
+        println!("FAILED: test_anchor_object_format: {:?}", e);
         e
     })?;
     test_v2_format(context).map_err(|e| {
@@ -244,7 +252,25 @@ fn test_context_override_pipeline(context: &Context) -> MaaResult<()> {
     assert_eq!(node_obj.max_hit, 3, "max_hit");
     assert_eq!(node_obj.enabled, true, "enabled");
     assert_eq!(node_obj.inverse, false, "inverse");
-    assert_eq!(node_obj.anchor, vec!["my_anchor".to_string()], "anchor");
+
+    match node_obj.anchor {
+        maa_framework::pipeline::Anchor::Map(m) => {
+            assert!(
+                m.contains_key("my_anchor"),
+                "anchor map should contain 'my_anchor', got {:?}",
+                m
+            );
+            assert_eq!(
+                m.get("my_anchor").map(|s| s.as_str()),
+                Some("OverrideTestNode"),
+                "anchor value"
+            );
+        }
+        _ => panic!(
+            "Expected Anchor::Map after C API round-trip, got {:?}",
+            node_obj.anchor
+        ),
+    }
 
     // Verify attach
     assert!(node_obj.attach.is_some(), "attach should exist");
@@ -380,6 +406,115 @@ fn test_and_or_override_inheritance(context: &Context) -> MaaResult<()> {
     }
 
     println!("    PASS: And/Or override inheritance");
+    Ok(())
+}
+
+/// Test And/Or node reference - matching Python _test_and_or_node_reference
+fn test_and_or_node_reference(context: &Context) -> MaaResult<()> {
+    println!("  Testing And/Or node name reference...");
+
+    let new_ctx = context.clone_context()?;
+
+    // Create base nodes
+    new_ctx.override_pipeline(
+        r#"{
+        "BaseTemplateNode": {
+            "recognition": "TemplateMatch",
+            "template": ["test.png"],
+            "threshold": 0.8
+        },
+        "BaseOCRNode": {
+            "recognition": "OCR",
+            "expected": ["hello"]
+        }
+    }"#,
+    )?;
+
+    // Create And node with references
+    new_ctx.override_pipeline(
+        r#"{
+        "AndWithNodeRef": {
+            "recognition": {
+                "type": "And",
+                "param": {
+                    "all_of": [
+                        "BaseTemplateNode",
+                        "BaseOCRNode",
+                        {"recognition": {"type": "DirectHit"}}
+                    ],
+                    "box_index": 0
+                }
+            }
+        }
+    }"#,
+    )?;
+
+    let and_node = new_ctx
+        .get_node_object("AndWithNodeRef")?
+        .expect("AndWithNodeRef MUST exist");
+
+    match and_node.recognition {
+        Recognition::And(and) => {
+            assert_eq!(and.all_of.len(), 3, "all_of length");
+            match &and.all_of[0] {
+                maa_framework::pipeline::RecognitionRef::NodeName(name) => {
+                    assert_eq!(name, "BaseTemplateNode");
+                }
+                _ => panic!("Expected NodeName"),
+            }
+            match &and.all_of[1] {
+                maa_framework::pipeline::RecognitionRef::NodeName(name) => {
+                    assert_eq!(name, "BaseOCRNode");
+                }
+                _ => panic!("Expected NodeName"),
+            }
+            match &and.all_of[2] {
+                maa_framework::pipeline::RecognitionRef::Inline(_) => {}
+                _ => panic!("Expected Inline"),
+            }
+        }
+        _ => panic!("Expected And recognition"),
+    }
+
+    // Create Or node with references
+    new_ctx.override_pipeline(
+        r#"{
+        "OrWithNodeRef": {
+            "recognition": {
+                "type": "Or",
+                "param": {
+                    "any_of": [
+                        "BaseTemplateNode",
+                        {"recognition": {"type": "DirectHit"}}
+                    ]
+                }
+            }
+        }
+    }"#,
+    )?;
+
+    let or_node = new_ctx
+        .get_node_object("OrWithNodeRef")?
+        .expect("OrWithNodeRef MUST exist");
+
+    match or_node.recognition {
+        Recognition::Or(or) => {
+            assert_eq!(or.any_of.len(), 2, "any_of length");
+            match &or.any_of[0] {
+                maa_framework::pipeline::RecognitionRef::NodeName(name) => {
+                    assert_eq!(name, "BaseTemplateNode");
+                }
+                _ => panic!("Expected NodeName"),
+            }
+            match &or.any_of[1] {
+                maa_framework::pipeline::RecognitionRef::Inline(_) => {}
+                _ => panic!("Expected Inline"),
+            }
+        }
+        _ => panic!("Expected Or recognition"),
+    }
+
+    println!("    PASS: And/Or node name reference");
     Ok(())
 }
 
@@ -933,6 +1068,95 @@ fn test_node_attributes(context: &Context) -> MaaResult<()> {
     assert_eq!(obj.on_error[0].jump_back, true);
 
     println!("    PASS: node attributes");
+    Ok(())
+}
+
+/// Test anchor object format - matching Python _test_anchor_object_format
+fn test_anchor_object_format(context: &Context) -> MaaResult<()> {
+    println!("  Testing anchor object format...");
+
+    let new_ctx = context.clone_context()?;
+
+    // Test anchor formats
+    new_ctx.override_pipeline(
+        r#"{
+        "AnchorString": {
+            "anchor": "StringAnchor"
+        },
+        "AnchorArray": {
+            "anchor": ["ArrayAnchor1", "ArrayAnchor2"]
+        },
+        "AnchorObject": {
+            "anchor": {
+                "ObjAnchor1": "TargetNode1",
+                "ObjAnchor2": "",
+                "ObjAnchor3": "TargetNode2"
+            }
+        },
+        "TargetNode1": {},
+        "TargetNode2": {}
+    }"#,
+    )?;
+
+    // C API normalizes ALL anchor formats to map: {anchor_name: node_name}
+    // "anchor": "StringAnchor" on "AnchorString" => {"StringAnchor": "AnchorString"}
+    let obj1 = new_ctx
+        .get_node_object("AnchorString")?
+        .expect("AnchorString should exist");
+    match obj1.anchor {
+        maa_framework::pipeline::Anchor::Map(m) => {
+            assert_eq!(
+                m.get("StringAnchor").map(|s| s.as_str()),
+                Some("AnchorString"),
+                "string anchor should map to node name"
+            );
+        }
+        _ => panic!(
+            "Expected Anchor::Map for AnchorString, got {:?}",
+            obj1.anchor
+        ),
+    }
+
+    // "anchor": ["ArrayAnchor1", "ArrayAnchor2"] on "AnchorArray"
+    //   => {"ArrayAnchor1": "AnchorArray", "ArrayAnchor2": "AnchorArray"}
+    let obj2 = new_ctx
+        .get_node_object("AnchorArray")?
+        .expect("AnchorArray should exist");
+    match obj2.anchor {
+        maa_framework::pipeline::Anchor::Map(m) => {
+            assert_eq!(m.len(), 2, "array anchor should have 2 entries");
+            assert_eq!(
+                m.get("ArrayAnchor1").map(|s| s.as_str()),
+                Some("AnchorArray")
+            );
+            assert_eq!(
+                m.get("ArrayAnchor2").map(|s| s.as_str()),
+                Some("AnchorArray")
+            );
+        }
+        _ => panic!(
+            "Expected Anchor::Map for AnchorArray, got {:?}",
+            obj2.anchor
+        ),
+    }
+
+    // "anchor": {"ObjAnchor1": "TargetNode1", ...} stays as-is
+    let obj3 = new_ctx
+        .get_node_object("AnchorObject")?
+        .expect("AnchorObject should exist");
+    match obj3.anchor {
+        maa_framework::pipeline::Anchor::Map(m) => {
+            assert_eq!(m.get("ObjAnchor1").map(|s| s.as_str()), Some("TargetNode1"));
+            assert_eq!(m.get("ObjAnchor2").map(|s| s.as_str()), Some(""));
+            assert_eq!(m.get("ObjAnchor3").map(|s| s.as_str()), Some("TargetNode2"));
+        }
+        _ => panic!(
+            "Expected Anchor::Map for AnchorObject, got {:?}",
+            obj3.anchor
+        ),
+    }
+
+    println!("    PASS: anchor object format");
     Ok(())
 }
 
