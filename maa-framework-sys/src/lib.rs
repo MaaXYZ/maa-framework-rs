@@ -42,13 +42,13 @@ impl CompositeLibrary {
             {
                 //LOAD_WITH_ALTERED_SEARCH_PATH (0x00000008)
                 let p = p.canonicalize().unwrap_or(p.to_path_buf());
-                let lib = libloading::os::windows::Library::load_with_flags(&p, 0x00000008)?;
+                let lib = unsafe { libloading::os::windows::Library::load_with_flags(&p, 0x00000008)? };
                 Ok(lib.into())
             }
             #[cfg(not(target_os = "windows"))]
             {
                 let p = p.canonicalize().unwrap_or(p.to_path_buf());
-                libloading::Library::new(&p)
+                unsafe { libloading::Library::new(&p) }
             }
         };
 
@@ -89,11 +89,11 @@ impl CompositeLibrary {
         symbol: &[u8],
     ) -> Result<libloading::Symbol<'_, T>, libloading::Error> {
         for lib in &self.libs {
-            if let Ok(s) = lib.get(symbol) {
+            if let Ok(s) = unsafe { lib.get(symbol) } {
                 return Ok(s);
             }
         }
-        self.libs[0].get(symbol)
+        unsafe { self.libs[0].get(symbol) }
     }
 }
 
@@ -102,7 +102,7 @@ pub unsafe fn load_library(path: &std::path::Path) -> Result<(), String> {
     if INSTANCE.get().is_some() {
         return Err("Library already loaded".to_string());
     }
-    let lib = MaaFramework::new(path).map_err(|e| e.to_string())?;
+    let lib = unsafe { MaaFramework::new(path).map_err(|e| e.to_string())? };
     INSTANCE
         .set(lib)
         .map_err(|_| "Library already loaded".to_string())
@@ -113,7 +113,7 @@ macro_rules! shim {
     ($name:ident ( $($arg:ident : $type:ty),* $(,)? ) -> $ret:ty) => {
         pub unsafe fn $name($($arg : $type),*) -> $ret {
             let lib = INSTANCE.get().expect("MaaFramework library not loaded!");
-            (lib.$name)($($arg),*)
+            unsafe { (lib.$name)($($arg),*) }
         }
     }
 }

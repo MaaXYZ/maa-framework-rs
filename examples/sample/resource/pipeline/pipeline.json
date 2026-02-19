@@ -1,0 +1,10 @@
+{  
+  "OpenSettings": {  
+    "action": {  
+      "type": "StartApp",  
+      "param": {  
+        "package": "com.android.settings"  
+      }  
+    }  
+  }  
+}

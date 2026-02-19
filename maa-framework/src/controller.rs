@@ -50,7 +50,7 @@ impl Controller {
     /// * `adb_path` - Path to the ADB executable
     /// * `address` - Device address (e.g., "127.0.0.1:5555" or "emulator-5554")
     /// * `config` - JSON configuration string for advanced options
-    /// * `agent_path` - Path to MaaAgentBinary directory (e.g., `"./MaaAgentBinary"`)
+    /// * `agent_path` - Path to MaaAgent binary; pass `""` to use current directory (may return `Err` if resolution fails).
     #[cfg(feature = "adb")]
     pub fn new_adb(
         adb_path: &str,
@@ -68,6 +68,28 @@ impl Controller {
         )
     }
 
+    /// Resolves to the current directory if the string is empty; otherwise, uses it as-is. Returns Err if parsing fails.
+    #[cfg(feature = "adb")]
+    fn resolve_agent_path(agent_path: &str) -> MaaResult<String> {
+        if !agent_path.is_empty() {
+            return Ok(agent_path.to_string());
+        }
+        let cur = std::env::current_dir().
+                           map_err(|e| {
+                           MaaError::InvalidArgument(
+                           format!("agent_path empty and current_dir failed: {}", e)
+                        )
+        })?;
+        let s = cur.
+                    to_str().
+                    ok_or_else(|| {
+                    MaaError::InvalidArgument(
+                   "agent_path empty and current directory is not valid UTF-8".to_string(),
+            )
+        })?;
+        Ok(s.to_string())
+    }
+
     #[cfg(feature = "adb")]
     pub(crate) fn create_adb(
         adb_path: &str,
@@ -77,10 +99,11 @@ impl Controller {
         config: &str,
         agent_path: &str,
     ) -> MaaResult<Self> {
+        let path = Self::resolve_agent_path(agent_path)?;
         let c_adb = CString::new(adb_path)?;
         let c_addr = CString::new(address)?;
         let c_cfg = CString::new(config)?;
-        let c_agent = CString::new(agent_path)?;
+        let c_agent = CString::new(path.as_str())?;
 
         let handle = unsafe {
             sys::MaaAdbControllerCreate(
@@ -684,7 +707,7 @@ impl AdbControllerBuilder {
             screencap_methods: sys::MaaAdbScreencapMethod_Default as sys::MaaAdbScreencapMethod,
             input_methods: sys::MaaAdbInputMethod_Default as sys::MaaAdbInputMethod,
             config: "{}".to_string(),
-            agent_path: "./MaaAgentBinary".to_string(),
+            agent_path: String::new(),
         }
     }
 
@@ -714,7 +737,6 @@ impl AdbControllerBuilder {
 
     /// Build the controller with the configured options.
     pub fn build(self) -> MaaResult<Controller> {
-        // Fix: Use create_adb directly to ensure options are used
         Controller::create_adb(
             &self.adb_path,
             &self.address,

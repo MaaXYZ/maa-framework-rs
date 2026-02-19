@@ -337,6 +337,7 @@ fn generate_bindings_with_bindgen(include_dir: &[PathBuf], out_path: &PathBuf, i
     }
 
     bindings_builder = bindings_builder
+        .wrap_unsafe_ops(true)
         .allowlist_function("Maa.*")
         .allowlist_type("Maa.*")
         .allowlist_var("Maa.*")
@@ -498,3 +499,4 @@ fn copy_dir_recursive(src: &std::path::Path, dst: &std::path::Path) -> std::io::
         Ok(1)
     }
 }
+

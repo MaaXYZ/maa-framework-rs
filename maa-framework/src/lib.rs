@@ -20,13 +20,11 @@
 //!     let devices = Toolkit::find_adb_devices()?;
 //!     let device = devices.first().expect("No device found");
 //!
-//!     // 2. Create controller
-//!     let controller = Controller::new_adb(
-//!         device.adb_path.to_str().unwrap(),
-//!         &device.address,
-//!         "{}",
-//!         "./MaaAgentBinary",
-//!     )?;
+//!     // 2. Create controller (agent_path: "" to use MAA_AGENT_PATH or current dir)
+//!     let adb_path = device.adb_path.to_str().ok_or_else(|| {
+//!         std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid ADB path")
+//!     })?;
+//!     let controller = Controller::new_adb(adb_path, &device.address, "{}", "")?;
 //!
 //!     // 3. Create resource and tasker
 //!     let resource = Resource::new()?;
@@ -247,4 +245,68 @@ pub fn load_plugin(path: &str) -> MaaResult<()> {
 #[cfg(feature = "dynamic")]
 pub fn load_library(path: &std::path::Path) -> Result<(), String> {
     unsafe { sys::load_library(path) }
+}
+
+/// Finds and loads the MaaFramework dynamic library when using the `dynamic` feature.
+///
+/// Tries, in order: `MAA_SDK_PATH` (bin/lib), project `MAA-*` dirs (from `CARGO_MANIFEST_DIR`
+/// or current dir), `target/debug` or `target/release`, then current dir. Use this in examples
+/// or apps so that `cargo run --example main` works without setting env vars.
+///
+/// # Errors
+///
+/// Returns an error if no library file is found or loading fails.
+#[cfg(feature = "dynamic")]
+pub fn ensure_library_loaded() -> Result<(), String> {
+    let lib_name = if cfg!(target_os = "windows") {
+        "MaaFramework.dll"
+    } else if cfg!(target_os = "macos") {
+        "libMaaFramework.dylib"
+    } else {
+        "libMaaFramework.so"
+    };
+
+    let mut candidates: Vec<std::path::PathBuf> = Vec::new();
+
+    if let Ok(sdk) = std::env::var("MAA_SDK_PATH") {
+        let sdk = std::path::PathBuf::from(sdk);
+        candidates.push(sdk.join("bin").join(lib_name));
+        candidates.push(sdk.join("lib").join(lib_name));
+    }
+
+    let search_roots: Vec<std::path::PathBuf> = std::env::var("CARGO_MANIFEST_DIR")
+        .map(std::path::PathBuf::from)
+        .into_iter()
+        .chain(std::env::current_dir().ok())
+        .collect();
+
+    for root in &search_roots {
+        if let Ok(entries) = std::fs::read_dir(root) {
+            for e in entries.flatten() {
+                let p = e.path();
+                if p.is_dir() {
+                    if let Some(name) = p.file_name() {
+                        if name.to_string_lossy().starts_with("MAA-") {
+                            candidates.push(p.join("bin").join(lib_name));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if let Ok(cwd) = std::env::current_dir() {
+        candidates.push(cwd.join("target/debug").join(lib_name));
+        candidates.push(cwd.join("target/release").join(lib_name));
+        candidates.push(cwd.join(lib_name));
+    }
+
+    let chosen = candidates.into_iter().find(|p| p.exists());
+    match chosen {
+        Some(path) => load_library(&path),
+        None => Err(
+            "MaaFramework library not found. Set MAA_SDK_PATH or place SDK (e.g. MAA-*/bin/)."
+                .to_string(),
+        ),
+    }
 }
