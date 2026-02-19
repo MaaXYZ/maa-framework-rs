@@ -50,13 +50,13 @@ impl Controller {
     /// * `adb_path` - Path to the ADB executable
     /// * `address` - Device address (e.g., "127.0.0.1:5555" or "emulator-5554")
     /// * `config` - JSON configuration string for advanced options
-    /// * `agent_path` - Optional path to MaaAgentBinary
+    /// * `agent_path` - Path to MaaAgentBinary (required; use `""` if no agent)
     #[cfg(feature = "adb")]
     pub fn new_adb(
         adb_path: &str,
         address: &str,
         config: &str,
-        agent_path: Option<&str>,
+        agent_path: &str,
     ) -> MaaResult<Self> {
         Self::create_adb(
             adb_path,
@@ -75,16 +75,12 @@ impl Controller {
         screencap_method: sys::MaaAdbScreencapMethod,
         input_method: sys::MaaAdbInputMethod,
         config: &str,
-        agent_path: Option<&str>,
+        agent_path: &str,
     ) -> MaaResult<Self> {
         let c_adb = CString::new(adb_path)?;
         let c_addr = CString::new(address)?;
         let c_cfg = CString::new(config)?;
-        
-        // Use empty string instead of null pointer for agent_path
-        // to avoid crashes in MaaFramework's logging code
-        let agent_str = agent_path.unwrap_or("");
-        let c_agent = CString::new(agent_str)?;
+        let c_agent = CString::new(agent_path)?;
 
         let handle = unsafe {
             sys::MaaAdbControllerCreate(
@@ -675,7 +671,7 @@ pub struct AdbControllerBuilder {
     screencap_methods: sys::MaaAdbScreencapMethod,
     input_methods: sys::MaaAdbInputMethod,
     config: String,
-    agent_path: Option<String>,
+    agent_path: String,
 }
 
 #[cfg(feature = "adb")]
@@ -688,7 +684,7 @@ impl AdbControllerBuilder {
             screencap_methods: sys::MaaAdbScreencapMethod_Default as sys::MaaAdbScreencapMethod,
             input_methods: sys::MaaAdbInputMethod_Default as sys::MaaAdbInputMethod,
             config: "{}".to_string(),
-            agent_path: None,
+            agent_path: String::new(),
         }
     }
 
@@ -712,20 +708,19 @@ impl AdbControllerBuilder {
 
     /// Set the path to MaaAgentBinary.
     pub fn agent_path(mut self, path: &str) -> Self {
-        self.agent_path = Some(path.to_string());
+        self.agent_path = path.to_string();
         self
     }
 
     /// Build the controller with the configured options.
     pub fn build(self) -> MaaResult<Controller> {
-        // Fix: Use create_adb directly to ensure options are used
         Controller::create_adb(
             &self.adb_path,
             &self.address,
             self.screencap_methods,
             self.input_methods,
             &self.config,
-            self.agent_path.as_deref(),
+            &self.agent_path,
         )
     }
 }

@@ -336,7 +336,9 @@ fn generate_bindings_with_bindgen(include_dir: &[PathBuf], out_path: &PathBuf, i
         bindings_builder = bindings_builder.header("headers/maa_toolkit.h");
     }
 
-    bindings_builder = bindings_builder.blocklist_function("^__.*");
+    bindings_builder = bindings_builder
+        .blocklist_function("^__.*")
+        .wrap_unsafe_ops(true);
 
     if is_dynamic {
         let static_bindings = bindings_builder
@@ -370,10 +372,6 @@ fn generate_bindings_with_bindgen(include_dir: &[PathBuf], out_path: &PathBuf, i
             bindings_content.replace("::libloading::Library::new", "CompositeLibrary::new");
         bindings_content =
             bindings_content.replace("Into<::libloading::Library>", "Into<CompositeLibrary>");
-
-        // Fix Rust 2024 Edition unsafe-in-unsafe-fn warnings
-        // Wrap function bodies with unsafe blocks for all unsafe fn methods
-        bindings_content = fix_unsafe_fn_bodies(&bindings_content);
 
         std::fs::write(out_path.join("bindings.rs"), bindings_content)
             .expect("Couldn't write bindings!");
@@ -499,45 +497,3 @@ fn copy_dir_recursive(src: &std::path::Path, dst: &std::path::Path) -> std::io::
     }
 }
 
-/// Fix Rust 2024 Edition unsafe-in-unsafe-fn warnings by wrapping function bodies with unsafe blocks
-#[cfg(feature = "generate-bindings")]
-fn fix_unsafe_fn_bodies(code: &str) -> String {
-    // Parse the code using syn to properly handle the structure
-    let file = match syn::parse_file(code) {
-        Ok(f) => f,
-        Err(_) => return code.to_string(), // If parsing fails, return original
-    };
-    
-    let mut result = String::new();
-    
-    for item in file.items {
-        if let syn::Item::Impl(mut impl_block) = item {
-            // Process each method in the impl block
-            for impl_item in &mut impl_block.items {
-                if let syn::ImplItem::Fn(method) = impl_item {
-                    // Check if this is an unsafe fn
-                    if method.sig.unsafety.is_some() {
-                        // Wrap the function body with an unsafe block
-                        let body = &method.block;
-                        let new_body: syn::Block = syn::parse_quote! {
-                            {
-                                unsafe #body
-                            }
-                        };
-                        method.block = new_body;
-                    }
-                }
-            }
-            
-            // Convert back to string
-            use std::fmt::Write;
-            writeln!(result, "{}", quote::quote! { #impl_block }).unwrap();
-        } else {
-            // For non-impl items, just output as-is
-            use std::fmt::Write;
-            writeln!(result, "{}", quote::quote! { #item }).unwrap();
-        }
-    }
-    
-    result
-}
