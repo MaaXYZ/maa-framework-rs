@@ -110,6 +110,10 @@ fn run_context_pipeline_tests(context: &Context) -> MaaResult<()> {
         println!("FAILED: test_and_or_override_inheritance: {:?}", e);
         e
     })?;
+    test_and_or_node_reference(context).map_err(|e| {
+        println!("FAILED: test_and_or_node_reference: {:?}", e);
+        e
+    })?;
     test_recognition_types(context).map_err(|e| {
         println!("FAILED: test_recognition_types: {:?}", e);
         e
@@ -390,6 +394,115 @@ fn test_and_or_override_inheritance(context: &Context) -> MaaResult<()> {
     }
 
     println!("    PASS: And/Or override inheritance");
+    Ok(())
+}
+
+/// Test And/Or node reference - matching Python _test_and_or_node_reference
+fn test_and_or_node_reference(context: &Context) -> MaaResult<()> {
+    println!("  Testing And/Or node name reference...");
+
+    let new_ctx = context.clone_context()?;
+
+    // Create base nodes
+    new_ctx.override_pipeline(
+        r#"{
+        "BaseTemplateNode": {
+            "recognition": "TemplateMatch",
+            "template": ["test.png"],
+            "threshold": 0.8
+        },
+        "BaseOCRNode": {
+            "recognition": "OCR",
+            "expected": ["hello"]
+        }
+    }"#,
+    )?;
+
+    // Create And node with references
+    new_ctx.override_pipeline(
+        r#"{
+        "AndWithNodeRef": {
+            "recognition": {
+                "type": "And",
+                "param": {
+                    "all_of": [
+                        "BaseTemplateNode",
+                        "BaseOCRNode",
+                        {"recognition": {"type": "DirectHit"}}
+                    ],
+                    "box_index": 0
+                }
+            }
+        }
+    }"#,
+    )?;
+
+    let and_node = new_ctx
+        .get_node_object("AndWithNodeRef")?
+        .expect("AndWithNodeRef MUST exist");
+
+    match and_node.recognition {
+        Recognition::And(and) => {
+            assert_eq!(and.all_of.len(), 3, "all_of length");
+            match &and.all_of[0] {
+                maa_framework::pipeline::RecognitionRef::NodeName(name) => {
+                    assert_eq!(name, "BaseTemplateNode");
+                }
+                _ => panic!("Expected NodeName"),
+            }
+            match &and.all_of[1] {
+                maa_framework::pipeline::RecognitionRef::NodeName(name) => {
+                    assert_eq!(name, "BaseOCRNode");
+                }
+                _ => panic!("Expected NodeName"),
+            }
+            match &and.all_of[2] {
+                maa_framework::pipeline::RecognitionRef::Inline(_) => {}
+                _ => panic!("Expected Inline"),
+            }
+        }
+        _ => panic!("Expected And recognition"),
+    }
+
+    // Create Or node with references
+    new_ctx.override_pipeline(
+        r#"{
+        "OrWithNodeRef": {
+            "recognition": {
+                "type": "Or",
+                "param": {
+                    "any_of": [
+                        "BaseTemplateNode",
+                        {"recognition": {"type": "DirectHit"}}
+                    ]
+                }
+            }
+        }
+    }"#,
+    )?;
+
+    let or_node = new_ctx
+        .get_node_object("OrWithNodeRef")?
+        .expect("OrWithNodeRef MUST exist");
+
+    match or_node.recognition {
+        Recognition::Or(or) => {
+            assert_eq!(or.any_of.len(), 2, "any_of length");
+            match &or.any_of[0] {
+                maa_framework::pipeline::RecognitionRef::NodeName(name) => {
+                    assert_eq!(name, "BaseTemplateNode");
+                }
+                _ => panic!("Expected NodeName"),
+            }
+            match &or.any_of[1] {
+                maa_framework::pipeline::RecognitionRef::Inline(_) => {}
+                _ => panic!("Expected Inline"),
+            }
+        }
+        _ => panic!("Expected Or recognition"),
+    }
+
+    println!("    PASS: And/Or node name reference");
     Ok(())
 }
 

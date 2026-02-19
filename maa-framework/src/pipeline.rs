@@ -168,6 +168,14 @@ pub enum Recognition {
     Custom(CustomRecognition),
 }
 
+/// Reference to a recognition: either an inline definition or a node name.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(untagged)]
+pub enum RecognitionRef {
+    NodeName(String),
+    Inline(Recognition),
+}
+
 // --- Specific Recognition Structs ---
 
 /// Direct hit recognition - always matches without performing actual recognition.
@@ -401,7 +409,7 @@ pub struct CustomRecognition {
 pub struct And {
     /// Sub-recognition list. All must match. Required.
     #[serde(default)]
-    pub all_of: Vec<Recognition>,
+    pub all_of: Vec<RecognitionRef>,
     /// Which sub-recognition's bounding box to use. Default: 0.
     #[serde(default)]
     pub box_index: i32,
@@ -414,7 +422,7 @@ pub struct And {
 pub struct Or {
     /// Sub-recognition list. First match wins. Required.
     #[serde(default)]
-    pub any_of: Vec<Recognition>,
+    pub any_of: Vec<RecognitionRef>,
 }
 
 // --- Action Enums ---
