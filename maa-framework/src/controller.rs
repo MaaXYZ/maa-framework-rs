@@ -68,7 +68,7 @@ impl Controller {
         )
     }
 
-    /// 空字符串时解析为当前目录，非空则原样使用；解析失败返回 `Err`。
+    /// Resolves to the current directory if the string is empty; otherwise, uses it as-is. Returns Err if parsing fails.
     #[cfg(feature = "adb")]
     fn resolve_agent_path(agent_path: &str) -> MaaResult<String> {
         if !agent_path.is_empty() {

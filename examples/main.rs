@@ -54,7 +54,7 @@ impl CustomRecognition for MyRecognition {
 
         // 1. Run sub-pipeline recognition with override (requires OCR model)
         if !Path::new("sample/resource/ocr_model").exists() {
-            println!("找不到 OCR 模型资源，跳过 run_recognition 演示...");
+            println!("OCR model resource not found, skipping run_recognition demo...");
         } else if let Ok(img_buf) = buffer::MaaImageBuffer::new() {
             let pp_override =
                 r#"{"MyCustomOCR": {"recognition": "OCR", "roi": [100, 100, 200, 300]}}"#;
@@ -103,13 +103,13 @@ impl CustomRecognition for MyRecognition {
 
         // 7. Clone context for independent operations (modifications won't affect original)
         if !Path::new("sample/resource").exists() {
-            println!("找不到 sample/resource，跳过 clone_context 演示...");
+            println!("sample/resource not found, skipping clone_context demo...");
         } else if let Ok(new_ctx) = context.clone_context() {
             let _ = new_ctx.override_pipeline(r#"{"MyCustomOCR": {"roi": [100, 200, 300, 400]}}"#);
             if let Ok(img_buf) = buffer::MaaImageBuffer::new() {
                 let reco_id = new_ctx.run_recognition("MyCustomOCR", "{}", &img_buf);
                 if reco_id.is_ok() {
-                    println!("  [Demo] clone_context + run_recognition 完成");
+                    println!("  [Demo] clone_context + run_recognition completed");
                 }
             }
         }
@@ -415,13 +415,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("    Task posted, waiting for completion...");
                     let status = job.wait();
                     println!("    OpenSettings task status: {:?}", status);
-                    
+
                     if status == common::MaaStatus::SUCCEEDED {
                         println!("    ✅ Successfully opened Android Settings!");
-                        
+
                         // Wait a moment for the app to fully open
                         std::thread::sleep(std::time::Duration::from_secs(2));
-                        
+
                         // Verify by checking screen
                         if let Some(ref ctrl) = controller {
                             println!("    Taking screenshot to verify...");
@@ -431,7 +431,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     } else {
                         println!("    ⚠️  Task completed with status: {:?}", status);
                     }
-                    
+
                     if let Ok(Some(detail)) = job.get(false) {
                         println!("    Entry: {}", detail.entry);
                         println!("    Nodes executed: {}", detail.nodes.len());

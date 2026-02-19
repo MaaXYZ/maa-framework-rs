@@ -337,7 +337,7 @@ fn generate_bindings_with_bindgen(include_dir: &[PathBuf], out_path: &PathBuf, i
     }
 
     bindings_builder = bindings_builder
-        .wrap_unsafe_ops(true);
+        .wrap_unsafe_ops(true)
         .allowlist_function("Maa.*")
         .allowlist_type("Maa.*")
         .allowlist_var("Maa.*")
