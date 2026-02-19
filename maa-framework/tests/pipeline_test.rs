@@ -254,10 +254,22 @@ fn test_context_override_pipeline(context: &Context) -> MaaResult<()> {
     assert_eq!(node_obj.inverse, false, "inverse");
 
     match node_obj.anchor {
-        maa_framework::pipeline::Anchor::List(l) => {
-            assert_eq!(l, vec!["my_anchor".to_string()], "anchor");
+        maa_framework::pipeline::Anchor::Map(m) => {
+            assert!(
+                m.contains_key("my_anchor"),
+                "anchor map should contain 'my_anchor', got {:?}",
+                m
+            );
+            assert_eq!(
+                m.get("my_anchor").map(|s| s.as_str()),
+                Some("OverrideTestNode"),
+                "anchor value"
+            );
         }
-        _ => panic!("Expected Anchor::List"),
+        _ => panic!(
+            "Expected Anchor::Map after C API round-trip, got {:?}",
+            node_obj.anchor
+        ),
     }
 
     // Verify attach
@@ -1086,29 +1098,49 @@ fn test_anchor_object_format(context: &Context) -> MaaResult<()> {
     }"#,
     )?;
 
-    // Verify String format
+    // C API normalizes ALL anchor formats to map: {anchor_name: node_name}
+    // "anchor": "StringAnchor" on "AnchorString" => {"StringAnchor": "AnchorString"}
     let obj1 = new_ctx
         .get_node_object("AnchorString")?
         .expect("AnchorString should exist");
     match obj1.anchor {
-        maa_framework::pipeline::Anchor::Name(s) => {
-            assert_eq!(s, "StringAnchor");
+        maa_framework::pipeline::Anchor::Map(m) => {
+            assert_eq!(
+                m.get("StringAnchor").map(|s| s.as_str()),
+                Some("AnchorString"),
+                "string anchor should map to node name"
+            );
         }
-        _ => panic!("Expected Anchor::Name for AnchorString"),
+        _ => panic!(
+            "Expected Anchor::Map for AnchorString, got {:?}",
+            obj1.anchor
+        ),
     }
 
-    // Verify Array format
+    // "anchor": ["ArrayAnchor1", "ArrayAnchor2"] on "AnchorArray"
+    //   => {"ArrayAnchor1": "AnchorArray", "ArrayAnchor2": "AnchorArray"}
     let obj2 = new_ctx
         .get_node_object("AnchorArray")?
         .expect("AnchorArray should exist");
     match obj2.anchor {
-        maa_framework::pipeline::Anchor::List(l) => {
-            assert_eq!(l, vec!["ArrayAnchor1", "ArrayAnchor2"]);
+        maa_framework::pipeline::Anchor::Map(m) => {
+            assert_eq!(m.len(), 2, "array anchor should have 2 entries");
+            assert_eq!(
+                m.get("ArrayAnchor1").map(|s| s.as_str()),
+                Some("AnchorArray")
+            );
+            assert_eq!(
+                m.get("ArrayAnchor2").map(|s| s.as_str()),
+                Some("AnchorArray")
+            );
         }
-        _ => panic!("Expected Anchor::List for AnchorArray"),
+        _ => panic!(
+            "Expected Anchor::Map for AnchorArray, got {:?}",
+            obj2.anchor
+        ),
     }
 
-    // Verify Map format
+    // "anchor": {"ObjAnchor1": "TargetNode1", ...} stays as-is
     let obj3 = new_ctx
         .get_node_object("AnchorObject")?
         .expect("AnchorObject should exist");
@@ -1118,7 +1150,10 @@ fn test_anchor_object_format(context: &Context) -> MaaResult<()> {
             assert_eq!(m.get("ObjAnchor2").map(|s| s.as_str()), Some(""));
             assert_eq!(m.get("ObjAnchor3").map(|s| s.as_str()), Some("TargetNode2"));
         }
-        _ => panic!("Expected Anchor::Map for AnchorObject"),
+        _ => panic!(
+            "Expected Anchor::Map for AnchorObject, got {:?}",
+            obj3.anchor
+        ),
     }
 
     println!("    PASS: anchor object format");
