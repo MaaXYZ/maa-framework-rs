@@ -3,7 +3,7 @@ resolver = "3"
 members = ["maa-framework", "maa-framework-sys"]
 
 [workspace.package]
-version = "1.5.0"
+version = "1.6.0"
 authors = ["MaaFramework Contributors"]
 edition = "2024"
 license = "LGPL-3.0"
