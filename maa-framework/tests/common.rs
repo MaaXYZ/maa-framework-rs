@@ -12,25 +12,12 @@ use maa_framework::{self, sys, MaaResult};
 #[cfg(feature = "dynamic")]
 #[ctor::ctor]
 fn global_setup() {
-    let is_server = std::env::var("MAA_AGENT_TEST_MODE").unwrap_or_default() == "SERVER";
     let lib_name = if cfg!(target_os = "windows") {
-        if is_server {
-            "MaaAgentServer.dll"
-        } else {
-            "MaaFramework.dll"
-        }
+        "MaaFramework.dll"
     } else if cfg!(target_os = "macos") {
-        if is_server {
-            "libMaaAgentServer.dylib"
-        } else {
-            "libMaaFramework.dylib"
-        }
+        "libMaaFramework.dylib"
     } else {
-        if is_server {
-            "libMaaAgentServer.so"
-        } else {
-            "libMaaFramework.so"
-        }
+        "libMaaFramework.so"
     };
 
     let mut candidates = Vec::new();
