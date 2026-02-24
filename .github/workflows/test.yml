@@ -6,11 +6,11 @@ on:
       - "**"
     paths:
       - ".github/workflows/test-rust.yml"
-      - "src/**"
-      - "Cargo.toml"
-      - "build.rs"
-      - "tests/**"
-      - "examples/**"
+      - "**/src/**"
+      - "**/tests/**"
+      - "**/Cargo.toml"
+      - "**/build.rs"
+      - "**/examples/**"
   pull_request:
     branches:
       - "**"
