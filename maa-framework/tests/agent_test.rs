@@ -157,7 +157,7 @@ fn test_agent_full_integration() {
         .arg("--nocapture")
         .env("MAA_AGENT_TEST_MODE", "SERVER")
         .stdout(Stdio::inherit())
-        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
         .spawn()
         .expect("Failed to spawn server process");
 
