@@ -157,13 +157,12 @@ fn test_agent_full_integration() {
     let current_exe = env::current_exe().expect("Failed to get current exe path");
     println!("Spawning server: {:?}", current_exe);
 
-    let identifier = format!(
-        "MaaAgentTest_Integration_{}",
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis()
-    );
+    let ts = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis()
+        % 10000000;
+    let identifier = format!("MAT_{}", ts);
 
     let mut server_process = Command::new(&current_exe)
         .arg("test_agent_full_integration")
