@@ -125,15 +125,19 @@ impl CustomAction for ServerAction {
 }
 
 fn agent_server_main() {
-    println!("[Server] Starting...");
+    eprintln!("[Server] Starting...");
     let identifier = "MaaAgentTest_MultiProcess";
 
-    AgentServer::start_up(identifier).expect("Failed to start AgentServer");
+    if let Err(e) = AgentServer::start_up(identifier) {
+        eprintln!("[Server] Failed to start AgentServer: {:?}", e);
+        panic!("Server failed to start");
+    }
 
+    eprintln!("[Server] Registering callbacks...");
     AgentServer::register_custom_recognition("MyRec", Box::new(ServerRecognition)).unwrap();
     AgentServer::register_custom_action("MyAct", Box::new(ServerAction)).unwrap();
 
-    println!("[Server] Running. Waiting for client...");
+    eprintln!("[Server] Running. Waiting for client...");
 
     loop {
         thread::sleep(Duration::from_millis(100));
@@ -187,22 +191,27 @@ fn test_agent_full_integration() {
     let conn_id = controller.post_connection().unwrap();
     controller.wait(conn_id);
 
+    thread::sleep(Duration::from_millis(1000));
+
+    if let Ok(Some(status)) = server_process.try_wait() {
+        panic!("AgentServer process crashed prematurely BEFORE connecting! Exit Status: {}", status);
+    }
+
     println!("Connecting to agent...");
 
     // Robust connection loop for CI stability
     let mut connected = false;
     for i in 0..20 {
         // Retry ~10 seconds
+        if let Ok(Some(status)) = server_process.try_wait() {
+            panic!("AgentServer process crashed during connection attempts! Exit Status: {}", status);
+        }
+
         if client.connect().is_ok() {
             connected = true;
             println!("Connected on attempt {}", i + 1);
             break;
         }
-
-        if let Ok(Some(status)) = server_process.try_wait() {
-            panic!("AgentServer process crashed prematurely with status: {}! Please check the logs above.", status);
-        }
-
         thread::sleep(Duration::from_millis(500));
     }
 
