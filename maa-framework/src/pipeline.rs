@@ -1,6 +1,6 @@
 //! Pipeline configuration types for recognition and action definitions.
 
-use serde::{de::DeserializeOwned, Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, de::DeserializeOwned};
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -673,7 +673,7 @@ pub struct Shell {
     pub cmd: String,
     /// Command timeout in milliseconds. Default: 20000.
     #[serde(default = "default_timeout")]
-    pub timeout: i32,
+    pub shell_timeout: i32,
 }
 
 /// Custom action - uses user-registered action handler.
