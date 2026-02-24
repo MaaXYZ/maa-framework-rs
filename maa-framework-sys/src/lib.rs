@@ -52,33 +52,40 @@ impl CompositeLibrary {
             }
         };
 
-        libs.push(load_lib(path)?);
+        let file_name = path.file_name().unwrap_or_default().to_string_lossy();
+        let dir = path.parent().unwrap_or(std::path::Path::new(""));
 
-        if let Some(parent) = path.parent() {
-            let file_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+        let prefix = if cfg!(target_os = "windows") {
+            ""
+        } else {
+            "lib"
+        };
+        let ext = if cfg!(target_os = "windows") {
+            ".dll"
+        } else if cfg!(target_os = "macos") {
+            ".dylib"
+        } else {
+            ".so"
+        };
 
-            let (prefix, suffix) = if file_name.ends_with(".dll") {
-                ("", ".dll")
-            } else if file_name.starts_with("lib") && file_name.ends_with(".dylib") {
-                ("lib", ".dylib")
-            } else if file_name.starts_with("lib") && file_name.ends_with(".so") {
-                ("lib", ".so")
-            } else {
-                ("", "")
-            };
+        let try_load = |name: &str| {
+            let p = dir.join(format!("{}{}{}", prefix, name, ext));
+            load_lib(&p).ok()
+        };
 
-            let mut try_load = |name: &str| {
-                let p = parent.join(format!("{}{}{}", prefix, name, suffix));
-                if p.exists() {
-                    if let Ok(lib) = load_lib(&p) {
-                        libs.push(lib);
-                    }
-                }
-            };
+        let is_agent_server = file_name.contains("MaaAgentServer");
 
-            try_load("MaaToolkit");
-            try_load("MaaAgentServer");
-            try_load("MaaAgentClient");
+        if let Some(lib) = try_load("MaaToolkit") {
+            libs.push(lib);
+        }
+
+        let main_lib = load_lib(path)?;
+        libs.insert(0, main_lib);
+
+        if !is_agent_server {
+            if let Some(lib) = try_load("MaaAgentClient") {
+                libs.push(lib);
+            }
         }
 
         Ok(Self { libs })
@@ -113,7 +120,12 @@ macro_rules! shim {
     ($name:ident ( $($arg:ident : $type:ty),* $(,)? ) -> $ret:ty) => {
         pub unsafe fn $name($($arg : $type),*) -> $ret {
             let lib = INSTANCE.get().expect("MaaFramework library not loaded!");
-            unsafe { (lib.$name)($($arg),*) }
+            let func = match &lib.$name {
+                Ok(f) => f,
+                Err(e) => panic!("Function {} not loaded: {}", stringify!($name), e),
+            };
+
+            unsafe { func($($arg),*) }
         }
     }
 }

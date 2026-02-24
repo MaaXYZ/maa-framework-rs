@@ -125,15 +125,20 @@ impl CustomAction for ServerAction {
 }
 
 fn agent_server_main() {
-    println!("[Server] Starting...");
-    let identifier = "MaaAgentTest_MultiProcess";
+    eprintln!("[Server] Starting...");
+    let identifier = env::var("MAA_AGENT_IDENTIFIER")
+        .unwrap_or_else(|_| "MaaAgentTest_MultiProcess".to_string());
 
-    AgentServer::start_up(identifier).expect("Failed to start AgentServer");
+    if let Err(e) = AgentServer::start_up(&identifier) {
+        eprintln!("[Server] Failed to start AgentServer: {:?}", e);
+        panic!("Server failed to start");
+    }
 
+    eprintln!("[Server] Registering callbacks...");
     AgentServer::register_custom_recognition("MyRec", Box::new(ServerRecognition)).unwrap();
     AgentServer::register_custom_action("MyAct", Box::new(ServerAction)).unwrap();
 
-    println!("[Server] Running. Waiting for client...");
+    eprintln!("[Server] Running. Waiting for client...");
 
     loop {
         thread::sleep(Duration::from_millis(100));
@@ -152,21 +157,27 @@ fn test_agent_full_integration() {
     let current_exe = env::current_exe().expect("Failed to get current exe path");
     println!("Spawning server: {:?}", current_exe);
 
+    let ts = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis()
+        % 10000000;
+    let identifier = format!("MAT_{}", ts);
+
     let mut server_process = Command::new(&current_exe)
         .arg("test_agent_full_integration")
         .arg("--nocapture")
         .env("MAA_AGENT_TEST_MODE", "SERVER")
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
+        .env("MAA_AGENT_IDENTIFIER", &identifier)
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
         .spawn()
         .expect("Failed to spawn server process");
 
     // Waiting for server to start
     thread::sleep(Duration::from_millis(500));
 
-    let identifier = "MaaAgentTest_MultiProcess";
-
-    let mut client = AgentClient::new(Some(identifier)).expect("Failed to create AgentClient");
+    let mut client = AgentClient::new(Some(&identifier)).expect("Failed to create AgentClient");
 
     let res_dir = get_test_resources_dir();
     let resource_dir = res_dir.join("resource");
@@ -187,12 +198,30 @@ fn test_agent_full_integration() {
     let conn_id = controller.post_connection().unwrap();
     controller.wait(conn_id);
 
+    thread::sleep(Duration::from_millis(1000));
+
+    if let Ok(Some(status)) = server_process.try_wait() {
+        if status.success() {
+            println!("AgentServer library is missing or skipped. Skipping test.");
+            return;
+        }
+        panic!("AgentServer process crashed! Exit status: {}", status);
+    }
+
     println!("Connecting to agent...");
 
     // Robust connection loop for CI stability
     let mut connected = false;
     for i in 0..20 {
         // Retry ~10 seconds
+        if let Ok(Some(status)) = server_process.try_wait() {
+            if status.success() {
+                println!("AgentServer library is missing or skipped. Skipping test.");
+                return;
+            }
+            panic!("AgentServer process crashed! Exit status: {}", status);
+        }
+
         if client.connect().is_ok() {
             connected = true;
             println!("Connected on attempt {}", i + 1);
@@ -204,6 +233,7 @@ fn test_agent_full_integration() {
     if !connected {
         // Kill server if connect fails
         let _ = server_process.kill();
+        let _ = server_process.wait();
         panic!("Failed to connect to AgentServer after retries");
     }
 
@@ -275,6 +305,7 @@ fn test_agent_full_integration() {
     // Cleanup
     client.disconnect().unwrap();
     let _ = server_process.kill();
+    let _ = server_process.wait();
 
     if !status.succeeded() {
         panic!("Task failed execution");

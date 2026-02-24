@@ -923,7 +923,7 @@ fn test_action_types(context: &Context) -> MaaResult<()> {
         "ActShell": {
             "action": "Shell",
             "cmd": "ls -la",
-            "timeout": 30000
+            "shell_timeout": 30000
         }
     }"#,
     )?;
@@ -932,7 +932,7 @@ fn test_action_types(context: &Context) -> MaaResult<()> {
     match obj.action {
         Action::Shell(sh) => {
             assert_eq!(sh.cmd, "ls -la");
-            assert_eq!(sh.timeout, 30000);
+            assert_eq!(sh.shell_timeout, 30000);
         }
         _ => panic!("Expected Shell"),
     }

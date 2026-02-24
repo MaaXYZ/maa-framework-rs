@@ -12,33 +12,35 @@ use maa_framework::{self, sys, MaaResult};
 #[cfg(feature = "dynamic")]
 #[ctor::ctor]
 fn global_setup() {
+    let is_server = std::env::var("MAA_AGENT_TEST_MODE").unwrap_or_default() == "SERVER";
+    let base_name = if is_server { "MaaAgentServer" } else { "MaaFramework" };
+
     let lib_name = if cfg!(target_os = "windows") {
-        "MaaFramework.dll"
+        format!("{}.dll", base_name)
     } else if cfg!(target_os = "macos") {
-        "libMaaFramework.dylib"
+        format!("lib{}.dylib", base_name)
     } else {
-        "libMaaFramework.so"
+        format!("lib{}.so", base_name)
     };
 
     let mut candidates = Vec::new();
 
     if let Ok(sdk_path) = std::env::var("MAA_SDK_PATH") {
         let sdk = PathBuf::from(sdk_path);
-        candidates.push(sdk.join("bin").join(lib_name));
-        candidates.push(sdk.join("lib").join(lib_name));
-        candidates.push(sdk.join(lib_name));
+        candidates.push(sdk.join("bin").join(&lib_name));
+        candidates.push(sdk.join("lib").join(&lib_name));
+        candidates.push(sdk.join(&lib_name));
     }
 
-    candidates.push(PathBuf::from("target/debug").join(lib_name));
-
-    candidates.push(PathBuf::from(lib_name));
+    candidates.push(PathBuf::from("target/debug").join(&lib_name));
+    candidates.push(PathBuf::from(&lib_name));
 
     let final_path = candidates.into_iter().find(|p| p.exists());
 
     if let Some(path) = final_path {
-        maa_framework::load_library(&path).expect("Failed to load MaaFramework");
+        maa_framework::load_library(&path).expect(&format!("Failed to load {}", lib_name));
     } else {
-        panic!("MaaFramework library not found. Please set MAA_SDK_PATH.");
+        panic!("{} library not found. Please set MAA_SDK_PATH.", lib_name);
     }
 }
 
