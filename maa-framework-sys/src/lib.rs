@@ -77,8 +77,11 @@ impl CompositeLibrary {
             };
 
             try_load("MaaToolkit");
-            try_load("MaaAgentServer");
-            try_load("MaaAgentClient");
+
+            let is_agent_server = file_name.contains("MaaAgentServer");
+            if !is_agent_server {
+                try_load("MaaAgentClient");
+            }
         }
 
         Ok(Self { libs })
