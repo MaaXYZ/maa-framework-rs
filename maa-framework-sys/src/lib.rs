@@ -77,8 +77,11 @@ impl CompositeLibrary {
             };
 
             try_load("MaaToolkit");
-            try_load("MaaAgentServer");
-            try_load("MaaAgentClient");
+
+            let is_agent_server = file_name.contains("MaaAgentServer");
+            if !is_agent_server {
+                try_load("MaaAgentClient");
+            }
         }
 
         Ok(Self { libs })
@@ -113,7 +116,12 @@ macro_rules! shim {
     ($name:ident ( $($arg:ident : $type:ty),* $(,)? ) -> $ret:ty) => {
         pub unsafe fn $name($($arg : $type),*) -> $ret {
             let lib = INSTANCE.get().expect("MaaFramework library not loaded!");
-            unsafe { (lib.$name)($($arg),*) }
+            let func = match &lib.$name {
+                Ok(f) => f,
+                Err(e) => panic!("Function {} not loaded: {}", stringify!($name), e),
+            };
+
+            unsafe { func($($arg),*) }
         }
     }
 }

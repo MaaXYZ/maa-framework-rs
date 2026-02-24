@@ -356,7 +356,7 @@ fn generate_bindings_with_bindgen(include_dir: &[PathBuf], out_path: &PathBuf, i
 
         let dynamic_bindings = bindings_builder
             .dynamic_library_name("MaaFramework")
-            .dynamic_link_require_all(true)
+            .dynamic_link_require_all(false)
             .blocklist_item("__security_cookie")
             .raw_line("unsafe impl Send for MaaFramework {}")
             .raw_line("unsafe impl Sync for MaaFramework {}")
