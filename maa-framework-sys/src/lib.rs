@@ -79,12 +79,6 @@ impl CompositeLibrary {
             libs.push(lib);
         }
 
-        if is_agent_server {
-            if let Some(lib) = try_load("MaaFramework") {
-                libs.push(lib);
-            }
-        }
-
         let main_lib = load_lib(path)?;
         libs.insert(0, main_lib);
 
