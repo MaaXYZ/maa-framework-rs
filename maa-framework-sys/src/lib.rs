@@ -77,6 +77,7 @@ impl CompositeLibrary {
             };
 
             try_load("MaaToolkit");
+            try_load("MaaAgentServer");
             try_load("MaaAgentClient");
         }
 
