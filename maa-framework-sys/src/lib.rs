@@ -52,36 +52,37 @@ impl CompositeLibrary {
             }
         };
 
-        libs.push(load_lib(path)?);
+        let file_name = path.file_name().unwrap_or_default().to_string_lossy();
+        let dir = path.parent().unwrap_or(std::path::Path::new(""));
 
-        if let Some(parent) = path.parent() {
-            let file_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+        let prefix = if cfg!(target_os = "windows") {
+            ""
+        } else {
+            "lib"
+        };
+        let ext = if cfg!(target_os = "windows") {
+            ".dll"
+        } else if cfg!(target_os = "macos") {
+            ".dylib"
+        } else {
+            ".so"
+        };
 
-            let (prefix, suffix) = if file_name.ends_with(".dll") {
-                ("", ".dll")
-            } else if file_name.starts_with("lib") && file_name.ends_with(".dylib") {
-                ("lib", ".dylib")
-            } else if file_name.starts_with("lib") && file_name.ends_with(".so") {
-                ("lib", ".so")
-            } else {
-                ("", "")
-            };
-
-            let mut try_load = |name: &str| {
-                let p = parent.join(format!("{}{}{}", prefix, name, suffix));
-                if p.exists() {
-                    if let Ok(lib) = load_lib(&p) {
-                        libs.push(lib);
-                    }
-                }
-            };
-
-            try_load("MaaToolkit");
-
-            let is_agent_server = file_name.contains("MaaAgentServer");
-            if !is_agent_server {
-                try_load("MaaAgentClient");
+        let mut try_load = |name: &str| {
+            let p = dir.join(format!("{}{}{}", prefix, name, ext));
+            if let Ok(lib) = load_lib(&p) {
+                libs.push(lib);
             }
+        };
+
+        try_load("MaaToolkit");
+
+        let main_lib = load_lib(path)?;
+        libs.insert(0, main_lib);
+
+        let is_agent_server = file_name.contains("MaaAgentServer");
+        if !is_agent_server {
+            try_load("MaaAgentClient");
         }
 
         Ok(Self { libs })
