@@ -68,7 +68,7 @@ impl CompositeLibrary {
             ".so"
         };
 
-        let mut load_optional = |name: &str, libs_vec: &mut Vec<libloading::Library>| {
+        let load_optional = |name: &str, libs_vec: &mut Vec<libloading::Library>| {
             let p = dir.join(format!("{}{}{}", prefix, name, ext));
             if let Ok(lib) = load_lib(&p) {
                 libs_vec.push(lib);
