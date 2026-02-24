@@ -68,21 +68,26 @@ impl CompositeLibrary {
             ".so"
         };
 
-        let load_optional = |name: &str, libs_vec: &mut Vec<libloading::Library>| {
+        let mut try_load = |name: &str| {
             let p = dir.join(format!("{}{}{}", prefix, name, ext));
             if let Ok(lib) = load_lib(&p) {
-                libs_vec.push(lib);
+                libs.push(lib);
             }
         };
 
-        load_optional("MaaToolkit", &mut libs);
+        let is_agent_server = file_name.contains("MaaAgentServer");
+
+        try_load("MaaToolkit");
+
+        if is_agent_server {
+            try_load("MaaFramework");
+        }
 
         let main_lib = load_lib(path)?;
         libs.insert(0, main_lib);
 
-        let is_agent_server = file_name.contains("MaaAgentServer");
         if !is_agent_server {
-            load_optional("MaaAgentClient", &mut libs);
+            try_load("MaaAgentClient");
         }
 
         Ok(Self { libs })
