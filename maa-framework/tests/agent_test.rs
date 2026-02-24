@@ -126,9 +126,10 @@ impl CustomAction for ServerAction {
 
 fn agent_server_main() {
     eprintln!("[Server] Starting...");
-    let identifier = "MaaAgentTest_MultiProcess";
+    let identifier = env::var("MAA_AGENT_IDENTIFIER")
+        .unwrap_or_else(|_| "MaaAgentTest_MultiProcess".to_string());
 
-    if let Err(e) = AgentServer::start_up(identifier) {
+    if let Err(e) = AgentServer::start_up(&identifier) {
         eprintln!("[Server] Failed to start AgentServer: {:?}", e);
         panic!("Server failed to start");
     }
@@ -156,10 +157,19 @@ fn test_agent_full_integration() {
     let current_exe = env::current_exe().expect("Failed to get current exe path");
     println!("Spawning server: {:?}", current_exe);
 
+    let identifier = format!(
+        "MaaAgentTest_Integration_{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis()
+    );
+
     let mut server_process = Command::new(&current_exe)
         .arg("test_agent_full_integration")
         .arg("--nocapture")
         .env("MAA_AGENT_TEST_MODE", "SERVER")
+        .env("MAA_AGENT_IDENTIFIER", &identifier)
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .spawn()
@@ -168,9 +178,7 @@ fn test_agent_full_integration() {
     // Waiting for server to start
     thread::sleep(Duration::from_millis(500));
 
-    let identifier = "MaaAgentTest_MultiProcess";
-
-    let mut client = AgentClient::new(Some(identifier)).expect("Failed to create AgentClient");
+    let mut client = AgentClient::new(Some(&identifier)).expect("Failed to create AgentClient");
 
     let res_dir = get_test_resources_dir();
     let resource_dir = res_dir.join("resource");
@@ -226,6 +234,7 @@ fn test_agent_full_integration() {
     if !connected {
         // Kill server if connect fails
         let _ = server_process.kill();
+        let _ = server_process.wait();
         panic!("Failed to connect to AgentServer after retries");
     }
 
@@ -297,6 +306,7 @@ fn test_agent_full_integration() {
     // Cleanup
     client.disconnect().unwrap();
     let _ = server_process.kill();
+    let _ = server_process.wait();
 
     if !status.succeeded() {
         panic!("Task failed execution");
