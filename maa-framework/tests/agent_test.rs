@@ -156,8 +156,8 @@ fn test_agent_full_integration() {
         .arg("test_agent_full_integration")
         .arg("--nocapture")
         .env("MAA_AGENT_TEST_MODE", "SERVER")
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
+        .stdout(Stdio::inherit())
+        .stdout(Stdio::inherit())
         .spawn()
         .expect("Failed to spawn server process");
 
@@ -198,6 +198,11 @@ fn test_agent_full_integration() {
             println!("Connected on attempt {}", i + 1);
             break;
         }
+
+        if let Ok(Some(status)) = server_process.try_wait() {
+            panic!("AgentServer process crashed prematurely with status: {}! Please check the logs above.", status);
+        }
+
         thread::sleep(Duration::from_millis(500));
     }
 
