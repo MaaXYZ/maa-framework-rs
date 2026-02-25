@@ -611,7 +611,8 @@ fn test_recognition_types(context: &Context) -> MaaResult<()> {
             "threshold": 0.5,
             "replace": [["0", "O"], ["1", "I"]],
             "only_rec": true,
-            "model": "custom_model"
+            "model": "custom_model",
+            "color_filter": "RecoColorMatch"
         }
     }"#,
     )?;
@@ -622,6 +623,7 @@ fn test_recognition_types(context: &Context) -> MaaResult<()> {
             assert_eq!(ocr.expected.len(), 2);
             assert_eq!(ocr.only_rec, true);
             assert_eq!(ocr.model, "custom_model");
+            assert_eq!(ocr.color_filter, "RecoColorMatch");
         }
         _ => panic!("Expected OCR"),
     }

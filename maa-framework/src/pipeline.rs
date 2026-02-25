@@ -322,6 +322,9 @@ pub struct OCR {
     /// Model folder path relative to `model/ocr`. Default: root.
     #[serde(default)]
     pub model: String,
+    /// Color filter expression. Default: empty.
+    #[serde(default)]
+    pub color_filter: String,
 }
 
 /// Neural network classification - classifies fixed regions.
