@@ -471,6 +471,17 @@ impl Controller {
         Ok(id)
     }
 
+    // === Inactive ===
+
+    /// Post an inactive request to the controller.
+    ///
+    /// For Win32 controllers, this restores window position (removes topmost) and unblocks user input.
+    /// For other controllers, this is a no-op that always succeeds.
+    pub fn post_inactive(&self) -> MaaResult<common::MaaId> {
+        let id = unsafe { sys::MaaControllerPostInactive(self.inner.handle.as_ptr()) };
+        Ok(id)
+    }
+
     // === Image ===
 
     /// Gets the most recently captured screenshot.

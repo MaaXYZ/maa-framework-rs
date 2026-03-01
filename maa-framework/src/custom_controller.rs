@@ -60,6 +60,13 @@ pub trait CustomControllerCallback: Send + Sync {
     fn scroll(&self, _dx: i32, _dy: i32) -> bool {
         false
     }
+    /// Set the controller to inactive state.
+    ///
+    /// For Win32 controllers, this restores window position (removes topmost) and unblocks user input.
+    /// For other controllers, this is a no-op that always succeeds.
+    fn inactive(&self) -> bool {
+        true
+    }
 }
 
 type BoxedCallback = Box<dyn CustomControllerCallback>;
@@ -267,6 +274,15 @@ unsafe extern "C" fn scroll_trampoline(dx: i32, dy: i32, trans_arg: *mut c_void)
     }
 }
 
+unsafe extern "C" fn inactive_trampoline(trans_arg: *mut c_void) -> sys::MaaBool {
+    let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
+    if cb.inactive() {
+        1
+    } else {
+        0
+    }
+}
+
 pub fn create_custom_controller_callbacks() -> sys::MaaCustomControllerCallbacks {
     sys::MaaCustomControllerCallbacks {
         connect: Some(connect_trampoline),
@@ -286,6 +302,7 @@ pub fn create_custom_controller_callbacks() -> sys::MaaCustomControllerCallbacks
         key_down: Some(key_down_trampoline),
         key_up: Some(key_up_trampoline),
         scroll: Some(scroll_trampoline),
+        inactive: Some(inactive_trampoline),
     }
 }
 

@@ -348,6 +348,12 @@ impl CustomControllerCallback for MyController {
         self.count.fetch_add(1, Ordering::SeqCst);
         true
     }
+
+    fn inactive(&self) -> bool {
+        println!("  on MyController.inactive");
+        self.count.fetch_add(1, Ordering::SeqCst);
+        true
+    }
 }
 
 // ============================================================================
