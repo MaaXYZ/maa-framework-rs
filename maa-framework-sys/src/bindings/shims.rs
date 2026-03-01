@@ -84,6 +84,7 @@ shim ! (MaaControllerPostKeyDown (ctrl : * mut MaaController , keycode : i32) ->
 shim ! (MaaControllerPostKeyUp (ctrl : * mut MaaController , keycode : i32) -> MaaCtrlId) ;
 shim ! (MaaControllerPostScreencap (ctrl : * mut MaaController) -> MaaCtrlId) ;
 shim ! (MaaControllerPostScroll (ctrl : * mut MaaController , dx : i32 , dy : i32) -> MaaCtrlId) ;
+shim ! (MaaControllerPostInactive (ctrl : * mut MaaController) -> MaaCtrlId) ;
 shim ! (MaaControllerPostShell (ctrl : * mut MaaController , cmd : * const :: std :: os :: raw :: c_char , timeout : i64) -> MaaCtrlId) ;
 shim ! (MaaControllerGetShellOutput (ctrl : * const MaaController , buffer : * mut MaaStringBuffer) -> MaaBool) ;
 shim ! (MaaControllerStatus (ctrl : * const MaaController , id : MaaCtrlId) -> MaaStatus) ;

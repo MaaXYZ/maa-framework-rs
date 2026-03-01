@@ -372,11 +372,14 @@ pub struct MaaCustomControllerCallbacks {
     pub scroll: ::std::option::Option<
         unsafe extern "C" fn(dx: i32, dy: i32, trans_arg: *mut ::std::os::raw::c_void) -> MaaBool,
     >,
+    pub inactive: ::std::option::Option<
+        unsafe extern "C" fn(trans_arg: *mut ::std::os::raw::c_void) -> MaaBool,
+    >,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
     ["Size of MaaCustomControllerCallbacks"]
-        [::std::mem::size_of::<MaaCustomControllerCallbacks>() - 136usize];
+        [::std::mem::size_of::<MaaCustomControllerCallbacks>() - 144usize];
     ["Alignment of MaaCustomControllerCallbacks"]
         [::std::mem::align_of::<MaaCustomControllerCallbacks>() - 8usize];
     ["Offset of field: MaaCustomControllerCallbacks::connect"]
@@ -413,6 +416,8 @@ const _: () = {
         [::std::mem::offset_of!(MaaCustomControllerCallbacks, key_up) - 120usize];
     ["Offset of field: MaaCustomControllerCallbacks::scroll"]
         [::std::mem::offset_of!(MaaCustomControllerCallbacks, scroll) - 128usize];
+    ["Offset of field: MaaCustomControllerCallbacks::inactive"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, inactive) - 136usize];
 };
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -943,6 +948,8 @@ pub struct MaaFramework {
         unsafe extern "C" fn(ctrl: *mut MaaController, dx: i32, dy: i32) -> MaaCtrlId,
         ::libloading::Error,
     >,
+    pub MaaControllerPostInactive:
+        Result<unsafe extern "C" fn(ctrl: *mut MaaController) -> MaaCtrlId, ::libloading::Error>,
     pub MaaControllerPostShell: Result<
         unsafe extern "C" fn(
             ctrl: *mut MaaController,
@@ -1673,6 +1680,8 @@ impl MaaFramework {
             unsafe { __library.get(b"MaaControllerPostScreencap\0") }.map(|sym| *sym);
         let MaaControllerPostScroll =
             unsafe { __library.get(b"MaaControllerPostScroll\0") }.map(|sym| *sym);
+        let MaaControllerPostInactive =
+            unsafe { __library.get(b"MaaControllerPostInactive\0") }.map(|sym| *sym);
         let MaaControllerPostShell =
             unsafe { __library.get(b"MaaControllerPostShell\0") }.map(|sym| *sym);
         let MaaControllerGetShellOutput =
@@ -1990,6 +1999,7 @@ impl MaaFramework {
             MaaControllerPostKeyUp,
             MaaControllerPostScreencap,
             MaaControllerPostScroll,
+            MaaControllerPostInactive,
             MaaControllerPostShell,
             MaaControllerGetShellOutput,
             MaaControllerStatus,
@@ -3176,6 +3186,15 @@ impl MaaFramework {
                 .MaaControllerPostScroll
                 .as_ref()
                 .expect("Expected function, got error."))(ctrl, dx, dy)
+        }
+    }
+    #[doc = " @brief Post an inactive request to the controller.\n\n @param ctrl The controller handle.\n @return The control id of the inactive action.\n\n @note For Win32 controllers, this restores window position (removes topmost) and unblocks user input.\n @note For other controllers, this is a no-op that always succeeds."]
+    pub unsafe fn MaaControllerPostInactive(&self, ctrl: *mut MaaController) -> MaaCtrlId {
+        unsafe {
+            (self
+                .MaaControllerPostInactive
+                .as_ref()
+                .expect("Expected function, got error."))(ctrl)
         }
     }
     #[doc = " @brief Post a shell command to the controller.\n\n @param ctrl The controller handle.\n @param cmd The shell command to execute.\n @param timeout Timeout in milliseconds. Default is 20000 (20 seconds).\n @return The control id of the shell action.\n\n @note This is only valid for ADB controllers. If the controller is not an ADB controller, the action will fail.\n @see MaaControllerGetShellOutput"]
