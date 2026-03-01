@@ -518,6 +518,8 @@ impl ActionDetail {
 pub struct ClickActionResult {
     pub point: Point,
     pub contact: i32,
+    #[serde(default)]
+    pub pressure: i32,
 }
 
 /// Result of a LongPress action.
@@ -526,6 +528,8 @@ pub struct LongPressActionResult {
     pub point: Point,
     pub duration: i32,
     pub contact: i32,
+    #[serde(default)]
+    pub pressure: i32,
 }
 
 /// Result of a Swipe action.
@@ -542,6 +546,8 @@ pub struct SwipeActionResult {
     #[serde(default)]
     pub starting: i32,
     pub contact: i32,
+    #[serde(default)]
+    pub pressure: i32,
 }
 
 /// Result of a MultiSwipe action.
@@ -578,6 +584,8 @@ pub struct AppActionResult {
 /// Result of a Scroll action.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ScrollActionResult {
+    #[serde(default)]
+    pub point: Point,
     pub dx: i32,
     pub dy: i32,
 }
@@ -595,7 +603,7 @@ pub struct TouchActionResult {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ShellActionResult {
     pub cmd: String,
-    pub timeout: i32,
+    pub shell_timeout: i32,
     pub success: bool,
     pub output: String,
 }
