@@ -62,6 +62,7 @@ shim ! (MaaWin32ControllerCreate (hWnd : * mut :: std :: os :: raw :: c_void , s
 shim ! (MaaCustomControllerCreate (controller : * mut MaaCustomControllerCallbacks , controller_arg : * mut :: std :: os :: raw :: c_void) -> * mut MaaController) ;
 shim ! (MaaDbgControllerCreate (read_path : * const :: std :: os :: raw :: c_char , write_path : * const :: std :: os :: raw :: c_char , type_ : MaaDbgControllerType , config : * const :: std :: os :: raw :: c_char) -> * mut MaaController) ;
 shim ! (MaaPlayCoverControllerCreate (address : * const :: std :: os :: raw :: c_char , uuid : * const :: std :: os :: raw :: c_char) -> * mut MaaController) ;
+shim ! (MaaWlRootsControllerCreate (wlr_socket_path : * const :: std :: os :: raw :: c_char) -> * mut MaaController) ;
 shim ! (MaaGamepadControllerCreate (hWnd : * mut :: std :: os :: raw :: c_void , gamepad_type : MaaGamepadType , screencap_method : MaaWin32ScreencapMethod) -> * mut MaaController) ;
 shim ! (MaaControllerDestroy (ctrl : * mut MaaController) -> ()) ;
 shim ! (MaaControllerAddSink (ctrl : * mut MaaController , sink : MaaEventCallback , trans_arg : * mut :: std :: os :: raw :: c_void) -> MaaSinkId) ;
@@ -93,6 +94,7 @@ shim ! (MaaControllerConnected (ctrl : * const MaaController) -> MaaBool) ;
 shim ! (MaaControllerCachedImage (ctrl : * const MaaController , buffer : * mut MaaImageBuffer) -> MaaBool) ;
 shim ! (MaaControllerGetUuid (ctrl : * mut MaaController , buffer : * mut MaaStringBuffer) -> MaaBool) ;
 shim ! (MaaControllerGetResolution (ctrl : * const MaaController , width : * mut i32 , height : * mut i32) -> MaaBool) ;
+shim ! (MaaControllerGetInfo (ctrl : * const MaaController , buffer : * mut MaaStringBuffer) -> MaaBool) ;
 shim ! (MaaControllerPostPressKey (ctrl : * mut MaaController , keycode : i32) -> MaaCtrlId) ;
 shim ! (MaaContextRunTask (context : * mut MaaContext , entry : * const :: std :: os :: raw :: c_char , pipeline_override : * const :: std :: os :: raw :: c_char) -> MaaTaskId) ;
 shim ! (MaaContextRunRecognition (context : * mut MaaContext , entry : * const :: std :: os :: raw :: c_char , pipeline_override : * const :: std :: os :: raw :: c_char , image : * const MaaImageBuffer) -> MaaRecoId) ;

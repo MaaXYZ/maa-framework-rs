@@ -640,6 +640,12 @@ unsafe extern "C" {
     ) -> *mut MaaController;
 }
 unsafe extern "C" {
+    #[doc = " @brief Create a wlroots controller for Linux.\n\n @param wlr_socket_path The wayland socket path (e.g., \"/run/user/1000/wayland-0\").\n @return The controller handle, or nullptr on failure.\n\n @note This controller is designed for wlroots on Linux."]
+    pub fn MaaWlRootsControllerCreate(
+        wlr_socket_path: *const ::std::os::raw::c_char,
+    ) -> *mut MaaController;
+}
+unsafe extern "C" {
     #[doc = " @brief Create a virtual gamepad controller for Windows.\n\n @param hWnd Window handle for screencap (optional, can be nullptr if screencap not needed).\n @param gamepad_type Type of virtual gamepad (MaaGamepadType_Xbox360 or MaaGamepadType_DualShock4).\n @param screencap_method Win32 screencap method to use. Ignored if hWnd is nullptr.\n @return The controller handle, or nullptr on failure.\n\n @note Requires ViGEm Bus Driver to be installed on the system.\n @note For gamepad control, use:\n       - click_key/key_down/key_up: For digital buttons (A, B, X, Y, LB, RB, etc.)\n         See MaaGamepadButton_* constants for available buttons.\n       - touch_down/touch_move/touch_up: For analog inputs (sticks and triggers)\n         - contact 0 (MaaGamepadTouch_LeftStick): Left stick (x: -32768~32767, y: -32768~32767)\n         - contact 1 (MaaGamepadTouch_RightStick): Right stick (x: -32768~32767, y: -32768~32767)\n         - contact 2 (MaaGamepadTouch_LeftTrigger): Left trigger (pressure: 0~255, x/y ignored)\n         - contact 3 (MaaGamepadTouch_RightTrigger): Right trigger (pressure: 0~255, x/y ignored)\n @note click and swipe are not directly supported for gamepad.\n @note input_text, start_app, stop_app, scroll are not supported.\n @see MaaGamepadButton, MaaGamepadTouch, MaaGamepadType"]
     pub fn MaaGamepadControllerCreate(
         hWnd: *mut ::std::os::raw::c_void,
@@ -809,6 +815,13 @@ unsafe extern "C" {
         ctrl: *const MaaController,
         width: *mut i32,
         height: *mut i32,
+    ) -> MaaBool;
+}
+unsafe extern "C" {
+    #[doc = " @brief Get controller information as a JSON string.\n\n @param ctrl The controller handle.\n @param buffer The output buffer to store the JSON string.\n @return true if the info is available, false otherwise.\n\n @note Returns controller-specific information including type, constructor parameters and current state.\n       The returned JSON always contains a \"type\" field indicating the controller type."]
+    pub fn MaaControllerGetInfo(
+        ctrl: *const MaaController,
+        buffer: *mut MaaStringBuffer,
     ) -> MaaBool;
 }
 unsafe extern "C" {
@@ -1210,11 +1223,18 @@ pub struct MaaCustomControllerCallbacks {
     pub inactive: ::std::option::Option<
         unsafe extern "C" fn(trans_arg: *mut ::std::os::raw::c_void) -> MaaBool,
     >,
+    #[doc = " Write result (JSON string) to buffer. Optional, can be NULL."]
+    pub get_info: ::std::option::Option<
+        unsafe extern "C" fn(
+            trans_arg: *mut ::std::os::raw::c_void,
+            buffer: *mut MaaStringBuffer,
+        ) -> MaaBool,
+    >,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
     ["Size of MaaCustomControllerCallbacks"]
-        [::std::mem::size_of::<MaaCustomControllerCallbacks>() - 144usize];
+        [::std::mem::size_of::<MaaCustomControllerCallbacks>() - 152usize];
     ["Alignment of MaaCustomControllerCallbacks"]
         [::std::mem::align_of::<MaaCustomControllerCallbacks>() - 8usize];
     ["Offset of field: MaaCustomControllerCallbacks::connect"]
@@ -1253,6 +1273,8 @@ const _: () = {
         [::std::mem::offset_of!(MaaCustomControllerCallbacks, scroll) - 128usize];
     ["Offset of field: MaaCustomControllerCallbacks::inactive"]
         [::std::mem::offset_of!(MaaCustomControllerCallbacks, inactive) - 136usize];
+    ["Offset of field: MaaCustomControllerCallbacks::get_info"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, get_info) - 144usize];
 };
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
