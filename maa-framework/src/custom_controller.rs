@@ -67,6 +67,13 @@ pub trait CustomControllerCallback: Send + Sync {
     fn inactive(&self) -> bool {
         true
     }
+    /// Get custom controller extra info as a JSON string.
+    ///
+    /// The returned JSON will be merged with base controller info.
+    /// Default implementation returns empty JSON object.
+    fn get_info(&self) -> String {
+        "{}".to_string()
+    }
 }
 
 type BoxedCallback = Box<dyn CustomControllerCallback>;
@@ -283,6 +290,21 @@ unsafe extern "C" fn inactive_trampoline(trans_arg: *mut c_void) -> sys::MaaBool
     }
 }
 
+unsafe extern "C" fn get_info_trampoline(
+    trans_arg: *mut c_void,
+    buffer: *mut sys::MaaStringBuffer,
+) -> sys::MaaBool {
+    let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
+    let info = cb.get_info();
+    if let Ok(c_str) = std::ffi::CString::new(info) {
+        unsafe {
+            sys::MaaStringBufferSetEx(buffer, c_str.as_ptr(), c_str.as_bytes().len() as u64);
+        }
+        return 1;
+    }
+    0
+}
+
 pub fn create_custom_controller_callbacks() -> sys::MaaCustomControllerCallbacks {
     sys::MaaCustomControllerCallbacks {
         connect: Some(connect_trampoline),
@@ -303,6 +325,7 @@ pub fn create_custom_controller_callbacks() -> sys::MaaCustomControllerCallbacks
         key_up: Some(key_up_trampoline),
         scroll: Some(scroll_trampoline),
         inactive: Some(inactive_trampoline),
+        get_info: Some(get_info_trampoline),
     }
 }
 

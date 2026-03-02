@@ -103,6 +103,9 @@ pub struct ControllerActionDetail {
     /// Action parameters
     #[serde(default)]
     pub param: Value,
+    /// Controller information (type, constructor parameters, etc.)
+    #[serde(default)]
+    pub info: Value,
 }
 
 /// Tasker task event detail.

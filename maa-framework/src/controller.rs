@@ -371,6 +371,22 @@ impl Controller {
         }
     }
 
+    /// Gets the controller information as a JSON value.
+    ///
+    /// Returns controller-specific information including type, constructor parameters
+    /// and current state. The returned JSON always contains a "type" field.
+    pub fn info(&self) -> MaaResult<serde_json::Value> {
+        let buffer = crate::buffer::MaaStringBuffer::new()?;
+        let ret = unsafe { sys::MaaControllerGetInfo(self.inner.handle.as_ptr(), buffer.as_ptr()) };
+        if ret != 0 {
+            serde_json::from_str(&buffer.to_string()).map_err(|e| {
+                MaaError::InvalidArgument(format!("Failed to parse controller info: {}", e))
+            })
+        } else {
+            Err(MaaError::FrameworkError(0))
+        }
+    }
+
     /// Gets the device screen resolution as (width, height).
     pub fn resolution(&self) -> MaaResult<(i32, i32)> {
         let mut width: i32 = 0;
@@ -800,6 +816,19 @@ impl<'a> ControllerRef<'a> {
         let ret = unsafe { sys::MaaControllerGetUuid(self.handle, buffer.as_ptr()) };
         if ret != 0 {
             Ok(buffer.to_string())
+        } else {
+            Err(MaaError::FrameworkError(0))
+        }
+    }
+
+    /// Get controller information as a JSON value.
+    pub fn info(&self) -> MaaResult<serde_json::Value> {
+        let buffer = crate::buffer::MaaStringBuffer::new()?;
+        let ret = unsafe { sys::MaaControllerGetInfo(self.handle, buffer.as_ptr()) };
+        if ret != 0 {
+            serde_json::from_str(&buffer.to_string()).map_err(|e| {
+                MaaError::InvalidArgument(format!("Failed to parse controller info: {}", e))
+            })
         } else {
             Err(MaaError::FrameworkError(0))
         }
