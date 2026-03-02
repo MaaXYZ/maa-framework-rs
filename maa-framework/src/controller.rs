@@ -155,6 +155,17 @@ impl Controller {
         Self::from_handle(handle)
     }
 
+    /// Create a new WlRoots controller for apps running in wlroots compositor on Linux.
+    ///
+    /// # Arguments
+    /// * `wlr_socket_path` - Wayland socket path
+    pub fn new_wlroots(wlr_socket_path: &str) -> MaaResult<Self> {
+        let c_path = CString::new(wlr_socket_path)?;
+        let handle = unsafe { sys::MaaWlRootsControllerCreate(c_path.as_ptr()) };
+
+        Self::from_handle(handle)
+    }
+
     /// Create a custom controller with user-defined callbacks.
     #[cfg(feature = "custom")]
     pub fn new_custom<T: crate::custom_controller::CustomControllerCallback + 'static>(
