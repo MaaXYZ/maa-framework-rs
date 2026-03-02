@@ -939,6 +939,49 @@ fn test_action_types(context: &Context) -> MaaResult<()> {
         _ => panic!("Expected Shell"),
     }
 
+    // Screencap
+    new_ctx.override_pipeline(
+        r#"{
+        "ActScreencap": {
+            "action": "Screencap",
+            "filename": "test_capture",
+            "format": "jpg",
+            "quality": 85
+        }
+    }"#,
+    )?;
+
+    let obj = new_ctx.get_node_object("ActScreencap")?.expect("node");
+    match obj.action {
+        Action::Screencap(sc) => {
+            assert_eq!(sc.filename, "test_capture");
+            assert_eq!(sc.format, "jpg");
+            assert_eq!(sc.quality, 85);
+        }
+        _ => panic!("Expected Screencap"),
+    }
+
+    // Screencap with defaults
+    new_ctx.override_pipeline(
+        r#"{
+        "ActScreencapDefault": {
+            "action": "Screencap"
+        }
+    }"#,
+    )?;
+
+    let obj = new_ctx
+        .get_node_object("ActScreencapDefault")?
+        .expect("node");
+    match obj.action {
+        Action::Screencap(sc) => {
+            assert_eq!(sc.filename, "");
+            assert_eq!(sc.format, "png");
+            assert_eq!(sc.quality, 100);
+        }
+        _ => panic!("Expected Screencap"),
+    }
+
     // Scroll
     new_ctx.override_pipeline(
         r#"{

@@ -445,6 +445,7 @@ pub struct Or {
 /// - [`Scroll`] - Mouse wheel scroll
 /// - [`Command`] - Execute local command
 /// - [`Shell`] - Execute ADB shell command
+/// - [`Screencap`] - Save screenshot to file
 /// - `Custom` - User-defined action
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type", content = "param")]
@@ -468,6 +469,7 @@ pub enum Action {
     Scroll(Scroll),
     Command(Command),
     Shell(Shell),
+    Screencap(Screencap),
     Custom(CustomAction),
 }
 
@@ -679,6 +681,20 @@ pub struct Shell {
     pub shell_timeout: i32,
 }
 
+/// Screenshot capture action - saves the current screen to a file.
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct Screencap {
+    /// Output filename (without extension). Default: empty.
+    #[serde(default)]
+    pub filename: String,
+    /// Image format: "png", "jpg", etc. Default: "png".
+    #[serde(default = "default_screencap_format")]
+    pub format: String,
+    /// Image quality (0-100). Default: 100.
+    #[serde(default = "default_screencap_quality")]
+    pub quality: i32,
+}
+
 /// Custom action - uses user-registered action handler.
 ///
 /// Invokes a handler registered via `MaaResourceRegisterCustomAction`.
@@ -840,6 +856,12 @@ fn default_repeat() -> i32 {
 }
 fn default_max_hit() -> u32 {
     u32::MAX
+}
+fn default_screencap_format() -> String {
+    "png".to_string()
+}
+fn default_screencap_quality() -> i32 {
+    100
 }
 fn default_roi_zero() -> Target {
     Target::Rect((0, 0, 0, 0).into())
