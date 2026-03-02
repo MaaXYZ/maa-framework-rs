@@ -3,7 +3,7 @@
 use std::ffi::CString;
 use std::ptr::NonNull;
 
-use crate::{common, sys, MaaError, MaaResult};
+use crate::{MaaError, MaaResult, common, sys};
 
 /// Represents the execution context of a task.
 ///
@@ -364,11 +364,7 @@ impl Context {
         let ret = unsafe {
             sys::MaaContextGetHitCount(self.handle.as_ptr(), c_name.as_ptr(), &mut count)
         };
-        if ret != 0 {
-            Ok(count)
-        } else {
-            Ok(0)
-        }
+        if ret != 0 { Ok(count) } else { Ok(0) }
     }
 
     /// Resets the hit count for a specific node to zero.

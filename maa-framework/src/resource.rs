@@ -3,7 +3,7 @@
 use std::ffi::CString;
 use std::ptr::NonNull;
 
-use crate::{common, sys, MaaError, MaaResult};
+use crate::{MaaError, MaaResult, common, sys};
 
 /// Resource manager.
 ///

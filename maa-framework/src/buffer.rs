@@ -17,7 +17,7 @@ use std::ptr::NonNull;
 use std::slice;
 use std::str;
 
-use crate::{sys, MaaError, MaaResult};
+use crate::{MaaError, MaaResult, sys};
 
 /// Macro to implement common lifecycle methods for buffers.
 macro_rules! impl_buffer_lifecycle {

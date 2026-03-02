@@ -61,7 +61,9 @@ fn main() {
     let is_static = std::env::var("CARGO_FEATURE_STATIC").is_ok();
 
     if is_dynamic && is_static {
-        println!("cargo:warning=MaaFramework: Both 'static' and 'dynamic' features are enabled. Forcing 'dynamic' mode.");
+        println!(
+            "cargo:warning=MaaFramework: Both 'static' and 'dynamic' features are enabled. Forcing 'dynamic' mode."
+        );
     }
 
     let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
@@ -366,7 +368,9 @@ fn generate_bindings_with_bindgen(include_dir: &[PathBuf], out_path: &PathBuf, i
         let mut bindings_content = dynamic_bindings.to_string();
 
         if !bindings_content.contains(": ::libloading::Library") {
-            panic!("bindgen output format changed! Cannot apply CompositeLibrary patch. Expected ': ::libloading::Library'");
+            panic!(
+                "bindgen output format changed! Cannot apply CompositeLibrary patch. Expected ': ::libloading::Library'"
+            );
         }
 
         bindings_content =
@@ -499,4 +503,3 @@ fn copy_dir_recursive(src: &std::path::Path, dst: &std::path::Path) -> std::io::
         Ok(1)
     }
 }
-

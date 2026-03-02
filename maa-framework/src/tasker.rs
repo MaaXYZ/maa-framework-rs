@@ -1,7 +1,7 @@
 //! Task execution and pipeline management.
 
 use crate::resource::Resource;
-use crate::{common, sys, MaaError, MaaResult};
+use crate::{MaaError, MaaResult, common, sys};
 use std::ptr::NonNull;
 
 use std::collections::HashMap;

@@ -1,6 +1,6 @@
 //! Device controller for input, screen capture, and app management.
 
-use crate::{common, sys, MaaError, MaaResult};
+use crate::{MaaError, MaaResult, common, sys};
 use std::collections::HashMap;
 use std::ffi::CString;
 use std::os::raw::c_void;
@@ -74,17 +74,12 @@ impl Controller {
         if !agent_path.is_empty() {
             return Ok(agent_path.to_string());
         }
-        let cur = std::env::current_dir().
-                           map_err(|e| {
-                           MaaError::InvalidArgument(
-                           format!("agent_path empty and current_dir failed: {}", e)
-                        )
+        let cur = std::env::current_dir().map_err(|e| {
+            MaaError::InvalidArgument(format!("agent_path empty and current_dir failed: {}", e))
         })?;
-        let s = cur.
-                    to_str().
-                    ok_or_else(|| {
-                    MaaError::InvalidArgument(
-                   "agent_path empty and current directory is not valid UTF-8".to_string(),
+        let s = cur.to_str().ok_or_else(|| {
+            MaaError::InvalidArgument(
+                "agent_path empty and current directory is not valid UTF-8".to_string(),
             )
         })?;
         Ok(s.to_string())

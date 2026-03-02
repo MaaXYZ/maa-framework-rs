@@ -42,7 +42,8 @@ impl CompositeLibrary {
             {
                 //LOAD_WITH_ALTERED_SEARCH_PATH (0x00000008)
                 let p = p.canonicalize().unwrap_or(p.to_path_buf());
-                let lib = unsafe { libloading::os::windows::Library::load_with_flags(&p, 0x00000008)? };
+                let lib =
+                    unsafe { libloading::os::windows::Library::load_with_flags(&p, 0x00000008)? };
                 Ok(lib.into())
             }
             #[cfg(not(target_os = "windows"))]

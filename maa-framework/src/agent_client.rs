@@ -4,8 +4,8 @@
 //! to a separate process running an AgentServer.
 
 use crate::{
-    buffer, common, controller::Controller, resource::Resource, sys, tasker::Tasker, MaaError,
-    MaaResult,
+    MaaError, MaaResult, buffer, common, controller::Controller, resource::Resource, sys,
+    tasker::Tasker,
 };
 use std::ptr::NonNull;
 

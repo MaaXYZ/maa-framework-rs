@@ -9,8 +9,8 @@
 
 mod common;
 
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use maa_framework::context::Context;
 use maa_framework::controller::Controller;

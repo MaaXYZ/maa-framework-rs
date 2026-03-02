@@ -81,20 +81,12 @@ type BoxedCallback = Box<dyn CustomControllerCallback>;
 // FFI trampolines
 unsafe extern "C" fn connect_trampoline(trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.connect() {
-        1
-    } else {
-        0
-    }
+    if cb.connect() { 1 } else { 0 }
 }
 
 unsafe extern "C" fn connected_trampoline(trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.connected() {
-        1
-    } else {
-        0
-    }
+    if cb.connected() { 1 } else { 0 }
 }
 
 unsafe extern "C" fn request_uuid_trampoline(
@@ -104,7 +96,9 @@ unsafe extern "C" fn request_uuid_trampoline(
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
     if let Some(uuid) = cb.request_uuid() {
         if let Ok(c_str) = std::ffi::CString::new(uuid) {
-            unsafe { sys::MaaStringBufferSetEx(buffer, c_str.as_ptr(), c_str.as_bytes().len() as u64); }
+            unsafe {
+                sys::MaaStringBufferSetEx(buffer, c_str.as_ptr(), c_str.as_bytes().len() as u64);
+            }
             return 1;
         }
     }
@@ -126,11 +120,7 @@ unsafe extern "C" fn start_app_trampoline(
     } else {
         std::borrow::Cow::Borrowed("")
     };
-    if cb.start_app(&intent_str) {
-        1
-    } else {
-        0
-    }
+    if cb.start_app(&intent_str) { 1 } else { 0 }
 }
 
 unsafe extern "C" fn stop_app_trampoline(
@@ -143,11 +133,7 @@ unsafe extern "C" fn stop_app_trampoline(
     } else {
         std::borrow::Cow::Borrowed("")
     };
-    if cb.stop_app(&intent_str) {
-        1
-    } else {
-        0
-    }
+    if cb.stop_app(&intent_str) { 1 } else { 0 }
 }
 
 unsafe extern "C" fn screencap_trampoline(
@@ -166,11 +152,7 @@ unsafe extern "C" fn screencap_trampoline(
 
 unsafe extern "C" fn click_trampoline(x: i32, y: i32, trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.click(x, y) {
-        1
-    } else {
-        0
-    }
+    if cb.click(x, y) { 1 } else { 0 }
 }
 
 unsafe extern "C" fn swipe_trampoline(
@@ -221,20 +203,12 @@ unsafe extern "C" fn touch_move_trampoline(
 
 unsafe extern "C" fn touch_up_trampoline(contact: i32, trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.touch_up(contact) {
-        1
-    } else {
-        0
-    }
+    if cb.touch_up(contact) { 1 } else { 0 }
 }
 
 unsafe extern "C" fn click_key_trampoline(keycode: i32, trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.click_key(keycode) {
-        1
-    } else {
-        0
-    }
+    if cb.click_key(keycode) { 1 } else { 0 }
 }
 
 unsafe extern "C" fn input_text_trampoline(
@@ -247,47 +221,27 @@ unsafe extern "C" fn input_text_trampoline(
     } else {
         std::borrow::Cow::Borrowed("")
     };
-    if cb.input_text(&text_str) {
-        1
-    } else {
-        0
-    }
+    if cb.input_text(&text_str) { 1 } else { 0 }
 }
 
 unsafe extern "C" fn key_down_trampoline(keycode: i32, trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.key_down(keycode) {
-        1
-    } else {
-        0
-    }
+    if cb.key_down(keycode) { 1 } else { 0 }
 }
 
 unsafe extern "C" fn key_up_trampoline(keycode: i32, trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.key_up(keycode) {
-        1
-    } else {
-        0
-    }
+    if cb.key_up(keycode) { 1 } else { 0 }
 }
 
 unsafe extern "C" fn scroll_trampoline(dx: i32, dy: i32, trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.scroll(dx, dy) {
-        1
-    } else {
-        0
-    }
+    if cb.scroll(dx, dy) { 1 } else { 0 }
 }
 
 unsafe extern "C" fn inactive_trampoline(trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.inactive() {
-        1
-    } else {
-        0
-    }
+    if cb.inactive() { 1 } else { 0 }
 }
 
 unsafe extern "C" fn get_info_trampoline(

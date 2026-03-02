@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{common, sys, MaaError, MaaResult};
+use crate::{MaaError, MaaResult, common, sys};
 use std::ffi::{CStr, CString};
 use std::path::PathBuf;
 

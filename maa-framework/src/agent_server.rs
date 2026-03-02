@@ -3,7 +3,7 @@
 //! This module allows hosting custom recognition and action components
 //! in a separate process, which can be connected to by AgentClient.
 
-use crate::{callback, common, sys, MaaError, MaaResult};
+use crate::{MaaError, MaaResult, callback, common, sys};
 use std::ffi::CString;
 
 /// Static functions for AgentServer management.

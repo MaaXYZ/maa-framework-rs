@@ -17,7 +17,7 @@ use maa_framework::resource::Resource;
 use maa_framework::tasker::Tasker;
 use maa_framework::{self, sys};
 
-use common::{get_test_resources_dir, init_test_env, ImageController};
+use common::{ImageController, get_test_resources_dir, init_test_env};
 
 struct ServerRecognition;
 
@@ -312,7 +312,10 @@ fn test_agent_full_integration() {
     }
 
     if !recognition_detail_found {
-        panic!("IPC Verification Failed: Did not find 'server_verified' in recognition details. Task Detail: {}", detail_str);
+        panic!(
+            "IPC Verification Failed: Did not find 'server_verified' in recognition details. Task Detail: {}",
+            detail_str
+        );
     }
 
     println!("PASS: agent multi-process integration");

@@ -3,8 +3,9 @@
 use std::ops::Deref;
 
 use crate::{
+    MaaResult,
     common::{MaaId, MaaStatus},
-    sys, MaaResult,
+    sys,
 };
 
 pub type StatusFn<'a> = Box<dyn Fn(MaaId) -> MaaStatus + Send + Sync + 'a>;

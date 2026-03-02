@@ -7,13 +7,17 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use maa_framework::custom_controller::CustomControllerCallback;
 use maa_framework::toolkit::Toolkit;
-use maa_framework::{self, sys, MaaResult};
+use maa_framework::{self, MaaResult, sys};
 
 #[cfg(feature = "dynamic")]
 #[ctor::ctor]
 fn global_setup() {
     let is_server = std::env::var("MAA_AGENT_TEST_MODE").unwrap_or_default() == "SERVER";
-    let base_name = if is_server { "MaaAgentServer" } else { "MaaFramework" };
+    let base_name = if is_server {
+        "MaaAgentServer"
+    } else {
+        "MaaFramework"
+    };
 
     let lib_name = if cfg!(target_os = "windows") {
         format!("{}.dll", base_name)

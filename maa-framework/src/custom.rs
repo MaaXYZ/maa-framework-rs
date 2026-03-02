@@ -11,7 +11,7 @@
 
 use crate::context::Context;
 use crate::resource::Resource;
-use crate::{common, sys, MaaError, MaaResult};
+use crate::{MaaError, MaaResult, common, sys};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 

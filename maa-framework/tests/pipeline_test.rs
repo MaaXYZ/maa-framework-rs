@@ -23,9 +23,9 @@ use maa_framework::custom::{CustomAction, CustomRecognition};
 use maa_framework::pipeline::{Action, Recognition};
 use maa_framework::resource::Resource;
 use maa_framework::tasker::Tasker;
-use maa_framework::{self, sys, MaaResult};
+use maa_framework::{self, MaaResult, sys};
 
-use common::{get_test_resources_dir, init_test_env, ImageController};
+use common::{ImageController, get_test_resources_dir, init_test_env};
 
 // ============================================================================
 // Recognition Type Tests - Ported from Python _test_recognition_types

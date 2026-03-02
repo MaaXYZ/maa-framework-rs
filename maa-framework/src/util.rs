@@ -1,6 +1,6 @@
 //! Miscellaneous utility functions.
 
-use crate::{common, sys, MaaResult};
+use crate::{MaaResult, common, sys};
 use std::ffi::{CStr, CString};
 
 pub fn version() -> String {
