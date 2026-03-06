@@ -374,7 +374,17 @@ impl Default for AdbInputMethod {
 // ============================================================================
 
 bitflags::bitflags! {
-    /// Win32 screencap method (select ONE only, no bitwise OR).
+    /// Win32 screencap method flags.
+    ///
+    /// Use bitwise OR to set the methods you need.
+    /// MaaFramework will test all provided methods and use the fastest available one.
+    ///
+    /// Predefined combinations:
+    /// - [`FOREGROUND`](Self::FOREGROUND): `DXGI_DESKTOP_DUP_WINDOW | SCREEN_DC`
+    /// - [`BACKGROUND`](Self::BACKGROUND): `FRAME_POOL | PRINT_WINDOW`
+    ///
+    /// `FRAME_POOL` and `PRINT_WINDOW` support pseudo-minimize. Other methods
+    /// still fail when the target window is minimized.
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     pub struct Win32ScreencapMethod: u64 {
         const GDI = 1;
@@ -383,6 +393,9 @@ bitflags::bitflags! {
         const DXGI_DESKTOP_DUP_WINDOW = 1 << 3;
         const PRINT_WINDOW = 1 << 4;
         const SCREEN_DC = 1 << 5;
+        const ALL = !0;
+        const FOREGROUND = Self::DXGI_DESKTOP_DUP_WINDOW.bits() | Self::SCREEN_DC.bits();
+        const BACKGROUND = Self::FRAME_POOL.bits() | Self::PRINT_WINDOW.bits();
     }
 }
 

@@ -272,7 +272,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // if let Some(window) = windows.first() {
     //     controller = Some(Controller::new_win32(
     //         window.hwnd as isize,
-    //         common::Win32ScreencapMethod::FramePool as i32,
+    //         common::Win32ScreencapMethod::BACKGROUND.bits(),
     //         common::Win32InputMethod::PostMessage as i32,
     //         common::Win32InputMethod::PostMessage as i32,
     //     )?);
