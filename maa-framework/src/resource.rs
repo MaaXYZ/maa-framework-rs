@@ -628,38 +628,42 @@ impl Resource {
 impl Drop for ResourceInner {
     fn drop(&mut self) {
         unsafe {
-            {
-                let mut callbacks = self.callbacks.lock().unwrap();
-                for (_, ptr) in callbacks.drain() {
-                    let _ =
-                        crate::callback::EventCallback::drop_callback(ptr as *mut std::ffi::c_void);
-                }
-            }
-            {
-                let mut event_sinks = self.event_sinks.lock().unwrap();
-                for (_, ptr) in event_sinks.drain() {
-                    let _ = crate::callback::EventCallback::drop_sink(ptr as *mut std::ffi::c_void);
-                }
-            }
-            sys::MaaResourceClearSinks(self.handle.as_ptr());
-            sys::MaaResourceClearCustomAction(self.handle.as_ptr());
-            sys::MaaResourceClearCustomRecognition(self.handle.as_ptr());
-
-            {
-                let mut actions = self.custom_actions.lock().unwrap();
-                for (_, ptr) in actions.drain() {
-                    let _ = Box::from_raw(ptr as *mut Box<dyn crate::custom::CustomAction>);
-                }
-            }
-            {
-                let mut recos = self.custom_recognitions.lock().unwrap();
-                for (_, ptr) in recos.drain() {
-                    let _ = Box::from_raw(ptr as *mut Box<dyn crate::custom::CustomRecognition>);
-                }
-            }
-
             if self.owns_handle {
-                sys::MaaResourceDestroy(self.handle.as_ptr())
+                {
+                    let mut callbacks = self.callbacks.lock().unwrap();
+                    for (_, ptr) in callbacks.drain() {
+                        let _ = crate::callback::EventCallback::drop_callback(
+                            ptr as *mut std::ffi::c_void,
+                        );
+                    }
+                }
+                {
+                    let mut event_sinks = self.event_sinks.lock().unwrap();
+                    for (_, ptr) in event_sinks.drain() {
+                        let _ = crate::callback::EventCallback::drop_sink(
+                            ptr as *mut std::ffi::c_void,
+                        );
+                    }
+                }
+                sys::MaaResourceClearSinks(self.handle.as_ptr());
+                sys::MaaResourceClearCustomAction(self.handle.as_ptr());
+                sys::MaaResourceClearCustomRecognition(self.handle.as_ptr());
+
+                {
+                    let mut actions = self.custom_actions.lock().unwrap();
+                    for (_, ptr) in actions.drain() {
+                        let _ = Box::from_raw(ptr as *mut Box<dyn crate::custom::CustomAction>);
+                    }
+                }
+                {
+                    let mut recos = self.custom_recognitions.lock().unwrap();
+                    for (_, ptr) in recos.drain() {
+                        let _ =
+                            Box::from_raw(ptr as *mut Box<dyn crate::custom::CustomRecognition>);
+                    }
+                }
+
+                sys::MaaResourceDestroy(self.handle.as_ptr());
             }
         }
     }

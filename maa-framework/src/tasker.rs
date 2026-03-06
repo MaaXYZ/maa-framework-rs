@@ -931,17 +931,17 @@ impl Tasker {
 impl Drop for TaskerInner {
     fn drop(&mut self) {
         unsafe {
-            sys::MaaTaskerClearSinks(self.handle.as_ptr());
-            let mut callbacks = self.callbacks.lock().unwrap();
-            for (_, ptr) in callbacks.drain() {
-                crate::callback::EventCallback::drop_callback(ptr as *mut c_void);
-            }
-            let mut event_sinks = self.event_sinks.lock().unwrap();
-            for (_, ptr) in event_sinks.drain() {
-                crate::callback::EventCallback::drop_sink(ptr as *mut c_void);
-            }
             if self.owns_handle {
-                sys::MaaTaskerDestroy(self.handle.as_ptr())
+                sys::MaaTaskerClearSinks(self.handle.as_ptr());
+                let mut callbacks = self.callbacks.lock().unwrap();
+                for (_, ptr) in callbacks.drain() {
+                    crate::callback::EventCallback::drop_callback(ptr as *mut c_void);
+                }
+                let mut event_sinks = self.event_sinks.lock().unwrap();
+                for (_, ptr) in event_sinks.drain() {
+                    crate::callback::EventCallback::drop_sink(ptr as *mut c_void);
+                }
+                sys::MaaTaskerDestroy(self.handle.as_ptr());
             }
         }
     }
