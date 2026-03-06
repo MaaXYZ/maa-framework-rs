@@ -629,6 +629,7 @@ impl Drop for ResourceInner {
     fn drop(&mut self) {
         unsafe {
             if self.owns_handle {
+                sys::MaaResourceClearSinks(self.handle.as_ptr());
                 {
                     let mut callbacks = self.callbacks.lock().unwrap();
                     for (_, ptr) in callbacks.drain() {
@@ -640,12 +641,11 @@ impl Drop for ResourceInner {
                 {
                     let mut event_sinks = self.event_sinks.lock().unwrap();
                     for (_, ptr) in event_sinks.drain() {
-                        let _ = crate::callback::EventCallback::drop_sink(
-                            ptr as *mut std::ffi::c_void,
-                        );
+                        let _ =
+                            crate::callback::EventCallback::drop_sink(ptr as *mut std::ffi::c_void);
                     }
                 }
-                sys::MaaResourceClearSinks(self.handle.as_ptr());
+
                 sys::MaaResourceClearCustomAction(self.handle.as_ptr());
                 sys::MaaResourceClearCustomRecognition(self.handle.as_ptr());
 

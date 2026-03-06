@@ -933,14 +933,29 @@ impl Drop for TaskerInner {
         unsafe {
             if self.owns_handle {
                 sys::MaaTaskerClearSinks(self.handle.as_ptr());
-                let mut callbacks = self.callbacks.lock().unwrap();
-                for (_, ptr) in callbacks.drain() {
-                    crate::callback::EventCallback::drop_callback(ptr as *mut c_void);
+            } else {
+                let callbacks_keys: Vec<_> =
+                    self.callbacks.lock().unwrap().keys().copied().collect();
+                for id in callbacks_keys {
+                    sys::MaaTaskerRemoveSink(self.handle.as_ptr(), id);
                 }
-                let mut event_sinks = self.event_sinks.lock().unwrap();
-                for (_, ptr) in event_sinks.drain() {
-                    crate::callback::EventCallback::drop_sink(ptr as *mut c_void);
+                let event_sinks_keys: Vec<_> =
+                    self.event_sinks.lock().unwrap().keys().copied().collect();
+                for id in event_sinks_keys {
+                    sys::MaaTaskerRemoveSink(self.handle.as_ptr(), id);
                 }
+            }
+
+            let mut callbacks = self.callbacks.lock().unwrap();
+            for (_, ptr) in callbacks.drain() {
+                crate::callback::EventCallback::drop_callback(ptr as *mut c_void);
+            }
+            let mut event_sinks = self.event_sinks.lock().unwrap();
+            for (_, ptr) in event_sinks.drain() {
+                crate::callback::EventCallback::drop_sink(ptr as *mut c_void);
+            }
+
+            if self.owns_handle {
                 sys::MaaTaskerDestroy(self.handle.as_ptr());
             }
         }
