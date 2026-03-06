@@ -583,7 +583,7 @@ dependencies = [
 
 [[package]]
 name = "maa-framework-sys"
-version = "5.8.1"
+version = "5.9.0-alpha.1"
 dependencies = [
  "bindgen",
  "libloading",
