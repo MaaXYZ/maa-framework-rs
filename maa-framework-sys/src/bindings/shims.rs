@@ -81,6 +81,7 @@ shim ! (MaaControllerPostStopApp (ctrl : * mut MaaController , intent : * const 
 shim ! (MaaControllerPostTouchDown (ctrl : * mut MaaController , contact : i32 , x : i32 , y : i32 , pressure : i32) -> MaaCtrlId) ;
 shim ! (MaaControllerPostTouchMove (ctrl : * mut MaaController , contact : i32 , x : i32 , y : i32 , pressure : i32) -> MaaCtrlId) ;
 shim ! (MaaControllerPostTouchUp (ctrl : * mut MaaController , contact : i32) -> MaaCtrlId) ;
+shim ! (MaaControllerPostRelativeMove (ctrl : * mut MaaController , dx : i32 , dy : i32) -> MaaCtrlId) ;
 shim ! (MaaControllerPostKeyDown (ctrl : * mut MaaController , keycode : i32) -> MaaCtrlId) ;
 shim ! (MaaControllerPostKeyUp (ctrl : * mut MaaController , keycode : i32) -> MaaCtrlId) ;
 shim ! (MaaControllerPostScreencap (ctrl : * mut MaaController) -> MaaCtrlId) ;
