@@ -950,6 +950,10 @@ pub struct MaaFramework {
         unsafe extern "C" fn(ctrl: *mut MaaController, contact: i32) -> MaaCtrlId,
         ::libloading::Error,
     >,
+    pub MaaControllerPostRelativeMove: Result<
+        unsafe extern "C" fn(ctrl: *mut MaaController, dx: i32, dy: i32) -> MaaCtrlId,
+        ::libloading::Error,
+    >,
     pub MaaControllerPostKeyDown: Result<
         unsafe extern "C" fn(ctrl: *mut MaaController, keycode: i32) -> MaaCtrlId,
         ::libloading::Error,
@@ -1694,6 +1698,8 @@ impl MaaFramework {
             unsafe { __library.get(b"MaaControllerPostTouchMove\0") }.map(|sym| *sym);
         let MaaControllerPostTouchUp =
             unsafe { __library.get(b"MaaControllerPostTouchUp\0") }.map(|sym| *sym);
+        let MaaControllerPostRelativeMove =
+            unsafe { __library.get(b"MaaControllerPostRelativeMove\0") }.map(|sym| *sym);
         let MaaControllerPostKeyDown =
             unsafe { __library.get(b"MaaControllerPostKeyDown\0") }.map(|sym| *sym);
         let MaaControllerPostKeyUp =
@@ -2020,6 +2026,7 @@ impl MaaFramework {
             MaaControllerPostTouchDown,
             MaaControllerPostTouchMove,
             MaaControllerPostTouchUp,
+            MaaControllerPostRelativeMove,
             MaaControllerPostKeyDown,
             MaaControllerPostKeyUp,
             MaaControllerPostScreencap,
@@ -3179,6 +3186,19 @@ impl MaaFramework {
                 .expect("Expected function, got error."))(ctrl, contact)
         }
     }
+    pub unsafe fn MaaControllerPostRelativeMove(
+        &self,
+        ctrl: *mut MaaController,
+        dx: i32,
+        dy: i32,
+    ) -> MaaCtrlId {
+        unsafe {
+            (self
+                .MaaControllerPostRelativeMove
+                .as_ref()
+                .expect("Expected function, got error."))(ctrl, dx, dy)
+        }
+    }
     pub unsafe fn MaaControllerPostKeyDown(
         &self,
         ctrl: *mut MaaController,
@@ -3212,7 +3232,7 @@ impl MaaFramework {
                 .expect("Expected function, got error."))(ctrl)
         }
     }
-    #[doc = " @brief Post a scroll action to the controller.\n\n @param ctrl The controller handle.\n @param dx The horizontal scroll delta. Positive values scroll right, negative values scroll left.\n @param dy The vertical scroll delta. Positive values scroll up, negative values scroll down.\n @return The control id of the scroll action.\n\n @note Not all controllers support scroll. If not supported, the action will fail.\n @note The dx/dy values are sent directly as scroll increments. Using multiples of 120 (WHEEL_DELTA) is\n recommended for best compatibility."]
+    #[doc = " @brief Post a scroll action to the controller.\n\n @param ctrl The controller handle.\n @param dx The horizontal scroll delta. Positive values scroll right, negative values scroll left.\n @param dy The vertical scroll delta. Positive values scroll up, negative values scroll down.\n @return The control id of the scroll action.\n\n @note Scroll is supported by Win32 controllers and custom controllers that implement scroll.\n @note If the controller does not support scroll, the action will fail. Use MaaControllerStatus or\n MaaControllerWait to check the result.\n @note The dx/dy values are sent directly as scroll increments. Using multiples of 120 (WHEEL_DELTA) is\n recommended for best compatibility."]
     pub unsafe fn MaaControllerPostScroll(
         &self,
         ctrl: *mut MaaController,
