@@ -1158,6 +1158,83 @@ fn test_custom_controller_operations() {
     println!("  PASS: custom controller operations");
 }
 
+#[cfg(all(target_os = "windows", feature = "win32"))]
+#[test]
+fn test_win32_relative_move() {
+    use std::os::raw::c_void;
+
+    println!("\n=== test_win32_relative_move ===");
+
+    let desktop_windows = match Toolkit::find_desktop_windows() {
+        Ok(windows) => windows,
+        Err(e) => {
+            println!("  SKIP: failed to enumerate desktop windows ({:?})", e);
+            return;
+        }
+    };
+
+    if desktop_windows.is_empty() {
+        println!("  SKIP: no desktop windows found");
+        return;
+    }
+
+    let mut controller = None;
+    let mut target_window = None;
+
+    for window in desktop_windows {
+        match Controller::new_win32(
+            window.hwnd as *mut c_void,
+            sys::MaaWin32ScreencapMethod_GDI as sys::MaaWin32ScreencapMethod,
+            sys::MaaWin32InputMethod_SendMessage as sys::MaaWin32InputMethod,
+            sys::MaaWin32InputMethod_SendMessage as sys::MaaWin32InputMethod,
+        ) {
+            Ok(ctrl) => {
+                controller = Some(ctrl);
+                target_window = Some(window);
+                break;
+            }
+            Err(_) => continue,
+        }
+    }
+
+    let (controller, target_window) = match (controller, target_window) {
+        (Some(controller), Some(target_window)) => (controller, target_window),
+        _ => {
+            println!("  SKIP: failed to create Win32 controller");
+            return;
+        }
+    };
+
+    let ret = controller
+        .post_connection()
+        .map(|id| controller.wait(id).succeeded())
+        .unwrap_or(false)
+        && controller
+            .post_relative_move(0, 0)
+            .map(|id| controller.wait(id).succeeded())
+            .unwrap_or(false);
+
+    let window_name = if target_window.window_name.is_empty() {
+        "(no name)"
+    } else if target_window.window_name.len() > 30 {
+        &target_window.window_name[..30]
+    } else {
+        &target_window.window_name
+    };
+
+    println!("  target window: {}", window_name);
+    println!("  ret: {}", ret);
+    assert!(ret, "win32 relative_move should succeed");
+    println!("  PASS: win32 relative_move");
+}
+
+#[cfg(not(all(target_os = "windows", feature = "win32")))]
+#[test]
+fn test_win32_relative_move() {
+    println!("\n=== test_win32_relative_move ===");
+    println!("  SKIP: requires Windows target with win32 feature");
+}
+
 // ============================================================================
 // Toolkit Tests
 // ============================================================================
