@@ -1178,53 +1178,55 @@ fn test_win32_relative_move() {
         return;
     }
 
-    let mut controller = None;
-    let mut target_window = None;
+    let mut preferred_windows = desktop_windows;
+    preferred_windows.sort_by_key(|window| window.window_name.is_empty());
 
-    for window in desktop_windows {
-        match Controller::new_win32(
+    let mut target_window_name = None;
+    let mut ret = false;
+
+    for window in preferred_windows {
+        let controller = match Controller::new_win32(
             window.hwnd as *mut c_void,
             sys::MaaWin32ScreencapMethod_GDI as sys::MaaWin32ScreencapMethod,
-            sys::MaaWin32InputMethod_SendMessage as sys::MaaWin32InputMethod,
-            sys::MaaWin32InputMethod_SendMessage as sys::MaaWin32InputMethod,
+            sys::MaaWin32InputMethod_Seize as sys::MaaWin32InputMethod,
+            sys::MaaWin32InputMethod_Seize as sys::MaaWin32InputMethod,
         ) {
-            Ok(ctrl) => {
-                controller = Some(ctrl);
-                target_window = Some(window);
-                break;
-            }
+            Ok(ctrl) => ctrl,
             Err(_) => continue,
+        };
+
+        let current_ret = controller
+            .post_connection()
+            .map(|id| controller.wait(id).succeeded())
+            .unwrap_or(false)
+            && controller
+                .post_relative_move(0, 0)
+                .map(|id| controller.wait(id).succeeded())
+                .unwrap_or(false);
+
+        let window_name = if window.window_name.is_empty() {
+            "(no name)".to_string()
+        } else if window.window_name.len() > 30 {
+            window.window_name[..30].to_string()
+        } else {
+            window.window_name.clone()
+        };
+
+        println!("  try target window: {} -> {}", window_name, current_ret);
+
+        if current_ret {
+            target_window_name = Some(window_name);
+            ret = true;
+            break;
         }
     }
 
-    let (controller, target_window) = match (controller, target_window) {
-        (Some(controller), Some(target_window)) => (controller, target_window),
-        _ => {
-            println!("  SKIP: failed to create Win32 controller");
-            return;
-        }
-    };
-
-    let ret = controller
-        .post_connection()
-        .map(|id| controller.wait(id).succeeded())
-        .unwrap_or(false)
-        && controller
-            .post_relative_move(0, 0)
-            .map(|id| controller.wait(id).succeeded())
-            .unwrap_or(false);
-
-    let window_name = if target_window.window_name.is_empty() {
-        "(no name)"
-    } else if target_window.window_name.len() > 30 {
-        &target_window.window_name[..30]
-    } else {
-        &target_window.window_name
-    };
-
-    println!("  target window: {}", window_name);
+    println!(
+        "  target window: {}",
+        target_window_name.as_deref().unwrap_or("(none)")
+    );
     println!("  ret: {}", ret);
-    assert!(ret, "win32 relative_move should succeed");
+    assert!(ret, "win32 relative_move should succeed with Seize input");
     println!("  PASS: win32 relative_move");
 }
 
