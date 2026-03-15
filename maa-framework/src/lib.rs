@@ -99,6 +99,14 @@ pub use error::{MaaError, MaaResult};
 pub use maa_framework_sys as sys;
 
 use std::ffi::CString;
+use std::sync::atomic::{AtomicU8, Ordering};
+
+const RUNTIME_CONTEXT_UNKNOWN: u8 = 0;
+#[cfg(feature = "dynamic")]
+const RUNTIME_CONTEXT_FRAMEWORK: u8 = 1;
+const RUNTIME_CONTEXT_AGENT_SERVER: u8 = 2;
+
+static RUNTIME_CONTEXT: AtomicU8 = AtomicU8::new(RUNTIME_CONTEXT_UNKNOWN);
 
 /// Get the MaaFramework version string.
 ///
@@ -244,7 +252,10 @@ pub fn load_plugin(path: &str) -> MaaResult<()> {
 /// * The caller must ensure `path` points to a valid MaaFramework binary compatible with these bindings.
 #[cfg(feature = "dynamic")]
 pub fn load_library(path: &std::path::Path) -> Result<(), String> {
-    unsafe { sys::load_library(path) }
+    let context = runtime_context_from_library_path(path);
+    unsafe { sys::load_library(path) }?;
+    RUNTIME_CONTEXT.store(context, Ordering::Relaxed);
+    Ok(())
 }
 
 /// Finds and loads the MaaFramework dynamic library when using the `dynamic` feature.
@@ -308,5 +319,29 @@ pub fn ensure_library_loaded() -> Result<(), String> {
             "MaaFramework library not found. Set MAA_SDK_PATH or place SDK (e.g. MAA-*/bin/)."
                 .to_string(),
         ),
+    }
+}
+
+pub(crate) fn mark_agent_server_context() {
+    RUNTIME_CONTEXT.store(RUNTIME_CONTEXT_AGENT_SERVER, Ordering::Relaxed);
+}
+
+pub(crate) fn is_agent_server_context() -> bool {
+    RUNTIME_CONTEXT.load(Ordering::Relaxed) == RUNTIME_CONTEXT_AGENT_SERVER
+}
+
+#[cfg(feature = "dynamic")]
+fn runtime_context_from_library_path(path: &std::path::Path) -> u8 {
+    let Some(file_name) = path.file_name() else {
+        return RUNTIME_CONTEXT_UNKNOWN;
+    };
+    let file_name = file_name.to_string_lossy();
+    if file_name.is_empty() {
+        return RUNTIME_CONTEXT_UNKNOWN;
+    }
+    if file_name.contains("MaaAgentServer") {
+        RUNTIME_CONTEXT_AGENT_SERVER
+    } else {
+        RUNTIME_CONTEXT_FRAMEWORK
     }
 }

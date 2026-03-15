@@ -76,8 +76,10 @@ impl CompositeLibrary {
 
         let is_agent_server = file_name.contains("MaaAgentServer");
 
-        if let Some(lib) = try_load("MaaToolkit") {
-            libs.push(lib);
+        if !is_agent_server {
+            if let Some(lib) = try_load("MaaToolkit") {
+                libs.push(lib);
+            }
         }
 
         let main_lib = load_lib(path)?;

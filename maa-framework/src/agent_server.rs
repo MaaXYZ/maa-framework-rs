@@ -13,6 +13,11 @@ use std::ffi::CString;
 pub struct AgentServer;
 
 impl AgentServer {
+    #[inline]
+    fn mark_context() {
+        crate::mark_agent_server_context();
+    }
+
     /// Register a custom recognition with the AgentServer.
     ///
     /// The recognition will be available to connected AgentClients.
@@ -20,6 +25,7 @@ impl AgentServer {
         name: &str,
         reco: Box<dyn crate::custom::CustomRecognition>,
     ) -> MaaResult<()> {
+        Self::mark_context();
         let c_name = CString::new(name)?;
         let reco_ptr = Box::into_raw(Box::new(reco));
         let reco_ptr_void = reco_ptr as *mut std::ffi::c_void;
@@ -46,6 +52,7 @@ impl AgentServer {
         name: &str,
         action: Box<dyn crate::custom::CustomAction>,
     ) -> MaaResult<()> {
+        Self::mark_context();
         let c_name = CString::new(name)?;
         let action_ptr = Box::into_raw(Box::new(action));
         let action_ptr_void = action_ptr as *mut std::ffi::c_void;
@@ -69,6 +76,7 @@ impl AgentServer {
     where
         F: Fn(&str, &str) + Send + Sync + 'static,
     {
+        Self::mark_context();
         let (cb, arg) = callback::EventCallback::new(callback);
         let sink_id = unsafe { sys::MaaAgentServerAddResourceSink(cb, arg) };
         if sink_id != 0 {
@@ -84,6 +92,7 @@ impl AgentServer {
     where
         F: Fn(&str, &str) + Send + Sync + 'static,
     {
+        Self::mark_context();
         let (cb, arg) = callback::EventCallback::new(callback);
         let sink_id = unsafe { sys::MaaAgentServerAddControllerSink(cb, arg) };
         if sink_id != 0 {
@@ -99,6 +108,7 @@ impl AgentServer {
     where
         F: Fn(&str, &str) + Send + Sync + 'static,
     {
+        Self::mark_context();
         let (cb, arg) = callback::EventCallback::new(callback);
         let sink_id = unsafe { sys::MaaAgentServerAddTaskerSink(cb, arg) };
         if sink_id != 0 {
@@ -114,6 +124,7 @@ impl AgentServer {
     where
         F: Fn(&str, &str) + Send + Sync + 'static,
     {
+        Self::mark_context();
         let (cb, arg) = callback::EventCallback::new(callback);
         let sink_id = unsafe { sys::MaaAgentServerAddContextSink(cb, arg) };
         if sink_id != 0 {
@@ -129,6 +140,7 @@ impl AgentServer {
     /// # Arguments
     /// * `identifier` - Connection identifier for clients to connect to
     pub fn start_up(identifier: &str) -> MaaResult<()> {
+        Self::mark_context();
         let c_id = CString::new(identifier)?;
         let ret = unsafe { sys::MaaAgentServerStartUp(c_id.as_ptr()) };
         common::check_bool(ret)
@@ -136,16 +148,19 @@ impl AgentServer {
 
     /// Shut down the AgentServer.
     pub fn shut_down() {
+        Self::mark_context();
         unsafe { sys::MaaAgentServerShutDown() }
     }
 
     /// Block until the server shuts down.
     pub fn join() {
+        Self::mark_context();
         unsafe { sys::MaaAgentServerJoin() }
     }
 
     /// Detach the server to run in background.
     pub fn detach() {
+        Self::mark_context();
         unsafe { sys::MaaAgentServerDetach() }
     }
 }

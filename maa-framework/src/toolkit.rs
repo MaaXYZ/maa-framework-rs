@@ -4,7 +4,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{MaaError, MaaResult, common, sys};
 use std::ffi::{CStr, CString};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::sync::Once;
 
 /// Information about a connected ADB device.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -37,13 +38,39 @@ pub struct DesktopWindow {
 /// Toolkit utilities for device discovery and configuration.
 pub struct Toolkit;
 
+static AGENT_SERVER_INIT_OPTION_WARNING: Once = Once::new();
+
 impl Toolkit {
+    #[inline]
+    fn unsupported(api: &str) -> MaaError {
+        MaaError::UnsupportedInAgentServer(api.to_string())
+    }
+
+    fn maybe_warn_init_option_in_agent_server() {
+        if std::env::var_os("MAA_RUST_WARN_AGENTSERVER_TOOLKIT_INIT").is_none() {
+            return;
+        }
+
+        AGENT_SERVER_INIT_OPTION_WARNING.call_once(|| {
+            eprintln!(
+                "Warning: Toolkit::init_option is deprecated in AgentServer; only log_dir is applied."
+            );
+        });
+    }
+
     /// Initialize MAA framework options.
     ///
     /// # Arguments
     /// * `user_path` - Path to user data directory
     /// * `default_config` - Default configuration JSON string
     pub fn init_option(user_path: &str, default_config: &str) -> MaaResult<()> {
+        if crate::is_agent_server_context() {
+            let _ = default_config;
+            Self::maybe_warn_init_option_in_agent_server();
+            let log_dir = Path::new(user_path).join("debug");
+            return crate::configure_logging(log_dir.to_string_lossy().as_ref());
+        }
+
         let c_path = CString::new(user_path)?;
         let c_config = CString::new(default_config)?;
         let ret = unsafe { sys::MaaToolkitConfigInitOption(c_path.as_ptr(), c_config.as_ptr()) };
@@ -57,6 +84,9 @@ impl Toolkit {
     /// # Returns
     /// List of discovered ADB devices with their configurations.
     pub fn find_adb_devices() -> MaaResult<Vec<AdbDevice>> {
+        if crate::is_agent_server_context() {
+            return Err(Self::unsupported("Toolkit::find_adb_devices"));
+        }
         Self::find_adb_devices_impl(None)
     }
 
@@ -68,6 +98,9 @@ impl Toolkit {
     /// # Returns
     /// List of discovered ADB devices with their configurations.
     pub fn find_adb_devices_with_adb(adb_path: &str) -> MaaResult<Vec<AdbDevice>> {
+        if crate::is_agent_server_context() {
+            return Err(Self::unsupported("Toolkit::find_adb_devices_with_adb"));
+        }
         Self::find_adb_devices_impl(Some(adb_path))
     }
 
@@ -135,6 +168,10 @@ impl Toolkit {
     /// # Returns
     /// List of visible desktop windows.
     pub fn find_desktop_windows() -> MaaResult<Vec<DesktopWindow>> {
+        if crate::is_agent_server_context() {
+            return Err(Self::unsupported("Toolkit::find_desktop_windows"));
+        }
+
         let list = unsafe { sys::MaaToolkitDesktopWindowListCreate() };
         if list.is_null() {
             return Err(MaaError::NullPointer);
