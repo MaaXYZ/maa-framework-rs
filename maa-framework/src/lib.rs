@@ -332,7 +332,13 @@ pub(crate) fn is_agent_server_context() -> bool {
 
 #[cfg(feature = "dynamic")]
 fn runtime_context_from_library_path(path: &std::path::Path) -> u8 {
-    let file_name = path.file_name().unwrap_or_default().to_string_lossy();
+    let Some(file_name) = path.file_name() else {
+        return RUNTIME_CONTEXT_UNKNOWN;
+    };
+    let file_name = file_name.to_string_lossy();
+    if file_name.is_empty() {
+        return RUNTIME_CONTEXT_UNKNOWN;
+    }
     if file_name.contains("MaaAgentServer") {
         RUNTIME_CONTEXT_AGENT_SERVER
     } else {

@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{MaaError, MaaResult, common, sys};
 use std::ffi::{CStr, CString};
 use std::path::{Path, PathBuf};
+use std::sync::Once;
 
 /// Information about a connected ADB device.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -37,10 +38,24 @@ pub struct DesktopWindow {
 /// Toolkit utilities for device discovery and configuration.
 pub struct Toolkit;
 
+static AGENT_SERVER_INIT_OPTION_WARNING: Once = Once::new();
+
 impl Toolkit {
     #[inline]
     fn unsupported(api: &str) -> MaaError {
         MaaError::UnsupportedInAgentServer(api.to_string())
+    }
+
+    fn maybe_warn_init_option_in_agent_server() {
+        if std::env::var_os("MAA_RUST_WARN_AGENTSERVER_TOOLKIT_INIT").is_none() {
+            return;
+        }
+
+        AGENT_SERVER_INIT_OPTION_WARNING.call_once(|| {
+            eprintln!(
+                "Warning: Toolkit::init_option is deprecated in AgentServer; only log_dir is applied."
+            );
+        });
     }
 
     /// Initialize MAA framework options.
@@ -51,9 +66,7 @@ impl Toolkit {
     pub fn init_option(user_path: &str, default_config: &str) -> MaaResult<()> {
         if crate::is_agent_server_context() {
             let _ = default_config;
-            eprintln!(
-                "Warning: Toolkit::init_option is deprecated in AgentServer; only log_dir is applied."
-            );
+            Self::maybe_warn_init_option_in_agent_server();
             let log_dir = Path::new(user_path).join("debug");
             return crate::configure_logging(log_dir.to_string_lossy().as_ref());
         }
