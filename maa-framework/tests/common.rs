@@ -6,7 +6,6 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use maa_framework::custom_controller::CustomControllerCallback;
-use maa_framework::toolkit::Toolkit;
 use maa_framework::{self, MaaResult, sys};
 
 #[cfg(feature = "dynamic")]
@@ -85,9 +84,17 @@ pub fn get_test_resources_dir() -> PathBuf {
 
 /// Initialize the test environment with logging
 pub fn init_test_env() -> MaaResult<()> {
+    let is_server = std::env::var("MAA_AGENT_TEST_MODE").unwrap_or_default() == "SERVER";
+
     if let Ok(sdk_path) = std::env::var("MAA_SDK_PATH") {
         let bin_dir = PathBuf::from(sdk_path).join("bin");
-        let _ = Toolkit::init_option(bin_dir.to_str().unwrap_or("."), "{}");
+        if is_server {
+            let server_log_dir = bin_dir.join("debug");
+            let _ = maa_framework::configure_logging(server_log_dir.to_str().unwrap_or("."));
+        } else {
+            let _ =
+                maa_framework::toolkit::Toolkit::init_option(bin_dir.to_str().unwrap_or("."), "{}");
+        }
     }
 
     maa_framework::set_debug_mode(true)?;

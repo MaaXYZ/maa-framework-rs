@@ -48,6 +48,9 @@ pub enum MaaError {
 
     #[error("Image conversion error")]
     ImageConversionError,
+
+    #[error("{0} is not available in AgentServer context")]
+    UnsupportedInAgentServer(String),
 }
 
 pub type MaaResult<T> = Result<T, MaaError>;
