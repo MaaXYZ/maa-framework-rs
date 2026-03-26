@@ -37,6 +37,11 @@ pub const MaaWin32InputMethod_SendMessageWithCursorPos: u32 = 32;
 pub const MaaWin32InputMethod_PostMessageWithCursorPos: u32 = 64;
 pub const MaaWin32InputMethod_SendMessageWithWindowPos: u32 = 128;
 pub const MaaWin32InputMethod_PostMessageWithWindowPos: u32 = 256;
+pub const MaaMacOSScreencapMethod_None: u32 = 0;
+pub const MaaMacOSScreencapMethod_ScreenCaptureKit: u32 = 1;
+pub const MaaMacOSInputMethod_None: u32 = 0;
+pub const MaaMacOSInputMethod_GlobalEvent: u32 = 1;
+pub const MaaMacOSInputMethod_PostToPid: u32 = 2;
 pub const MaaDbgControllerType_None: u32 = 0;
 pub const MaaDbgControllerType_CarouselImage: u32 = 1;
 pub const MaaDbgControllerType_ReplayRecording: u32 = 2;
@@ -210,6 +215,10 @@ pub type MaaAdbInputMethod = u64;
 pub type MaaWin32ScreencapMethod = u64;
 #[doc = " @brief Win32 input method\n\n No bitwise OR, select ONE method only.\n\n No default value. Client should choose one as default.\n\n Different applications process input differently, there is no universal solution.\n\n | Method                       | Compatibility | Require Admin | Seize Mouse  | Background Support | Notes |\n |------------------------------|---------------|---------------|--------------|--------------------|-------------------------------------------------------------\n | | Seize                        | High          | No            | Yes          | No                 | | | SendMessage                  |\n Medium        | Maybe         | No           | Yes                |                                                             | |\n PostMessage                  | Medium        | Maybe         | No           | Yes                | | | LegacyEvent                  | Low\n | No            | Yes          | No                 |                                                             | | PostThreadMessage\n | Low           | Maybe         | No           | Yes                |                                                             | |\n SendMessageWithCursorPos     | Medium        | Maybe         | Briefly      | Yes                | Moves cursor to target position, then\n restores              | | PostMessageWithCursorPos     | Medium        | Maybe         | Briefly      | Yes                | Moves cursor\n to target position, then restores              | | SendMessageWithWindowPos     | Medium        | Maybe         | No           | Yes |\n Moves window to align target with cursor, then restores     | | PostMessageWithWindowPos     | Medium        | Maybe         | No | Yes |\n Moves window to align target with cursor, then restores     |\n\n Note:\n - Admin rights mainly depend on the target application's privilege level.\n   If the target runs as admin, MaaFramework should also run as admin for compatibility.\n - \"WithCursorPos\" methods briefly move the cursor to target position, send message,\n   then restore cursor position. This \"briefly\" seizes the mouse but won't block user operations.\n - \"WithWindowPos\" methods briefly move the window so the target aligns with the current cursor\n   position, send message, then restore the window position. The cursor is not moved."]
 pub type MaaWin32InputMethod = u64;
+#[doc = " @brief macOS screencap method\n\n Select ONE method only.\n\n | Method          | Description                                    |\n |-----------------|------------------------------------------------|\n | ScreenCaptureKit| Modern macOS screencap using ScreenCaptureKit  |"]
+pub type MaaMacOSScreencapMethod = u64;
+#[doc = " @brief macOS input method\n\n Select ONE method only.\n\n | Method          | Description                                    |\n |-----------------|------------------------------------------------|\n | GlobalEvent     | Injects into the global HID event stream via CGEventPost(kCGHIDEventTap), dispatched by the OS to the front window |\n | PostToPid       | Directly send to target process using CGEventPostToPid |"]
+pub type MaaMacOSInputMethod = u64;
 #[doc = " No bitwise OR, just set it"]
 pub type MaaDbgControllerType = u64;
 #[doc = " @brief Virtual gamepad type\n\n Select ONE type only.\n\n | Type          | Description                                    |\n |---------------|------------------------------------------------|\n | Xbox360       | Microsoft Xbox 360 Controller (wired)          |\n | DualShock4    | Sony DualShock 4 Controller (wired)            |"]
@@ -619,6 +628,14 @@ unsafe extern "C" {
         screencap_method: MaaWin32ScreencapMethod,
         mouse_method: MaaWin32InputMethod,
         keyboard_method: MaaWin32InputMethod,
+    ) -> *mut MaaController;
+}
+unsafe extern "C" {
+    #[doc = " @brief Create a macOS controller for native macOS applications.\n\n @param window_id The CGWindowID of the target window (0 for desktop).\n @param screencap_method macOS screencap method to use.\n @param input_method macOS input method to use.\n @return The controller handle, or nullptr on failure.\n\n @note This controller is designed for native macOS applications.\n @note Requires Screen Recording permission for screencap.\n @note Input simulation requires Accessibility permission.\n @note Some features are not supported: start_app, stop_app, scroll.\n @note Only single touch is supported (contact must be 0)."]
+    pub fn MaaMacOSControllerCreate(
+        window_id: u32,
+        screencap_method: MaaMacOSScreencapMethod,
+        input_method: MaaMacOSInputMethod,
     ) -> *mut MaaController;
 }
 unsafe extern "C" {
@@ -1432,6 +1449,10 @@ pub struct MaaToolkitDesktopWindow {
 pub struct MaaToolkitDesktopWindowList {
     _unused: [u8; 0],
 }
+pub const MaaMacOSPermissionEnum_MaaMacOSPermissionScreenCapture: MaaMacOSPermissionEnum = 1;
+pub const MaaMacOSPermissionEnum_MaaMacOSPermissionAccessibility: MaaMacOSPermissionEnum = 2;
+pub type MaaMacOSPermissionEnum = ::std::os::raw::c_uint;
+pub type MaaMacOSPermission = i32;
 unsafe extern "C" {
     pub fn MaaToolkitAdbDeviceListCreate() -> *mut MaaToolkitAdbDeviceList;
 }
