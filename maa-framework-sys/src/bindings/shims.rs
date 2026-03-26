@@ -59,6 +59,7 @@ shim ! (MaaResourceGetDefaultRecognitionParam (res : * const MaaResource , reco_
 shim ! (MaaResourceGetDefaultActionParam (res : * const MaaResource , action_type : * const :: std :: os :: raw :: c_char , buffer : * mut MaaStringBuffer) -> MaaBool) ;
 shim ! (MaaAdbControllerCreate (adb_path : * const :: std :: os :: raw :: c_char , address : * const :: std :: os :: raw :: c_char , screencap_methods : MaaAdbScreencapMethod , input_methods : MaaAdbInputMethod , config : * const :: std :: os :: raw :: c_char , agent_path : * const :: std :: os :: raw :: c_char) -> * mut MaaController) ;
 shim ! (MaaWin32ControllerCreate (hWnd : * mut :: std :: os :: raw :: c_void , screencap_method : MaaWin32ScreencapMethod , mouse_method : MaaWin32InputMethod , keyboard_method : MaaWin32InputMethod) -> * mut MaaController) ;
+shim ! (MaaMacOSControllerCreate (window_id : u32 , screencap_method : MaaMacOSScreencapMethod , input_method : MaaMacOSInputMethod) -> * mut MaaController) ;
 shim ! (MaaCustomControllerCreate (controller : * mut MaaCustomControllerCallbacks , controller_arg : * mut :: std :: os :: raw :: c_void) -> * mut MaaController) ;
 shim ! (MaaDbgControllerCreate (read_path : * const :: std :: os :: raw :: c_char , write_path : * const :: std :: os :: raw :: c_char , type_ : MaaDbgControllerType , config : * const :: std :: os :: raw :: c_char) -> * mut MaaController) ;
 shim ! (MaaPlayCoverControllerCreate (address : * const :: std :: os :: raw :: c_char , uuid : * const :: std :: os :: raw :: c_char) -> * mut MaaController) ;
