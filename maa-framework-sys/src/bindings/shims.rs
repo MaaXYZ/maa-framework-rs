@@ -212,3 +212,6 @@ shim ! (MaaToolkitDesktopWindowGetHandle (window : * const MaaToolkitDesktopWind
 shim ! (MaaToolkitDesktopWindowGetClassName (window : * const MaaToolkitDesktopWindow) -> * const :: std :: os :: raw :: c_char) ;
 shim ! (MaaToolkitDesktopWindowGetWindowName (window : * const MaaToolkitDesktopWindow) -> * const :: std :: os :: raw :: c_char) ;
 shim ! (MaaToolkitConfigInitOption (user_path : * const :: std :: os :: raw :: c_char , default_json : * const :: std :: os :: raw :: c_char) -> MaaBool) ;
+shim ! (MaaToolkitMacOSCheckPermission (perm : MaaMacOSPermission) -> MaaBool) ;
+shim ! (MaaToolkitMacOSRequestPermission (perm : MaaMacOSPermission) -> MaaBool) ;
+shim ! (MaaToolkitMacOSRevealPermissionSettings (perm : MaaMacOSPermission) -> MaaBool) ;
