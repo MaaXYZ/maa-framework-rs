@@ -35,6 +35,16 @@ pub struct DesktopWindow {
     pub window_name: String,
 }
 
+/// macOS system permission types used by toolkit helpers.
+#[repr(i32)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum MacOSPermission {
+    /// Screen recording / screen capture permission.
+    ScreenCapture = sys::MaaMacOSPermissionEnum_MaaMacOSPermissionScreenCapture as i32,
+    /// Accessibility permission for input simulation.
+    Accessibility = sys::MaaMacOSPermissionEnum_MaaMacOSPermissionAccessibility as i32,
+}
+
 /// Toolkit utilities for device discovery and configuration.
 pub struct Toolkit;
 
@@ -211,6 +221,46 @@ impl Toolkit {
             }
             Ok(windows)
         }
+    }
+
+    /// Check whether the current process has the specified macOS permission.
+    pub fn macos_check_permission(permission: MacOSPermission) -> MaaResult<bool> {
+        if crate::is_agent_server_context() {
+            return Err(Self::unsupported("Toolkit::macos_check_permission"));
+        }
+
+        let ret =
+            unsafe { sys::MaaToolkitMacOSCheckPermission(permission as sys::MaaMacOSPermission) };
+        Ok(ret != 0)
+    }
+
+    /// Request the specified macOS permission from the system.
+    ///
+    /// A successful return means the request API call succeeded. It does not
+    /// necessarily mean the user has already granted the permission.
+    pub fn macos_request_permission(permission: MacOSPermission) -> MaaResult<bool> {
+        if crate::is_agent_server_context() {
+            return Err(Self::unsupported("Toolkit::macos_request_permission"));
+        }
+
+        let ret = unsafe {
+            sys::MaaToolkitMacOSRequestPermission(permission as sys::MaaMacOSPermission)
+        };
+        Ok(ret != 0)
+    }
+
+    /// Open the corresponding macOS settings page for the permission.
+    pub fn macos_reveal_permission_settings(permission: MacOSPermission) -> MaaResult<bool> {
+        if crate::is_agent_server_context() {
+            return Err(Self::unsupported(
+                "Toolkit::macos_reveal_permission_settings",
+            ));
+        }
+
+        let ret = unsafe {
+            sys::MaaToolkitMacOSRevealPermissionSettings(permission as sys::MaaMacOSPermission)
+        };
+        Ok(ret != 0)
     }
 }
 
