@@ -243,9 +243,8 @@ impl Toolkit {
             return Err(Self::unsupported("Toolkit::macos_request_permission"));
         }
 
-        let ret = unsafe {
-            sys::MaaToolkitMacOSRequestPermission(permission as sys::MaaMacOSPermission)
-        };
+        let ret =
+            unsafe { sys::MaaToolkitMacOSRequestPermission(permission as sys::MaaMacOSPermission) };
         Ok(ret != 0)
     }
 

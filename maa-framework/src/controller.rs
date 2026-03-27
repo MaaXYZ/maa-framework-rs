@@ -368,8 +368,7 @@ impl Controller {
     /// * `dx` - Relative horizontal movement offset
     /// * `dy` - Relative vertical movement offset
     pub fn post_relative_move(&self, dx: i32, dy: i32) -> MaaResult<common::MaaId> {
-        let id =
-            unsafe { sys::MaaControllerPostRelativeMove(self.inner.handle.as_ptr(), dx, dy) };
+        let id = unsafe { sys::MaaControllerPostRelativeMove(self.inner.handle.as_ptr(), dx, dy) };
         Ok(id)
     }
 
