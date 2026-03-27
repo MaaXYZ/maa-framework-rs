@@ -1546,3 +1546,12 @@ unsafe extern "C" {
         default_json: *const ::std::os::raw::c_char,
     ) -> MaaBool;
 }
+unsafe extern "C" {
+    pub fn MaaToolkitMacOSCheckPermission(perm: MaaMacOSPermission) -> MaaBool;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitMacOSRequestPermission(perm: MaaMacOSPermission) -> MaaBool;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitMacOSRevealPermissionSettings(perm: MaaMacOSPermission) -> MaaBool;
+}

@@ -1558,6 +1558,12 @@ pub struct MaaFramework {
         ) -> MaaBool,
         ::libloading::Error,
     >,
+    pub MaaToolkitMacOSCheckPermission:
+        Result<unsafe extern "C" fn(perm: MaaMacOSPermission) -> MaaBool, ::libloading::Error>,
+    pub MaaToolkitMacOSRequestPermission:
+        Result<unsafe extern "C" fn(perm: MaaMacOSPermission) -> MaaBool, ::libloading::Error>,
+    pub MaaToolkitMacOSRevealPermissionSettings:
+        Result<unsafe extern "C" fn(perm: MaaMacOSPermission) -> MaaBool, ::libloading::Error>,
 }
 impl MaaFramework {
     pub unsafe fn new<P>(path: P) -> Result<Self, ::libloading::Error>
@@ -1964,6 +1970,12 @@ impl MaaFramework {
             unsafe { __library.get(b"MaaToolkitDesktopWindowGetWindowName\0") }.map(|sym| *sym);
         let MaaToolkitConfigInitOption =
             unsafe { __library.get(b"MaaToolkitConfigInitOption\0") }.map(|sym| *sym);
+        let MaaToolkitMacOSCheckPermission =
+            unsafe { __library.get(b"MaaToolkitMacOSCheckPermission\0") }.map(|sym| *sym);
+        let MaaToolkitMacOSRequestPermission =
+            unsafe { __library.get(b"MaaToolkitMacOSRequestPermission\0") }.map(|sym| *sym);
+        let MaaToolkitMacOSRevealPermissionSettings =
+            unsafe { __library.get(b"MaaToolkitMacOSRevealPermissionSettings\0") }.map(|sym| *sym);
         Ok(MaaFramework {
             __library,
             MaaTaskerCreate,
@@ -2180,6 +2192,9 @@ impl MaaFramework {
             MaaToolkitDesktopWindowGetClassName,
             MaaToolkitDesktopWindowGetWindowName,
             MaaToolkitConfigInitOption,
+            MaaToolkitMacOSCheckPermission,
+            MaaToolkitMacOSRequestPermission,
+            MaaToolkitMacOSRevealPermissionSettings,
         })
     }
     pub unsafe fn MaaTaskerCreate(&self) -> *mut MaaTasker {
@@ -4629,6 +4644,33 @@ impl MaaFramework {
                 .MaaToolkitConfigInitOption
                 .as_ref()
                 .expect("Expected function, got error."))(user_path, default_json)
+        }
+    }
+    pub unsafe fn MaaToolkitMacOSCheckPermission(&self, perm: MaaMacOSPermission) -> MaaBool {
+        unsafe {
+            (self
+                .MaaToolkitMacOSCheckPermission
+                .as_ref()
+                .expect("Expected function, got error."))(perm)
+        }
+    }
+    pub unsafe fn MaaToolkitMacOSRequestPermission(&self, perm: MaaMacOSPermission) -> MaaBool {
+        unsafe {
+            (self
+                .MaaToolkitMacOSRequestPermission
+                .as_ref()
+                .expect("Expected function, got error."))(perm)
+        }
+    }
+    pub unsafe fn MaaToolkitMacOSRevealPermissionSettings(
+        &self,
+        perm: MaaMacOSPermission,
+    ) -> MaaBool {
+        unsafe {
+            (self
+                .MaaToolkitMacOSRevealPermissionSettings
+                .as_ref()
+                .expect("Expected function, got error."))(perm)
         }
     }
 }
