@@ -45,7 +45,7 @@
 //! |--------|-------------|
 //! | [`tasker`] | Task execution and pipeline management |
 //! | [`resource`] | Resource loading (images, models, pipelines) |
-//! | [`controller`] | Device control (ADB, Win32, PlayCover) |
+//! | [`controller`] | Device control (ADB, Win32, macOS, PlayCover, WlRoots) |
 //! | [`context`] | Task execution context for custom components |
 //! | [`toolkit`] | Device discovery utilities |
 //! | [`pipeline`] | Pipeline configuration types |

@@ -140,6 +140,23 @@ impl Controller {
         Self::from_handle(handle)
     }
 
+    /// Create a new macOS controller for native macOS window control.
+    ///
+    /// # Arguments
+    /// * `window_id` - Target `CGWindowID` (use `0` for desktop)
+    /// * `screencap_method` - macOS screenshot method
+    /// * `input_method` - macOS input method
+    pub fn new_macos(
+        window_id: u32,
+        screencap_method: sys::MaaMacOSScreencapMethod,
+        input_method: sys::MaaMacOSInputMethod,
+    ) -> MaaResult<Self> {
+        let handle =
+            unsafe { sys::MaaMacOSControllerCreate(window_id, screencap_method, input_method) };
+
+        Self::from_handle(handle)
+    }
+
     /// Create a new PlayCover controller for iOS app control on macOS.
 
     pub fn new_playcover(address: &str, uuid: &str) -> MaaResult<Self> {

@@ -23,6 +23,7 @@
 #include <MaaToolkit/AdbDevice/MaaToolkitAdbDevice.h>
 #include <MaaToolkit/DesktopWindow/MaaToolkitDesktopWindow.h>
 #include <MaaToolkit/Config/MaaToolkitConfig.h>
+#include <MaaToolkit/MacOS/MaaToolkitMacOS.h>
 
 #endif // MAA_FRAMEWORK_RS_WRAPPER_H
 
