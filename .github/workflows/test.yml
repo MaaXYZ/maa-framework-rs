@@ -140,7 +140,8 @@ jobs:
       - name: Install Plugin
         shell: bash
         run: |
-            cp -r download_plugins/bin install/bin/plugins
+            mkdir -p install/bin/plugins
+            cp -r download_plugins/bin/. install/bin/plugins/
 
       - name: Run Rust testing
         shell: bash
@@ -258,7 +259,8 @@ jobs:
       - name: Install Plugin
         shell: bash
         run: |
-            cp -r download_plugins/bin install/bin/plugins
+            mkdir -p install/bin/plugins
+            cp -r download_plugins/bin/. install/bin/plugins/
 
       - name: Run Rust testing
         shell: bash
@@ -368,7 +370,8 @@ jobs:
       - name: Install Plugin
         shell: bash
         run: |
-            cp -r download_plugins/bin install/bin/plugins
+            mkdir -p install/bin/plugins
+            cp -r download_plugins/bin/. install/bin/plugins/
 
       - name: Run Rust testing
         shell: bash
