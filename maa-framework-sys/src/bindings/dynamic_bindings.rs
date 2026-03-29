@@ -45,9 +45,6 @@ pub const MaaMacOSScreencapMethod_ScreenCaptureKit: u32 = 1;
 pub const MaaMacOSInputMethod_None: u32 = 0;
 pub const MaaMacOSInputMethod_GlobalEvent: u32 = 1;
 pub const MaaMacOSInputMethod_PostToPid: u32 = 2;
-pub const MaaDbgControllerType_None: u32 = 0;
-pub const MaaDbgControllerType_CarouselImage: u32 = 1;
-pub const MaaDbgControllerType_ReplayRecording: u32 = 2;
 pub const MaaGamepadType_Xbox360: u32 = 0;
 pub const MaaGamepadType_DualShock4: u32 = 1;
 pub const MaaGamepadButton_A: u32 = 4096;
@@ -222,8 +219,6 @@ pub type MaaWin32InputMethod = u64;
 pub type MaaMacOSScreencapMethod = u64;
 #[doc = " @brief macOS input method\n\n Select ONE method only.\n\n | Method          | Description                                    |\n |-----------------|------------------------------------------------|\n | GlobalEvent     | Injects into the global HID event stream via CGEventPost(kCGHIDEventTap), dispatched by the OS to the front window |\n | PostToPid       | Directly send to target process using CGEventPostToPid |"]
 pub type MaaMacOSInputMethod = u64;
-#[doc = " No bitwise OR, just set it"]
-pub type MaaDbgControllerType = u64;
 #[doc = " @brief Virtual gamepad type\n\n Select ONE type only.\n\n | Type          | Description                                    |\n |---------------|------------------------------------------------|\n | Xbox360       | Microsoft Xbox 360 Controller (wired)          |\n | DualShock4    | Sony DualShock 4 Controller (wired)            |"]
 pub type MaaGamepadType = u64;
 #[doc = " @brief Virtual gamepad button codes for click_key/key_down/key_up\n\n Use these values with MaaControllerPostClickKey, MaaControllerPostKeyDown, MaaControllerPostKeyUp.\n Values are based on XUSB (Xbox 360) button flags. DS4 face buttons are mapped to Xbox equivalents.\n\n Xbox 360 buttons:\n\n | Value   | Button              | Description            |\n |---------|---------------------|------------------------|\n | 0x1000  | A                   | A button               |\n | 0x2000  | B                   | B button               |\n | 0x4000  | X                   | X button               |\n | 0x8000  | Y                   | Y button               |\n | 0x0100  | LB (Left Shoulder)  | Left bumper            |\n | 0x0200  | RB (Right Shoulder) | Right bumper           |\n | 0x0040  | L_THUMB             | Left stick click       |\n | 0x0080  | R_THUMB             | Right stick click      |\n | 0x0010  | START               | Start button           |\n | 0x0020  | BACK                | Back button            |\n | 0x0400  | GUIDE               | Guide/Home button      |\n | 0x0001  | DPAD_UP             | D-pad up               |\n | 0x0002  | DPAD_DOWN           | D-pad down             |\n | 0x0004  | DPAD_LEFT           | D-pad left             |\n | 0x0008  | DPAD_RIGHT          | D-pad right            |\n\n DualShock 4 buttons (aliases to Xbox buttons):\n\n | Value   | Button    | Xbox Equivalent | Description               |\n |---------|-----------|-----------------|---------------------------|\n | 0x1000  | CROSS     | A                   | Cross (X) button          |\n | 0x2000  | CIRCLE    | B                   | Circle button             |\n | 0x4000  | SQUARE    | X                   | Square button             |\n | 0x8000  | TRIANGLE  | Y                   | Triangle button           |\n | 0x0100  | L1        | LB                  | L1 button                 |\n | 0x0200  | R1        | RB                  | R1 button                 |\n | 0x0040  | L3        | L_THUMB             | Left stick click          |\n | 0x0080  | R3        | R_THUMB             | Right stick click         |\n | 0x0010  | OPTIONS   | START               | Options button            |\n | 0x0020  | SHARE     | BACK                | Share button              |\n | 0x10000 | PS        | -                   | PS button (DS4 special)   |\n | 0x20000 | TOUCHPAD  | -                   | Touchpad click (DS4 only) |"]
@@ -384,6 +379,18 @@ pub struct MaaCustomControllerCallbacks {
     pub scroll: ::std::option::Option<
         unsafe extern "C" fn(dx: i32, dy: i32, trans_arg: *mut ::std::os::raw::c_void) -> MaaBool,
     >,
+    pub relative_move: ::std::option::Option<
+        unsafe extern "C" fn(dx: i32, dy: i32, trans_arg: *mut ::std::os::raw::c_void) -> MaaBool,
+    >,
+    #[doc = " Write result to buffer."]
+    pub shell: ::std::option::Option<
+        unsafe extern "C" fn(
+            cmd: *const ::std::os::raw::c_char,
+            timeout: i64,
+            trans_arg: *mut ::std::os::raw::c_void,
+            buffer: *mut MaaStringBuffer,
+        ) -> MaaBool,
+    >,
     pub inactive: ::std::option::Option<
         unsafe extern "C" fn(trans_arg: *mut ::std::os::raw::c_void) -> MaaBool,
     >,
@@ -398,7 +405,7 @@ pub struct MaaCustomControllerCallbacks {
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
     ["Size of MaaCustomControllerCallbacks"]
-        [::std::mem::size_of::<MaaCustomControllerCallbacks>() - 152usize];
+        [::std::mem::size_of::<MaaCustomControllerCallbacks>() - 168usize];
     ["Alignment of MaaCustomControllerCallbacks"]
         [::std::mem::align_of::<MaaCustomControllerCallbacks>() - 8usize];
     ["Offset of field: MaaCustomControllerCallbacks::connect"]
@@ -435,10 +442,14 @@ const _: () = {
         [::std::mem::offset_of!(MaaCustomControllerCallbacks, key_up) - 120usize];
     ["Offset of field: MaaCustomControllerCallbacks::scroll"]
         [::std::mem::offset_of!(MaaCustomControllerCallbacks, scroll) - 128usize];
+    ["Offset of field: MaaCustomControllerCallbacks::relative_move"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, relative_move) - 136usize];
+    ["Offset of field: MaaCustomControllerCallbacks::shell"]
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, shell) - 144usize];
     ["Offset of field: MaaCustomControllerCallbacks::inactive"]
-        [::std::mem::offset_of!(MaaCustomControllerCallbacks, inactive) - 136usize];
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, inactive) - 152usize];
     ["Offset of field: MaaCustomControllerCallbacks::get_info"]
-        [::std::mem::offset_of!(MaaCustomControllerCallbacks, get_info) - 144usize];
+        [::std::mem::offset_of!(MaaCustomControllerCallbacks, get_info) - 160usize];
 };
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -830,11 +841,17 @@ pub struct MaaFramework {
         ::libloading::Error,
     >,
     pub MaaDbgControllerCreate: Result<
+        unsafe extern "C" fn(read_path: *const ::std::os::raw::c_char) -> *mut MaaController,
+        ::libloading::Error,
+    >,
+    pub MaaReplayControllerCreate: Result<
+        unsafe extern "C" fn(recording_path: *const ::std::os::raw::c_char) -> *mut MaaController,
+        ::libloading::Error,
+    >,
+    pub MaaRecordControllerCreate: Result<
         unsafe extern "C" fn(
-            read_path: *const ::std::os::raw::c_char,
-            write_path: *const ::std::os::raw::c_char,
-            type_: MaaDbgControllerType,
-            config: *const ::std::os::raw::c_char,
+            inner: *mut MaaController,
+            recording_path: *const ::std::os::raw::c_char,
         ) -> *mut MaaController,
         ::libloading::Error,
     >,
@@ -1687,6 +1704,10 @@ impl MaaFramework {
             unsafe { __library.get(b"MaaCustomControllerCreate\0") }.map(|sym| *sym);
         let MaaDbgControllerCreate =
             unsafe { __library.get(b"MaaDbgControllerCreate\0") }.map(|sym| *sym);
+        let MaaReplayControllerCreate =
+            unsafe { __library.get(b"MaaReplayControllerCreate\0") }.map(|sym| *sym);
+        let MaaRecordControllerCreate =
+            unsafe { __library.get(b"MaaRecordControllerCreate\0") }.map(|sym| *sym);
         let MaaPlayCoverControllerCreate =
             unsafe { __library.get(b"MaaPlayCoverControllerCreate\0") }.map(|sym| *sym);
         let MaaWlRootsControllerCreate =
@@ -2042,6 +2063,8 @@ impl MaaFramework {
             MaaMacOSControllerCreate,
             MaaCustomControllerCreate,
             MaaDbgControllerCreate,
+            MaaReplayControllerCreate,
+            MaaRecordControllerCreate,
             MaaPlayCoverControllerCreate,
             MaaWlRootsControllerCreate,
             MaaGamepadControllerCreate,
@@ -2970,20 +2993,41 @@ impl MaaFramework {
                 .expect("Expected function, got error."))(controller, controller_arg)
         }
     }
+    #[doc = " @brief Create a debug controller that serves images from a directory.\n\n @param read_path Path to a directory of images (or a single image file).\n                  Images are loaded on connect and cycled through on each screencap request.\n                  All input operations (click, swipe, etc.) are no-ops that return success.\n @return The controller handle, or nullptr on failure."]
     pub unsafe fn MaaDbgControllerCreate(
         &self,
         read_path: *const ::std::os::raw::c_char,
-        write_path: *const ::std::os::raw::c_char,
-        type_: MaaDbgControllerType,
-        config: *const ::std::os::raw::c_char,
     ) -> *mut MaaController {
         unsafe {
             (self
                 .MaaDbgControllerCreate
                 .as_ref()
-                .expect("Expected function, got error."))(
-                read_path, write_path, type_, config
-            )
+                .expect("Expected function, got error."))(read_path)
+        }
+    }
+    #[doc = " @brief Create a replay controller that replays recorded operations.\n\n @param recording_path Path to the recording JSONL file written by MaaRecordControllerCreate.\n                       Screenshot image paths in the file are resolved relative to this file's parent directory.\n @return The controller handle, or nullptr on failure."]
+    pub unsafe fn MaaReplayControllerCreate(
+        &self,
+        recording_path: *const ::std::os::raw::c_char,
+    ) -> *mut MaaController {
+        unsafe {
+            (self
+                .MaaReplayControllerCreate
+                .as_ref()
+                .expect("Expected function, got error."))(recording_path)
+        }
+    }
+    #[doc = " @brief Create a record controller that wraps an existing controller and records all operations.\n\n @param inner The inner controller to forward all operations to. Must not be null.\n              The record controller does NOT take ownership of the inner controller.\n @param recording_path Path to the recording JSONL file to write.\n                       Screenshot images will be saved to a \"{stem}-Screenshot\" folder\n                       in the same directory as this file.\n                       The recorded file can be replayed using MaaReplayControllerCreate.\n @return The record controller handle, or nullptr on failure."]
+    pub unsafe fn MaaRecordControllerCreate(
+        &self,
+        inner: *mut MaaController,
+        recording_path: *const ::std::os::raw::c_char,
+    ) -> *mut MaaController {
+        unsafe {
+            (self
+                .MaaRecordControllerCreate
+                .as_ref()
+                .expect("Expected function, got error."))(inner, recording_path)
         }
     }
     #[doc = " @brief Create a PlayCover controller for macOS.\n\n @param address The PlayTools service address in \"host:port\" format.\n @param uuid The application bundle identifier (e.g., \"com.hypergryph.arknights\").\n @return The controller handle, or nullptr on failure.\n\n @note This controller is designed for PlayCover on macOS.\n @note Some features are not supported: start_app, input_text, click_key, key_down, key_up, scroll.\n @note Only single touch is supported (contact must be 0)."]
@@ -3310,7 +3354,7 @@ impl MaaFramework {
                 .expect("Expected function, got error."))(ctrl)
         }
     }
-    #[doc = " @brief Post a shell command to the controller.\n\n @param ctrl The controller handle.\n @param cmd The shell command to execute.\n @param timeout Timeout in milliseconds. Default is 20000 (20 seconds).\n @return The control id of the shell action.\n\n @note This is only valid for ADB controllers. If the controller is not an ADB controller, the action will fail.\n @see MaaControllerGetShellOutput"]
+    #[doc = " @brief Post a shell command to the controller.\n\n @param ctrl The controller handle.\n @param cmd The shell command to execute.\n @param timeout Timeout in milliseconds. Default is 20000 (20 seconds).\n @return The control id of the shell action.\n\n @note Supported by ADB controllers and custom controllers that implement the shell callback.\n @see MaaControllerGetShellOutput"]
     pub unsafe fn MaaControllerPostShell(
         &self,
         ctrl: *mut MaaController,
