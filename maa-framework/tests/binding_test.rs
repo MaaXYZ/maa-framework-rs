@@ -690,25 +690,12 @@ fn test_dbg_controller_creation() {
         );
     }
 
-    // Create a user dir in temp
-    let user_dir = std::env::temp_dir().join("maa_test_user");
-    std::fs::create_dir_all(&user_dir).ok();
-
-    let controller = Controller::new_dbg(
-        screenshot_dir.to_str().unwrap(),
-        user_dir.to_str().unwrap(),
-        sys::MaaDbgControllerType_CarouselImage as u64,
-        "{}",
-    );
+    let controller = Controller::new_dbg(screenshot_dir.to_str().unwrap());
 
     match controller {
         Ok(_) => println!("  PASS: DbgController creation"),
         Err(e) => {
-            // MaaDbgControlUnit.dll is not included in release packages
-            panic!(
-                "DbgController not available ({}). Ensure MaaDbgControlUnit.dll is present.",
-                e
-            );
+            panic!("Failed to create dbg controller: {}", e);
         }
     }
 }
@@ -729,22 +716,9 @@ fn test_controller_connection() {
         );
     }
 
-    let user_dir = std::env::temp_dir().join("maa_test_user");
-    std::fs::create_dir_all(&user_dir).ok();
-
-    let controller = match Controller::new_dbg(
-        screenshot_dir.to_str().unwrap(),
-        user_dir.to_str().unwrap(),
-        sys::MaaDbgControllerType_CarouselImage as u64,
-        "{}",
-    ) {
+    let controller = match Controller::new_dbg(screenshot_dir.to_str().unwrap()) {
         Ok(c) => c,
-        Err(e) => {
-            panic!(
-                "DbgController not available ({}). Ensure MaaDbgControlUnit.dll is present.",
-                e
-            );
-        }
+        Err(e) => panic!("Failed to create dbg controller: {}", e),
     };
 
     // Test connection
@@ -758,6 +732,14 @@ fn test_controller_connection() {
     // Test UUID
     let uuid = controller.uuid();
     println!("  uuid: {:?}", uuid);
+
+    let info = controller.info().expect("controller info should succeed");
+    println!("  info: {:?}", info);
+    assert_eq!(
+        info.get("type").and_then(|v| v.as_str()),
+        Some("dbg"),
+        "dbg controller type should be 'dbg'"
+    );
 
     println!("  PASS: controller connection");
 }
@@ -778,22 +760,9 @@ fn test_controller_screencap() {
         );
     }
 
-    let user_dir = std::env::temp_dir().join("maa_test_user");
-    std::fs::create_dir_all(&user_dir).ok();
-
-    let controller = match Controller::new_dbg(
-        screenshot_dir.to_str().unwrap(),
-        user_dir.to_str().unwrap(),
-        sys::MaaDbgControllerType_CarouselImage as u64,
-        "{}",
-    ) {
+    let controller = match Controller::new_dbg(screenshot_dir.to_str().unwrap()) {
         Ok(c) => c,
-        Err(e) => {
-            panic!(
-                "DbgController not available ({}). Ensure MaaDbgControlUnit.dll is present.",
-                e
-            );
-        }
+        Err(e) => panic!("Failed to create dbg controller: {}", e),
     };
 
     // Connect first
@@ -842,22 +811,9 @@ fn test_controller_sink_operations() {
         );
     }
 
-    let user_dir = std::env::temp_dir().join("maa_test_user");
-    std::fs::create_dir_all(&user_dir).ok();
-
-    let controller = match Controller::new_dbg(
-        screenshot_dir.to_str().unwrap(),
-        user_dir.to_str().unwrap(),
-        sys::MaaDbgControllerType_CarouselImage as u64,
-        "{}",
-    ) {
+    let controller = match Controller::new_dbg(screenshot_dir.to_str().unwrap()) {
         Ok(c) => c,
-        Err(e) => {
-            panic!(
-                "DbgController not available ({}). Ensure MaaDbgControlUnit.dll is present.",
-                e
-            );
-        }
+        Err(e) => panic!("Failed to create dbg controller: {}", e),
     };
 
     // Add sink
@@ -1308,9 +1264,6 @@ fn test_tasker_with_native_dbg_controller() {
     let test_res_dir = get_test_resources_dir();
     let screenshot_dir = test_res_dir.join("Screenshot");
     let resource_path = test_res_dir.join("resource");
-    let user_dir = std::env::temp_dir().join("maa_test_user_native");
-    std::fs::create_dir_all(&user_dir).ok();
-
     assert!(
         screenshot_dir.exists(),
         "Screenshot dir MUST exist at {:?}",
@@ -1318,17 +1271,9 @@ fn test_tasker_with_native_dbg_controller() {
     );
 
     // Create native DbgController
-    let controller = match Controller::new_dbg(
-        screenshot_dir.to_str().unwrap(),
-        user_dir.to_str().unwrap(),
-        sys::MaaDbgControllerType_CarouselImage as u64,
-        "{}",
-    ) {
+    let controller = match Controller::new_dbg(screenshot_dir.to_str().unwrap()) {
         Ok(c) => c,
-        Err(e) => {
-            println!("  SKIPPED: MaaDbgControlUnit not available ({})", e);
-            return;
-        }
+        Err(e) => panic!("Failed to create native dbg controller: {}", e),
     };
 
     // Connect

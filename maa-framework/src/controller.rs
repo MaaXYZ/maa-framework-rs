@@ -24,6 +24,7 @@ pub struct Controller {
 struct ControllerInner {
     handle: NonNull<sys::MaaController>,
     owns_handle: bool,
+    _retained_handles: Vec<Arc<ControllerInner>>,
     callbacks: Mutex<HashMap<sys::MaaSinkId, usize>>,
     event_sinks: Mutex<HashMap<sys::MaaSinkId, usize>>,
 }
@@ -112,14 +113,7 @@ impl Controller {
         };
 
         if let Some(ptr) = NonNull::new(handle) {
-            Ok(Self {
-                inner: Arc::new(ControllerInner {
-                    handle: ptr,
-                    owns_handle: true,
-                    callbacks: Mutex::new(HashMap::new()),
-                    event_sinks: Mutex::new(HashMap::new()),
-                }),
-            })
+            Ok(Self::new_owned(ptr))
         } else {
             Err(MaaError::FrameworkError(-1))
         }
@@ -190,38 +184,41 @@ impl Controller {
         let handle =
             unsafe { sys::MaaCustomControllerCreate(callbacks as *const _ as *mut _, cb_ptr) };
 
-        NonNull::new(handle)
-            .map(|ptr| Self {
-                inner: Arc::new(ControllerInner {
-                    handle: ptr,
-                    owns_handle: true,
-                    callbacks: Mutex::new(HashMap::new()),
-                    event_sinks: Mutex::new(HashMap::new()),
-                }),
-            })
-            .ok_or_else(|| {
-                unsafe {
-                    let _ = Box::from_raw(
-                        cb_ptr as *mut Box<dyn crate::custom_controller::CustomControllerCallback>,
-                    );
-                }
-                MaaError::FrameworkError(-1)
-            })
+        NonNull::new(handle).map(Self::new_owned).ok_or_else(|| {
+            unsafe {
+                let _ = Box::from_raw(
+                    cb_ptr as *mut Box<dyn crate::custom_controller::CustomControllerCallback>,
+                );
+            }
+            MaaError::FrameworkError(-1)
+        })
     }
 
     /// Helper to create controller from raw handle.
     fn from_handle(handle: *mut sys::MaaController) -> MaaResult<Self> {
         if let Some(ptr) = NonNull::new(handle) {
-            Ok(Self {
-                inner: Arc::new(ControllerInner {
-                    handle: ptr,
-                    owns_handle: true,
-                    callbacks: Mutex::new(HashMap::new()),
-                    event_sinks: Mutex::new(HashMap::new()),
-                }),
-            })
+            Ok(Self::new_owned(ptr))
         } else {
             Err(MaaError::FrameworkError(-1))
+        }
+    }
+
+    fn new_owned(handle: NonNull<sys::MaaController>) -> Self {
+        Self::new_with_retained(handle, Vec::new())
+    }
+
+    fn new_with_retained(
+        handle: NonNull<sys::MaaController>,
+        retained_handles: Vec<Arc<ControllerInner>>,
+    ) -> Self {
+        Self {
+            inner: Arc::new(ControllerInner {
+                handle,
+                owns_handle: true,
+                _retained_handles: retained_handles,
+                callbacks: Mutex::new(HashMap::new()),
+                event_sinks: Mutex::new(HashMap::new()),
+            }),
         }
     }
 
@@ -302,7 +299,7 @@ impl Controller {
         Ok(id)
     }
 
-    /// Post a shell command execution (ADB only).
+    /// Post a shell command execution on controllers that support shell access.
     ///
     /// # Arguments
     /// * `cmd` - Shell command to execute
@@ -362,7 +359,7 @@ impl Controller {
         Ok(id)
     }
 
-    /// Post a relative mouse movement action (currently Win32 only).
+    /// Post a relative movement action on controllers that support it.
     ///
     /// # Arguments
     /// * `dx` - Relative horizontal movement offset
@@ -510,7 +507,7 @@ impl Controller {
 
     // === Scroll ===
 
-    /// Post a scroll action (Win32 only).
+    /// Post a scroll action on controllers that support it.
     ///
     /// # Arguments
     /// * `dx` - Horizontal scroll delta (positive = right)
@@ -547,7 +544,7 @@ impl Controller {
 
     // === Shell output ===
 
-    /// Gets the output from the most recent shell command (ADB only).
+    /// Gets the output from the most recent shell command.
     pub fn shell_output(&self) -> MaaResult<String> {
         let buffer = crate::buffer::MaaStringBuffer::new()?;
         let ret = unsafe {
@@ -620,20 +617,29 @@ impl Controller {
 
     // === New controller types ===
 
-    #[cfg(feature = "dbg")]
-    pub fn new_dbg(
-        read_path: &str,
-        write_path: &str,
-        dbg_type: sys::MaaDbgControllerType,
-        config: &str,
-    ) -> MaaResult<Self> {
+    pub fn new_dbg(read_path: &str) -> MaaResult<Self> {
         let c_read = CString::new(read_path)?;
-        let c_write = CString::new(write_path)?;
-        let c_cfg = CString::new(config)?;
-        let handle = unsafe {
-            sys::MaaDbgControllerCreate(c_read.as_ptr(), c_write.as_ptr(), dbg_type, c_cfg.as_ptr())
-        };
+        let handle = unsafe { sys::MaaDbgControllerCreate(c_read.as_ptr()) };
         Self::from_handle(handle)
+    }
+
+    /// Create a replay controller for replaying recorded controller operations.
+    pub fn new_replay(recording_path: &str) -> MaaResult<Self> {
+        let c_recording = CString::new(recording_path)?;
+        let handle = unsafe { sys::MaaReplayControllerCreate(c_recording.as_ptr()) };
+        Self::from_handle(handle)
+    }
+
+    /// Create a record controller that wraps another controller and records all operations.
+    pub fn new_record(inner: &Controller, recording_path: &str) -> MaaResult<Self> {
+        let c_recording = CString::new(recording_path)?;
+        let handle = unsafe { sys::MaaRecordControllerCreate(inner.raw(), c_recording.as_ptr()) };
+
+        if let Some(ptr) = NonNull::new(handle) {
+            Ok(Self::new_with_retained(ptr, vec![Arc::clone(&inner.inner)]))
+        } else {
+            Err(MaaError::FrameworkError(-1))
+        }
     }
 
     /// Create a virtual gamepad controller (Windows only).

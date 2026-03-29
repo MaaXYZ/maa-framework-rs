@@ -2,7 +2,7 @@
 
 use crate::common::ControllerFeature;
 use crate::sys;
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 
 /// Custom controller callback trait for implementing custom device control.
@@ -59,6 +59,12 @@ pub trait CustomControllerCallback: Send + Sync {
     }
     fn scroll(&self, _dx: i32, _dy: i32) -> bool {
         false
+    }
+    fn relative_move(&self, _dx: i32, _dy: i32) -> bool {
+        false
+    }
+    fn shell(&self, _cmd: &str, _timeout: i64) -> Option<String> {
+        None
     }
     /// Set the controller to inactive state.
     ///
@@ -239,6 +245,39 @@ unsafe extern "C" fn scroll_trampoline(dx: i32, dy: i32, trans_arg: *mut c_void)
     if cb.scroll(dx, dy) { 1 } else { 0 }
 }
 
+unsafe extern "C" fn relative_move_trampoline(
+    dx: i32,
+    dy: i32,
+    trans_arg: *mut c_void,
+) -> sys::MaaBool {
+    let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
+    if cb.relative_move(dx, dy) { 1 } else { 0 }
+}
+
+unsafe extern "C" fn shell_trampoline(
+    cmd: *const std::os::raw::c_char,
+    timeout: i64,
+    trans_arg: *mut c_void,
+    buffer: *mut sys::MaaStringBuffer,
+) -> sys::MaaBool {
+    let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
+    let cmd_str = if !cmd.is_null() {
+        unsafe { CStr::from_ptr(cmd).to_string_lossy() }
+    } else {
+        std::borrow::Cow::Borrowed("")
+    };
+
+    if let Some(output) = cb.shell(&cmd_str, timeout) {
+        if let Ok(c_str) = CString::new(output) {
+            unsafe {
+                sys::MaaStringBufferSetEx(buffer, c_str.as_ptr(), c_str.as_bytes().len() as u64);
+            }
+            return 1;
+        }
+    }
+    0
+}
+
 unsafe extern "C" fn inactive_trampoline(trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
     if cb.inactive() { 1 } else { 0 }
@@ -278,6 +317,8 @@ pub fn create_custom_controller_callbacks() -> sys::MaaCustomControllerCallbacks
         key_down: Some(key_down_trampoline),
         key_up: Some(key_up_trampoline),
         scroll: Some(scroll_trampoline),
+        relative_move: Some(relative_move_trampoline),
+        shell: Some(shell_trampoline),
         inactive: Some(inactive_trampoline),
         get_info: Some(get_info_trampoline),
     }

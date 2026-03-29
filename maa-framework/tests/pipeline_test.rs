@@ -15,7 +15,10 @@
 
 mod common;
 
+use std::fs;
+use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use maa_framework::context::Context;
 use maa_framework::controller::Controller;
@@ -25,7 +28,7 @@ use maa_framework::resource::Resource;
 use maa_framework::tasker::Tasker;
 use maa_framework::{self, MaaResult, sys};
 
-use common::{ImageController, get_test_resources_dir, init_test_env};
+use common::{get_test_resources_dir, init_test_env};
 
 // ============================================================================
 // Recognition Type Tests - Ported from Python _test_recognition_types
@@ -1325,63 +1328,15 @@ fn test_repeat_params(context: &Context) -> MaaResult<()> {
     Ok(())
 }
 
-// ============================================================================
-// Main Test Entry Points
-// ============================================================================
+fn create_test_pipeline_resource(resource_dir: &Path) {
+    let pipeline_dir = resource_dir.join("pipeline");
+    fs::create_dir_all(&pipeline_dir).expect("create pipeline dir");
 
-#[test]
-fn test_pipeline_full_execution() {
-    println!("\n=== test_pipeline_full_execution ===");
-    init_test_env().unwrap();
-
-    let res_dir = get_test_resources_dir();
-    let resource_dir = res_dir.join("resource");
-    let screenshot_dir = res_dir.join("Screenshot");
-
-    assert!(
-        resource_dir.exists(),
-        "Test resources MUST exist at {:?}. Run: git submodule update --init",
-        resource_dir
-    );
-    assert!(
-        screenshot_dir.exists(),
-        "Screenshot directory MUST exist at {:?}",
-        screenshot_dir
-    );
-
-    // 1. Create Resource
-    let resource = Resource::new().unwrap();
-    resource
-        .post_bundle(resource_dir.to_str().unwrap())
-        .unwrap()
-        .wait();
-    assert!(resource.loaded(), "Resource MUST be loaded");
-
-    // 2. Register custom recognition for Context-level tests
-    resource
-        .register_custom_recognition("PipelineTestReco", Box::new(PipelineTestRecognition))
-        .unwrap();
-    resource
-        .register_custom_action("PipelineTestAct", Box::new(PipelineTestAction))
-        .unwrap();
-
-    // 3. Create Controller (matching Python's DbgController with CarouselImage)
-    let img_ctrl = ImageController::new(screenshot_dir);
-    let controller = Controller::new_custom(img_ctrl).unwrap();
-    let conn_id = controller.post_connection().unwrap();
-    controller.wait(conn_id);
-    assert!(controller.connected(), "Controller MUST be connected");
-
-    // 4. Create Tasker
-    let tasker = Tasker::new().unwrap();
-    tasker.bind_resource(&resource).unwrap();
-    tasker.bind_controller(&controller).unwrap();
-
-    assert!(tasker.inited(), "Tasker MUST be initialized");
-
-    // 5. Run task to trigger Context-level tests
-    let ppover = r#"{
-        "TestEntry": {"next": ["TestReco"]},
+    let test_pipeline = r#"{
+        "TestBasic": {},
+        "TestEntry": {
+            "next": ["TestReco"]
+        },
         "TestReco": {
             "recognition": "Custom",
             "custom_recognition": "PipelineTestReco",
@@ -1390,20 +1345,150 @@ fn test_pipeline_full_execution() {
         }
     }"#;
 
+    fs::write(pipeline_dir.join("test.json"), test_pipeline).expect("write test pipeline");
+}
+
+fn create_temp_test_resource_dir() -> std::path::PathBuf {
+    let suffix = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("clock before unix epoch")
+        .as_nanos();
+    let dir = std::env::temp_dir().join(format!("maa-framework-rs-pipeline-{suffix}"));
+    fs::create_dir_all(&dir).expect("create temp resource dir");
+    dir
+}
+
+// ============================================================================
+// Main Test Entry Points
+// ============================================================================
+
+#[test]
+fn test_pipeline_node_execution() {
+    println!("\n=== test_pipeline_node_execution ===");
+    init_test_env().unwrap();
+    CONTEXT_TESTS_PASSED.store(false, Ordering::SeqCst);
+
+    let res_dir = get_test_resources_dir();
+    let base_resource_dir = res_dir.join("resource");
+    let screenshot_dir = res_dir.join("Screenshot");
+    let temp_root = create_temp_test_resource_dir();
+    let test_resource_dir = temp_root.join("resource");
+    create_test_pipeline_resource(&test_resource_dir);
+
+    assert!(
+        base_resource_dir.exists(),
+        "Test resources MUST exist at {:?}. Run: git submodule update --init",
+        base_resource_dir
+    );
+    assert!(
+        screenshot_dir.exists(),
+        "Screenshot directory MUST exist at {:?}",
+        screenshot_dir
+    );
+
+    let resource = Resource::new().unwrap();
+    resource
+        .post_bundle(base_resource_dir.to_str().unwrap())
+        .unwrap()
+        .wait();
+    resource
+        .post_bundle(test_resource_dir.to_str().unwrap())
+        .unwrap()
+        .wait();
+    assert!(resource.loaded(), "Resource MUST be loaded");
+
+    resource
+        .register_custom_recognition("PipelineTestReco", Box::new(PipelineTestRecognition))
+        .unwrap();
+    resource
+        .register_custom_action("PipelineTestAct", Box::new(PipelineTestAction))
+        .unwrap();
+
+    let controller = Controller::new_dbg(screenshot_dir.to_str().unwrap()).unwrap();
+    let conn_id = controller.post_connection().unwrap();
+    controller.wait(conn_id);
+    assert!(controller.connected(), "Controller MUST be connected");
+
+    let tasker = Tasker::new().unwrap();
+    tasker.bind_resource(&resource).unwrap();
+    tasker.bind_controller(&controller).unwrap();
+
+    assert!(tasker.inited(), "Tasker MUST be initialized");
+
     let job = tasker
-        .post_task("TestEntry", ppover)
+        .post_task("TestEntry", "{}")
         .expect("post_task MUST work");
     let status = job.wait();
+    let detail = job.get(false).expect("get task detail MUST work");
 
     assert!(status.done(), "Task MUST complete");
+    assert!(detail.is_some(), "Task detail MUST exist");
 
-    // 6. Verify Context tests passed
     assert!(
         CONTEXT_TESTS_PASSED.load(Ordering::SeqCst),
         "Context-level pipeline tests MUST pass"
     );
 
-    println!("PASS: pipeline full execution");
+    println!("PASS: pipeline node execution");
+}
+
+#[test]
+fn test_pipeline_smoking() {
+    println!("\n=== test_pipeline_smoking ===");
+    init_test_env().unwrap();
+
+    let res_dir = get_test_resources_dir();
+    let resource_dir = res_dir.join("resource");
+    let recording_path = res_dir.join("MaaRecording.jsonl");
+
+    assert!(
+        resource_dir.exists(),
+        "Test resources MUST exist at {:?}. Run: git submodule update --init",
+        resource_dir
+    );
+    assert!(
+        recording_path.exists(),
+        "Replay recording MUST exist at {:?}",
+        recording_path
+    );
+
+    let controller = Controller::new_replay(recording_path.to_str().unwrap()).unwrap();
+    let conn_id = controller.post_connection().unwrap();
+
+    let resource = Resource::new().unwrap();
+    let res_job = resource
+        .post_bundle(resource_dir.to_str().unwrap())
+        .unwrap();
+
+    let conn_status = controller.wait(conn_id);
+    let res_status = res_job.wait();
+    assert!(
+        conn_status.succeeded(),
+        "ReplayController connection failed"
+    );
+    assert!(res_status.succeeded(), "Resource loading failed");
+
+    let info = controller.info().expect("controller info MUST work");
+    assert_eq!(
+        info.get("type").and_then(|v| v.as_str()),
+        Some("replay"),
+        "replay controller type should be 'replay'"
+    );
+
+    let tasker = Tasker::new().unwrap();
+    tasker.bind_resource(&resource).unwrap();
+    tasker.bind_controller(&controller).unwrap();
+
+    assert!(tasker.inited(), "Tasker must be initialized");
+
+    let job = tasker.post_task("Wilderness", "{}").unwrap();
+    let status = job.wait();
+    let detail = job.get(false).expect("get task detail MUST work");
+
+    assert!(status.succeeded(), "pipeline_smoking task should succeed");
+    assert!(detail.is_some(), "pipeline_smoking task detail MUST exist");
+
+    println!("PASS: pipeline smoking");
 }
 
 #[test]

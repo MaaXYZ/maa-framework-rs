@@ -22,13 +22,12 @@ image = { version = "0.25", optional = true }
 maa-framework-sys = { workspace = true }
 
 [features]
-default = ["toolkit", "adb", "win32", "dbg", "custom", "internal"]
+default = ["toolkit", "adb", "win32", "custom", "internal"]
 static = ["maa-framework-sys/static"]
 dynamic = ["maa-framework-sys/dynamic"]
 toolkit = ["maa-framework-sys/toolkit"]
 adb = []
 win32 = []
-dbg = []
 custom = [
     "custom_recognizer",
     "custom_controller",
