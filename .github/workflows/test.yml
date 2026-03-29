@@ -120,11 +120,29 @@ jobs:
               tar -xf $file.FullName -C sdk
             }
 
-            $root = Get-ChildItem sdk -Directory | Select-Object -First 1
-            if ($root) {
-              Copy-Item "$($root.FullName)\*" install -Recurse -Force
+            $root = $null
+            if ((Test-Path "sdk/include") -or (Test-Path "sdk/lib") -or (Test-Path "sdk/bin")) {
+              $root = "sdk"
             } else {
-              Copy-Item "sdk\*" install -Recurse -Force
+              $candidates = Get-ChildItem sdk -Directory | Where-Object {
+                (Test-Path (Join-Path $_.FullName "include")) -or
+                (Test-Path (Join-Path $_.FullName "lib")) -or
+                (Test-Path (Join-Path $_.FullName "bin"))
+              }
+              if ($candidates.Count -eq 1) {
+                $root = $candidates[0].FullName
+              } elseif ($candidates.Count -gt 1) {
+                throw "Multiple SDK root candidates found under sdk/"
+              } else {
+                throw "Unable to locate MaaFramework SDK root under sdk/"
+              }
+            }
+
+            Copy-Item "$root\*" install -Recurse -Force
+
+            if (-not (Test-Path "install/include")) { throw "install/include missing after SDK extraction" }
+            if ((-not (Test-Path "install/lib")) -and (-not (Test-Path "install/bin"))) {
+              throw "Neither install/lib nor install/bin exists after SDK extraction"
             }
 
       - name: Download Plugin
@@ -242,9 +260,32 @@ jobs:
               *) echo "Unsupported asset: $FILE"; exit 1 ;;
             esac
 
-            ROOT=$(find sdk -mindepth 1 -maxdepth 1 -type d | head -n 1)
-            [ -n "$ROOT" ] || ROOT=sdk
+            if [ -d sdk/include ] || [ -d sdk/lib ] || [ -d sdk/bin ]; then
+              ROOT=sdk
+            else
+              SDK_ROOTS=()
+              for candidate in sdk/*; do
+                [ -d "$candidate" ] || continue
+                if [ -d "$candidate/include" ] || [ -d "$candidate/lib" ] || [ -d "$candidate/bin" ]; then
+                  SDK_ROOTS+=("$candidate")
+                fi
+              done
+              if [ "${#SDK_ROOTS[@]}" -eq 1 ]; then
+                ROOT="${SDK_ROOTS[0]}"
+              elif [ "${#SDK_ROOTS[@]}" -eq 0 ]; then
+                echo "Unable to locate MaaFramework SDK root under sdk"
+                find sdk -maxdepth 2 -type d | sort
+                exit 1
+              else
+                echo "Multiple SDK root candidates found under sdk:"
+                printf '%s\n' "${SDK_ROOTS[@]}"
+                exit 1
+              fi
+            fi
             cp -R "$ROOT"/. install/
+
+            test -d install/include || (echo "install/include missing after SDK extraction" && exit 1)
+            test -d install/lib -o -d install/bin || (echo "Neither install/lib nor install/bin exists after SDK extraction" && exit 1)
 
       - name: Download Plugin
         uses: robinraju/release-downloader@v1
@@ -353,9 +394,32 @@ jobs:
               *) echo "Unsupported asset: $FILE"; exit 1 ;;
             esac
 
-            ROOT=$(find sdk -mindepth 1 -maxdepth 1 -type d | head -n 1)
-            [ -n "$ROOT" ] || ROOT=sdk
+            if [ -d sdk/include ] || [ -d sdk/lib ] || [ -d sdk/bin ]; then
+              ROOT=sdk
+            else
+              SDK_ROOTS=()
+              for candidate in sdk/*; do
+                [ -d "$candidate" ] || continue
+                if [ -d "$candidate/include" ] || [ -d "$candidate/lib" ] || [ -d "$candidate/bin" ]; then
+                  SDK_ROOTS+=("$candidate")
+                fi
+              done
+              if [ "${#SDK_ROOTS[@]}" -eq 1 ]; then
+                ROOT="${SDK_ROOTS[0]}"
+              elif [ "${#SDK_ROOTS[@]}" -eq 0 ]; then
+                echo "Unable to locate MaaFramework SDK root under sdk"
+                find sdk -maxdepth 2 -type d | sort
+                exit 1
+              else
+                echo "Multiple SDK root candidates found under sdk:"
+                printf '%s\n' "${SDK_ROOTS[@]}"
+                exit 1
+              fi
+            fi
             cp -R "$ROOT"/. install/
+
+            test -d install/include || (echo "install/include missing after SDK extraction" && exit 1)
+            test -d install/lib -o -d install/bin || (echo "Neither install/lib nor install/bin exists after SDK extraction" && exit 1)
 
       - name: Download Plugin
         uses: robinraju/release-downloader@v1
