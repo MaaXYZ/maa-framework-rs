@@ -25,8 +25,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          UPSTREAM_TAG=$(gh api repos/MaaXYZ/MaaFramework/releases --paginate \
-            --jq 'map(select(.draft == false)) | sort_by(.published_at) | reverse | .[0].tag_name')
+          UPSTREAM_TAG=$(gh api --paginate --slurp repos/MaaXYZ/MaaFramework/releases \
+            --jq 'add | map(select(.draft == false)) | sort_by(.published_at) | reverse | .[0].tag_name')
           UPSTREAM_VERSION="${UPSTREAM_TAG#v}"
           
           CURRENT_VERSION=$(grep '^version = ' maa-framework-sys/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')

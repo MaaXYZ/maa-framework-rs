@@ -39,8 +39,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          MAA_TAG=$(gh api repos/MaaXYZ/MaaFramework/releases --paginate \
-            --jq 'map(select(.draft == false)) | sort_by(.published_at) | reverse | .[0].tag_name')
+          MAA_TAG=$(gh api --paginate --slurp repos/MaaXYZ/MaaFramework/releases \
+            --jq 'add | map(select(.draft == false)) | sort_by(.published_at) | reverse | .[0].tag_name')
           echo "tag=$MAA_TAG" >> $GITHUB_OUTPUT
           echo "version=${MAA_TAG#v}" >> $GITHUB_OUTPUT
           echo "Using MaaFramework $MAA_TAG"
