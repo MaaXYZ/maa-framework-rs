@@ -84,24 +84,45 @@ jobs:
       - name: Install LLVM
         run: choco install llvm -y
 
-      - name: Bootstrap MaaDeps
-        env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-            cd MaaFramework
-            python tools/maadeps-download.py ${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}-windows
-
-      - name: Build MAA
-        run: |
-            cd MaaFramework
-            cmake --preset "${{ matrix.arch == 'x86_64' && 'MSVC 2022' || 'MSVC 2022 ARM' }}" -DMAADEPS_TRIPLET="maa-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}-windows" -DCMAKE_SYSTEM_VERSION="10.0.26100.0" -DMAA_HASH_VERSION="CI-Build" -DWITH_NODEJS_BINDING=OFF -DWITH_QUICKJS_BINDING=OFF -DBUILD_PICLI=OFF -DWITH_DBG_CONTROLLER=ON -DBUILD_PIPELINE_TESTING=ON -DBUILD_DLOPEN_TESTING=ON
-            cmake --build build --preset "${{ matrix.arch == 'x86_64' && 'MSVC 2022' || 'MSVC 2022 ARM' }} - Debug" -j 16
-
-      - name: Install MAA
+      - name: Get latest MaaFramework release tag
+        id: maa-version
         shell: bash
+        env:
+            GH_TOKEN: ${{ github.token }}
         run: |
-            cd MaaFramework
-            cmake --install build --prefix ../install --config Debug
+            MAA_TAG=$(gh api repos/MaaXYZ/MaaFramework/releases --paginate \
+              --jq 'map(select(.draft == false)) | sort_by(.published_at) | reverse | .[0].tag_name')
+            echo "tag=$MAA_TAG" >> $GITHUB_OUTPUT
+            echo "Using MaaFramework $MAA_TAG"
+
+      - name: Download MaaFramework SDK from release
+        shell: pwsh
+        env:
+            GH_TOKEN: ${{ github.token }}
+        run: |
+            $tag = "${{ steps.maa-version.outputs.tag }}"
+            New-Item -ItemType Directory -Force -Path asset, sdk, install | Out-Null
+
+            $assetName = gh release view $tag --repo MaaXYZ/MaaFramework --json assets --jq '.assets[].name | select(((ascii_downcase | contains("win")) or (ascii_downcase | contains("windows"))) and ((ascii_downcase | contains("x64")) or (ascii_downcase | contains("x86_64"))))' | Select-Object -First 1
+            if (-not $assetName) { throw "No windows x64 asset found for $tag" }
+
+            gh release download $tag --repo MaaXYZ/MaaFramework --pattern $assetName --dir asset
+
+            $file = Get-ChildItem asset -File | Select-Object -First 1
+            if (-not $file) { throw "Downloaded asset not found" }
+
+            if ($file.Extension -eq ".zip") {
+              Expand-Archive $file.FullName -DestinationPath sdk -Force
+            } else {
+              tar -xf $file.FullName -C sdk
+            }
+
+            $root = Get-ChildItem sdk -Directory | Select-Object -First 1
+            if ($root) {
+              Copy-Item "$($root.FullName)\*" install -Recurse -Force
+            } else {
+              Copy-Item "sdk\*" install -Recurse -Force
+            }
 
       - name: Download Plugin
         uses: robinraju/release-downloader@v1
@@ -181,30 +202,42 @@ jobs:
         with:
             toolchain: stable
 
-      - name: Bootstrap MaaDeps
+      - name: Get latest MaaFramework release tag
+        id: maa-version
         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GH_TOKEN: ${{ github.token }}
         run: |
-            cd MaaFramework
-            python3 tools/maadeps-download.py ${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}-linux
+            MAA_TAG=$(gh api repos/MaaXYZ/MaaFramework/releases --paginate \
+              --jq 'map(select(.draft == false)) | sort_by(.published_at) | reverse | .[0].tag_name')
+            echo "tag=$MAA_TAG" >> $GITHUB_OUTPUT
+            echo "Using MaaFramework $MAA_TAG"
 
-      - name: Build MAA
+      - name: Download MaaFramework SDK from release
+        env:
+            GH_TOKEN: ${{ github.token }}
         run: |
-            cd MaaFramework
-            cmake --preset 'NinjaMulti Linux ${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}' \
-              -DMAADEPS_TRIPLET='maa-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}-linux' \
-              -DMAA_HASH_VERSION="CI-Build" \
-              -DWITH_NODEJS_BINDING=OFF -DWITH_QUICKJS_BINDING=OFF \
-              -DBUILD_PICLI=OFF \
-              -DWITH_DBG_CONTROLLER=ON -DBUILD_PIPELINE_TESTING=ON \
-              -DBUILD_DLOPEN_TESTING=ON
-            cmake --build build --preset 'NinjaMulti Linux ${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }} - Debug' -j 16
+            TAG="${{ steps.maa-version.outputs.tag }}"
+            mkdir -p asset sdk install
 
-      - name: Install MAA
-        shell: bash
-        run: |
-            cd MaaFramework
-            cmake --install build --prefix ../install --config Debug
+            ASSET_NAME=$(gh release view "$TAG" --repo MaaXYZ/MaaFramework --json assets \
+              --jq '.assets[].name | select((ascii_downcase | contains("linux")) and ((ascii_downcase | contains("x64")) or (ascii_downcase | contains("x86_64"))))' \
+              | head -n 1)
+
+            test -n "$ASSET_NAME" || (echo "No linux x64 asset found for $TAG" && exit 1)
+
+            gh release download "$TAG" --repo MaaXYZ/MaaFramework --pattern "$ASSET_NAME" --dir asset
+
+            FILE=$(find asset -type f | head -n 1)
+            case "$FILE" in
+              *.zip) unzip -q "$FILE" -d sdk ;;
+              *.tar.gz|*.tgz) tar -xzf "$FILE" -C sdk ;;
+              *.tar.xz) tar -xJf "$FILE" -C sdk ;;
+              *) echo "Unsupported asset: $FILE"; exit 1 ;;
+            esac
+
+            ROOT=$(find sdk -mindepth 1 -maxdepth 1 -type d | head -n 1)
+            [ -n "$ROOT" ] || ROOT=sdk
+            cp -R "$ROOT"/. install/
 
       - name: Download Plugin
         uses: robinraju/release-downloader@v1
@@ -276,32 +309,42 @@ jobs:
             toolchain: stable
             target: aarch64-apple-darwin
 
-      - name: Bootstrap MaaDeps
+      - name: Get latest MaaFramework release tag
+        id: maa-version
         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GH_TOKEN: ${{ github.token }}
         run: |
-            cd MaaFramework
-            python3 tools/maadeps-download.py ${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}-osx
+            MAA_TAG=$(gh api repos/MaaXYZ/MaaFramework/releases --paginate \
+              --jq 'map(select(.draft == false)) | sort_by(.published_at) | reverse | .[0].tag_name')
+            echo "tag=$MAA_TAG" >> $GITHUB_OUTPUT
+            echo "Using MaaFramework $MAA_TAG"
 
-      - name: Build MAA
+      - name: Download MaaFramework SDK from release
+        env:
+            GH_TOKEN: ${{ github.token }}
         run: |
-            cd MaaFramework
-            cmake --preset 'NinjaMulti' \
-              -DMAADEPS_TRIPLET='maa-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}-osx' \
-              -DMAA_HASH_VERSION="CI-Build" \
-              -DCMAKE_OSX_SYSROOT=macosx \
-              -DWITH_NODEJS_BINDING=OFF -DWITH_QUICKJS_BINDING=OFF \
-              -DBUILD_PICLI=OFF \
-              -DWITH_DBG_CONTROLLER=ON -DBUILD_PIPELINE_TESTING=ON \
-              -DBUILD_DLOPEN_TESTING=ON \
-              -DCMAKE_OSX_ARCHITECTURES='${{ matrix.arch == 'x86_64' && 'x86_64' || 'arm64' }}'
-            cmake --build build --preset 'NinjaMulti - Debug' -j 16
+            TAG="${{ steps.maa-version.outputs.tag }}"
+            mkdir -p asset sdk install
 
-      - name: Install MAA
-        shell: bash
-        run: |
-            cd MaaFramework
-            cmake --install build --prefix ../install --config Debug
+            ASSET_NAME=$(gh release view "$TAG" --repo MaaXYZ/MaaFramework --json assets \
+              --jq '.assets[].name | select(((ascii_downcase | contains("mac")) or (ascii_downcase | contains("osx"))) and ((ascii_downcase | contains("arm64")) or (ascii_downcase | contains("aarch64"))))' \
+              | head -n 1)
+
+            test -n "$ASSET_NAME" || (echo "No macOS arm64 asset found for $TAG" && exit 1)
+
+            gh release download "$TAG" --repo MaaXYZ/MaaFramework --pattern "$ASSET_NAME" --dir asset
+
+            FILE=$(find asset -type f | head -n 1)
+            case "$FILE" in
+              *.zip) unzip -q "$FILE" -d sdk ;;
+              *.tar.gz|*.tgz) tar -xzf "$FILE" -C sdk ;;
+              *.tar.xz) tar -xJf "$FILE" -C sdk ;;
+              *) echo "Unsupported asset: $FILE"; exit 1 ;;
+            esac
+
+            ROOT=$(find sdk -mindepth 1 -maxdepth 1 -type d | head -n 1)
+            [ -n "$ROOT" ] || ROOT=sdk
+            cp -R "$ROOT"/. install/
 
       - name: Download Plugin
         uses: robinraju/release-downloader@v1

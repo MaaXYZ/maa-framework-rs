@@ -12,7 +12,7 @@ on:
 
 jobs:
   publish-release:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,62 +34,43 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install dep
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y ninja-build cmake ccache libclang-dev
-
       - name: Get latest MaaFramework release tag
         id: maa-version
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          MAA_TAG=$(gh release view --repo MaaXYZ/MaaFramework --json tagName -q .tagName)
+          MAA_TAG=$(gh api repos/MaaXYZ/MaaFramework/releases --paginate \
+            --jq 'map(select(.draft == false)) | sort_by(.published_at) | reverse | .[0].tag_name')
           echo "tag=$MAA_TAG" >> $GITHUB_OUTPUT
+          echo "version=${MAA_TAG#v}" >> $GITHUB_OUTPUT
           echo "Using MaaFramework $MAA_TAG"
 
-      - name: Checkout MaaFramework
-        uses: actions/checkout@v4
-        with:
-          repository: MaaXYZ/MaaFramework
-          ref: ${{ steps.maa-version.outputs.tag }}
-          submodules: recursive
-          path: MaaFramework
-
-      - name: Setup ccache
-        uses: Chocobo1/setup-ccache-action@v1
-        with:
-          remove_stale_cache: false
-
-      - name: Setup Python
-        uses: actions/setup-python@v5.2.0
-        with:
-          python-version: "3.9"
-
-      - name: Bootstrap MaaDeps
+      - name: Download MaaFramework SDK from release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          cd MaaFramework
-          python3 tools/maadeps-download.py x64-linux
+          TAG="${{ steps.maa-version.outputs.tag }}"
+          mkdir -p asset sdk install
 
-      - name: Build MAA
-        run: |
-          cd MaaFramework
-          cmake --preset 'NinjaMulti Linux x64' \
-            -DMAADEPS_TRIPLET='maa-x64-linux' \
-            -DMAA_HASH_VERSION="CI-Build" \
-            -DWITH_NODEJS_BINDING=OFF -DWITH_QUICKJS_BINDING=OFF \
-            -DBUILD_PICLI=OFF \
-            -DWITH_DBG_CONTROLLER=ON -DBUILD_PIPELINE_TESTING=ON \
-            -DBUILD_DLOPEN_TESTING=ON
-          cmake --build build --preset 'NinjaMulti Linux x64 - Debug' -j 16
+          ASSET_NAME=$(gh release view "$TAG" --repo MaaXYZ/MaaFramework --json assets \
+            --jq '.assets[].name | select(((ascii_downcase | contains("mac")) or (ascii_downcase | contains("osx"))) and ((ascii_downcase | contains("arm64")) or (ascii_downcase | contains("aarch64"))))' \
+            | head -n 1)
 
-      - name: Install MAA
-        shell: bash
-        run: |
-          cd MaaFramework
-          cmake --install build --prefix ../install --config Debug
+          test -n "$ASSET_NAME" || (echo "No macOS arm64 asset found for $TAG" && exit 1)
+
+          gh release download "$TAG" --repo MaaXYZ/MaaFramework --pattern "$ASSET_NAME" --dir asset
+
+          FILE=$(find asset -type f | head -n 1)
+          case "$FILE" in
+            *.zip) unzip -q "$FILE" -d sdk ;;
+            *.tar.gz|*.tgz) tar -xzf "$FILE" -C sdk ;;
+            *.tar.xz) tar -xJf "$FILE" -C sdk ;;
+            *) echo "Unsupported asset: $FILE"; exit 1 ;;
+          esac
+
+          ROOT=$(find sdk -mindepth 1 -maxdepth 1 -type d | head -n 1)
+          [ -n "$ROOT" ] || ROOT=sdk
+          cp -R "$ROOT"/. install/
 
       - name: Cargo Publish maa-framework-sys
         if: steps.release-type.outputs.type == 'sys'
