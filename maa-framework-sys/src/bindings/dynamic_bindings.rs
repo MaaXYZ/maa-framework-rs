@@ -3,6 +3,7 @@
 unsafe impl Send for MaaFramework {}
 unsafe impl Sync for MaaFramework {}
 
+pub const MaaNullSize: i32 = -1;
 pub const MaaAdbScreencapMethod_EncodeToFileAndPull: u32 = 1;
 pub const MaaAdbScreencapMethod_Encode: u32 = 2;
 pub const MaaAdbScreencapMethod_RawWithGzip: u32 = 4;
