@@ -3,6 +3,7 @@
 unsafe impl Send for MaaFramework {}
 unsafe impl Sync for MaaFramework {}
 
+pub const MaaNullSize: i32 = -1;
 pub const MaaAdbScreencapMethod_EncodeToFileAndPull: u32 = 1;
 pub const MaaAdbScreencapMethod_Encode: u32 = 2;
 pub const MaaAdbScreencapMethod_RawWithGzip: u32 = 4;
@@ -831,6 +832,10 @@ pub struct MaaFramework {
             screencap_method: MaaMacOSScreencapMethod,
             input_method: MaaMacOSInputMethod,
         ) -> *mut MaaController,
+        ::libloading::Error,
+    >,
+    pub MaaAndroidNativeControllerCreate: Result<
+        unsafe extern "C" fn(config_json: *const ::std::os::raw::c_char) -> *mut MaaController,
         ::libloading::Error,
     >,
     pub MaaCustomControllerCreate: Result<
@@ -1700,6 +1705,8 @@ impl MaaFramework {
             unsafe { __library.get(b"MaaWin32ControllerCreate\0") }.map(|sym| *sym);
         let MaaMacOSControllerCreate =
             unsafe { __library.get(b"MaaMacOSControllerCreate\0") }.map(|sym| *sym);
+        let MaaAndroidNativeControllerCreate =
+            unsafe { __library.get(b"MaaAndroidNativeControllerCreate\0") }.map(|sym| *sym);
         let MaaCustomControllerCreate =
             unsafe { __library.get(b"MaaCustomControllerCreate\0") }.map(|sym| *sym);
         let MaaDbgControllerCreate =
@@ -2061,6 +2068,7 @@ impl MaaFramework {
             MaaAdbControllerCreate,
             MaaWin32ControllerCreate,
             MaaMacOSControllerCreate,
+            MaaAndroidNativeControllerCreate,
             MaaCustomControllerCreate,
             MaaDbgControllerCreate,
             MaaReplayControllerCreate,
@@ -2979,6 +2987,18 @@ impl MaaFramework {
                 .expect("Expected function, got error."))(
                 window_id, screencap_method, input_method
             )
+        }
+    }
+    #[doc = " @brief Create an Android native controller backed by MaaAndroidNativeControlUnit.\n\n @param config_json JSON config for the control unit. Required fields:\n                    - library_path: path to the Android native control unit library\n                    - screen_resolution.width / screen_resolution.height: raw screenshot and touch resolution\n                    Optional fields:\n                    - display_id: target display id, defaults to 0\n                    - force_stop: whether to force stop before start_app, defaults to false\n @return The controller handle, or nullptr on failure.\n\n @note This controller is only available on Android.\n @note The configured screen_resolution must match the control unit's raw screenshot/touch coordinate space."]
+    pub unsafe fn MaaAndroidNativeControllerCreate(
+        &self,
+        config_json: *const ::std::os::raw::c_char,
+    ) -> *mut MaaController {
+        unsafe {
+            (self
+                .MaaAndroidNativeControllerCreate
+                .as_ref()
+                .expect("Expected function, got error."))(config_json)
         }
     }
     pub unsafe fn MaaCustomControllerCreate(
