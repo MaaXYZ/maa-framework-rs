@@ -1,9 +1,12 @@
 //! Device controller for input, screen capture, and app management.
 
 use crate::{MaaError, MaaResult, common, sys};
+use serde::Serialize;
 use std::collections::HashMap;
 use std::ffi::CString;
 use std::os::raw::c_void;
+#[cfg(feature = "dynamic")]
+use std::panic::AssertUnwindSafe;
 use std::ptr::NonNull;
 use std::sync::{Arc, Mutex};
 
@@ -147,6 +150,37 @@ impl Controller {
     ) -> MaaResult<Self> {
         let handle =
             unsafe { sys::MaaMacOSControllerCreate(window_id, screencap_method, input_method) };
+
+        Self::from_handle(handle)
+    }
+
+    /// Create a new Android native controller.
+    ///
+    /// The config is serialized to JSON and passed to
+    /// `MaaAndroidNativeControllerCreate`. You can pass either a
+    /// [`common::AndroidNativeControllerConfig`] value or any other serializable
+    /// type that matches the expected JSON schema.
+    pub fn new_android_native<T: Serialize>(config: &T) -> MaaResult<Self> {
+        let config_json = serde_json::to_string(config).map_err(|e| {
+            MaaError::InvalidConfig(format!(
+                "Failed to serialize Android native controller config: {}",
+                e
+            ))
+        })?;
+        let c_config = CString::new(config_json)?;
+
+        #[cfg(feature = "dynamic")]
+        let handle = std::panic::catch_unwind(AssertUnwindSafe(|| unsafe {
+            sys::MaaAndroidNativeControllerCreate(c_config.as_ptr())
+        }))
+        .map_err(|_| {
+            MaaError::InvalidArgument(
+                "Android native controller is not available in this MaaFramework build".to_string(),
+            )
+        })?;
+
+        #[cfg(not(feature = "dynamic"))]
+        let handle = unsafe { sys::MaaAndroidNativeControllerCreate(c_config.as_ptr()) };
 
         Self::from_handle(handle)
     }

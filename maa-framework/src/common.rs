@@ -308,6 +308,30 @@ bitflags::bitflags! {
 // ADB Controller Methods
 // ============================================================================
 
+/// Raw screen resolution used by Android native control units.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AndroidScreenResolution {
+    /// Raw screenshot width reported by the control unit.
+    pub width: i32,
+    /// Raw screenshot height reported by the control unit.
+    pub height: i32,
+}
+
+/// Configuration for [`crate::controller::Controller::new_android_native`].
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AndroidNativeControllerConfig {
+    /// Path to the Android native control unit shared library.
+    pub library_path: String,
+    /// Raw screenshot/touch coordinate resolution exposed by the control unit.
+    pub screen_resolution: AndroidScreenResolution,
+    /// Target Android display id. Defaults to `0` when omitted by MaaFramework.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub display_id: Option<u32>,
+    /// Whether to force-stop before `start_app`. Defaults to `false` when omitted.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub force_stop: Option<bool>,
+}
+
 bitflags::bitflags! {
     /// ADB screencap method flags.
     ///
@@ -902,4 +926,38 @@ pub struct CustomRecognitionResult {
     #[serde(rename = "box")]
     pub box_rect: (i32, i32, i32, i32),
     pub detail: serde_json::Value,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{AndroidNativeControllerConfig, AndroidScreenResolution};
+    use serde_json::json;
+
+    #[test]
+    fn android_native_controller_config_serializes_expected_shape() {
+        let config = AndroidNativeControllerConfig {
+            library_path: "/data/local/tmp/libmaa_unit.so".to_string(),
+            screen_resolution: AndroidScreenResolution {
+                width: 1920,
+                height: 1080,
+            },
+            display_id: Some(1),
+            force_stop: Some(true),
+        };
+
+        let value = serde_json::to_value(config).unwrap();
+
+        assert_eq!(
+            value,
+            json!({
+                "library_path": "/data/local/tmp/libmaa_unit.so",
+                "screen_resolution": {
+                    "width": 1920,
+                    "height": 1080
+                },
+                "display_id": 1,
+                "force_stop": true
+            })
+        );
+    }
 }
