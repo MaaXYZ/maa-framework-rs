@@ -203,6 +203,8 @@ pub const MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotTargetLongSide: MaaCtrlOptio
 pub const MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotTargetShortSide: MaaCtrlOptionEnum = 2;
 #[doc = " Screenshot use raw size without scaling.\n Please note that this option may cause incorrect coordinates on user devices with different resolutions if scaling is not performed.\n\n value: bool, eg: true; val_size: sizeof(bool)"]
 pub const MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotUseRawSize: MaaCtrlOptionEnum = 3;
+#[doc = " Enable or disable mouse-lock-follow mode for Win32 controllers.\n This is designed for TPS/FPS games that lock the mouse to their window in the background.\n Only valid for Win32 controllers using message-based input methods.\n\n value: bool, eg: true; val_size: sizeof(bool)"]
+pub const MaaCtrlOptionEnum_MaaCtrlOption_MouseLockFollow: MaaCtrlOptionEnum = 4;
 #[doc = " @brief Option keys for controller instance options. See MaaControllerSetOption().\n"]
 pub type MaaCtrlOptionEnum = ::std::os::raw::c_uint;
 pub type MaaTaskerOption = MaaOption;
