@@ -89,6 +89,7 @@ pub type MaaTaskId = MaaId;
 pub type MaaRecoId = MaaId;
 pub type MaaActId = MaaId;
 pub type MaaNodeId = MaaId;
+pub type MaaWfId = MaaId;
 pub type MaaSinkId = MaaId;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -200,6 +201,10 @@ pub const MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotTargetLongSide: MaaCtrlOptio
 pub const MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotTargetShortSide: MaaCtrlOptionEnum = 2;
 #[doc = " Screenshot use raw size without scaling.\n Please note that this option may cause incorrect coordinates on user devices with different resolutions if scaling is not performed.\n\n value: bool, eg: true; val_size: sizeof(bool)"]
 pub const MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotUseRawSize: MaaCtrlOptionEnum = 3;
+#[doc = " Enable or disable mouse-lock-follow mode for Win32 controllers.\n This is designed for TPS/FPS games that lock the mouse to their window in the background.\n Only valid for Win32 controllers using message-based input methods.\n\n value: bool, eg: true; val_size: sizeof(bool)"]
+pub const MaaCtrlOptionEnum_MaaCtrlOption_MouseLockFollow: MaaCtrlOptionEnum = 4;
+#[doc = " Set the interpolation method used when resizing screenshots.\n Value corresponds to cv::InterpolationFlags:\n   INTER_NEAREST=0, INTER_LINEAR=1, INTER_CUBIC=2, INTER_AREA=3, INTER_LANCZOS4=4\n Default is INTER_AREA (3).\n\n value: int, eg: 3; val_size: sizeof(int)"]
+pub const MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotResizeMethod: MaaCtrlOptionEnum = 6;
 #[doc = " @brief Option keys for controller instance options. See MaaControllerSetOption().\n"]
 pub type MaaCtrlOptionEnum = ::std::os::raw::c_uint;
 pub type MaaTaskerOption = MaaOption;
@@ -415,6 +420,20 @@ unsafe extern "C" {
         box_: *mut MaaRect,
         success: *mut MaaBool,
         detail_json: *mut MaaStringBuffer,
+    ) -> MaaBool;
+}
+unsafe extern "C" {
+    #[doc = " @param[out] node_name\n @param[out] phase\n @param[out] success\n @param[out] elapsed_ms\n @param[out] reco_id_list\n @param[in, out] reco_id_list_size\n @param[out] roi"]
+    pub fn MaaTaskerGetWaitFreezesDetail(
+        tasker: *const MaaTasker,
+        wf_id: MaaWfId,
+        node_name: *mut MaaStringBuffer,
+        phase: *mut MaaStringBuffer,
+        success: *mut MaaBool,
+        elapsed_ms: *mut MaaSize,
+        reco_id_list: *mut MaaRecoId,
+        reco_id_list_size: *mut MaaSize,
+        roi: *mut MaaRect,
     ) -> MaaBool;
 }
 unsafe extern "C" {
