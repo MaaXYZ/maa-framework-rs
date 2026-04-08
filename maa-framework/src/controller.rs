@@ -649,6 +649,23 @@ impl Controller {
         common::check_bool(ret)
     }
 
+    /// Sets whether to enable mouse-lock-follow mode.
+    ///
+    /// For Win32 controllers, useful for TPS/FPS games that lock the mouse
+    /// to their window while running in the background.
+    pub fn set_mouse_lock_follow(&self, enable: bool) -> MaaResult<()> {
+        let mut val: u8 = if enable { 1 } else { 0 };
+        let ret = unsafe {
+            sys::MaaControllerSetOption(
+                self.inner.handle.as_ptr(),
+                sys::MaaCtrlOptionEnum_MaaCtrlOption_MouseLockFollow as i32,
+                &mut val as *mut _ as *mut c_void,
+                std::mem::size_of::<u8>() as u64,
+            )
+        };
+        common::check_bool(ret)
+    }
+
     // === New controller types ===
 
     pub fn new_dbg(read_path: &str) -> MaaResult<Self> {
