@@ -118,6 +118,14 @@ impl Tasker {
         Self::fetch_action_detail(self.inner.handle.as_ptr(), act_id)
     }
 
+    /// Get wait-freezes details by ID.
+    pub fn get_wait_freezes_detail(
+        &self,
+        wf_id: crate::common::MaaId,
+    ) -> MaaResult<Option<crate::common::WaitFreezesDetail>> {
+        Self::fetch_wait_freezes_detail(self.inner.handle.as_ptr(), wf_id)
+    }
+
     /// Get node details by ID.
     pub fn get_node_detail(
         &self,
@@ -243,6 +251,78 @@ impl Tasker {
             box_rect: crate::common::Rect::from(result_box),
             success: success != 0,
             detail: serde_json::from_str(detail.as_str()).unwrap_or(serde_json::Value::Null),
+        }))
+    }
+
+    pub(crate) fn fetch_wait_freezes_detail(
+        handle: *mut sys::MaaTasker,
+        wf_id: crate::common::MaaId,
+    ) -> MaaResult<Option<crate::common::WaitFreezesDetail>> {
+        let name = crate::buffer::MaaStringBuffer::new()?;
+        let phase = crate::buffer::MaaStringBuffer::new()?;
+        let mut success = 0;
+        let mut elapsed_ms: sys::MaaSize = 0;
+        let mut reco_id_list_size: sys::MaaSize = 0;
+        let mut roi = sys::MaaRect {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+        };
+
+        let ret = unsafe {
+            sys::MaaTaskerGetWaitFreezesDetail(
+                handle,
+                wf_id,
+                name.raw(),
+                phase.raw(),
+                &mut success,
+                &mut elapsed_ms,
+                std::ptr::null_mut(),
+                &mut reco_id_list_size,
+                &mut roi,
+            )
+        };
+
+        if ret == 0 {
+            return Ok(None);
+        }
+
+        let mut reco_id_list = vec![0; reco_id_list_size as usize];
+        let reco_id_list_ptr = if reco_id_list.is_empty() {
+            std::ptr::null_mut()
+        } else {
+            reco_id_list.as_mut_ptr()
+        };
+
+        let ret = unsafe {
+            sys::MaaTaskerGetWaitFreezesDetail(
+                handle,
+                wf_id,
+                name.raw(),
+                phase.raw(),
+                &mut success,
+                &mut elapsed_ms,
+                reco_id_list_ptr,
+                &mut reco_id_list_size,
+                &mut roi,
+            )
+        };
+
+        if ret == 0 {
+            return Ok(None);
+        }
+
+        reco_id_list.truncate(reco_id_list_size as usize);
+
+        Ok(Some(crate::common::WaitFreezesDetail {
+            wf_id,
+            name: name.as_str().to_string(),
+            phase: phase.as_str().to_string(),
+            success: success != 0,
+            elapsed_ms,
+            reco_id_list,
+            roi: crate::common::Rect::from(roi),
         }))
     }
 

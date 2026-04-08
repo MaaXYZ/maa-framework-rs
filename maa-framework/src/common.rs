@@ -504,6 +504,18 @@ pub struct ActionDetail {
     pub detail: serde_json::Value,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct WaitFreezesDetail {
+    pub wf_id: MaaId,
+    pub name: String,
+    pub phase: String,
+    pub success: bool,
+    pub elapsed_ms: u64,
+    #[serde(default)]
+    pub reco_id_list: Vec<MaaId>,
+    pub roi: Rect,
+}
+
 impl ActionDetail {
     pub fn as_click_result(&self) -> Option<ClickActionResult> {
         serde_json::from_value(self.detail.clone()).ok()

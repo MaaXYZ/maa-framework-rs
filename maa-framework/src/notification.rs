@@ -151,6 +151,33 @@ pub struct NodeNextListDetail {
     pub focus: Value,
 }
 
+/// Node wait-freezes event detail.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NodeWaitFreezesDetail {
+    /// Task ID
+    pub task_id: i64,
+    /// Wait-freezes ID
+    pub wf_id: i64,
+    /// Node name
+    pub name: String,
+    /// Phase name
+    pub phase: String,
+    /// ROI
+    pub roi: crate::common::Rect,
+    /// Wait-freezes parameters
+    #[serde(default)]
+    pub param: Value,
+    /// Related recognition IDs
+    #[serde(default)]
+    pub reco_ids: Vec<i64>,
+    /// Elapsed time in ms
+    #[serde(default)]
+    pub elapsed: Option<u64>,
+    /// Focus configuration
+    #[serde(default)]
+    pub focus: Value,
+}
+
 /// Node recognition event detail.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NodeRecognitionDetail {
@@ -229,6 +256,11 @@ pub mod msg {
     pub const NODE_ACTION_SUCCEEDED: &str = "Node.Action.Succeeded";
     pub const NODE_ACTION_FAILED: &str = "Node.Action.Failed";
 
+    // Node wait freezes events
+    pub const NODE_WAIT_FREEZES_STARTING: &str = "Node.WaitFreezes.Starting";
+    pub const NODE_WAIT_FREEZES_SUCCEEDED: &str = "Node.WaitFreezes.Succeeded";
+    pub const NODE_WAIT_FREEZES_FAILED: &str = "Node.WaitFreezes.Failed";
+
     // Node next list events
     pub const NODE_NEXT_LIST_STARTING: &str = "Node.NextList.Starting";
     pub const NODE_NEXT_LIST_SUCCEEDED: &str = "Node.NextList.Succeeded";
@@ -280,6 +312,11 @@ pub fn parse_node_next_list(details: &str) -> Option<NodeNextListDetail> {
     serde_json::from_str(details).ok()
 }
 
+/// Parse node wait-freezes event detail from JSON.
+pub fn parse_node_wait_freezes(details: &str) -> Option<NodeWaitFreezesDetail> {
+    serde_json::from_str(details).ok()
+}
+
 /// Parse node recognition event detail from JSON.
 pub fn parse_node_recognition(details: &str) -> Option<NodeRecognitionDetail> {
     serde_json::from_str(details).ok()
@@ -303,6 +340,7 @@ pub enum ContextEvent {
     NodeNextList(NotificationType, NodeNextListDetail),
     NodeRecognition(NotificationType, NodeRecognitionDetail),
     NodeAction(NotificationType, NodeActionDetail),
+    NodeWaitFreezes(NotificationType, NodeWaitFreezesDetail),
     NodePipelineNode(NotificationType, NodePipelineNodeDetail),
     NodeRecognitionNode(NotificationType, NodePipelineNodeDetail),
     NodeActionNode(NotificationType, NodePipelineNodeDetail),
@@ -329,6 +367,11 @@ impl ContextEvent {
         if msg.starts_with("Node.Action.") {
             let detail = parse_node_action(details)?;
             return Some(ContextEvent::NodeAction(noti_type, detail));
+        }
+
+        if msg.starts_with("Node.WaitFreezes") {
+            let detail = parse_node_wait_freezes(details)?;
+            return Some(ContextEvent::NodeWaitFreezes(noti_type, detail));
         }
 
         if msg.starts_with("Node.PipelineNode") {
@@ -392,6 +435,9 @@ pub trait ContextEventHandler: Send + Sync {
 
     /// Called when a node action event occurs.
     fn on_node_action(&self, _noti_type: NotificationType, _detail: NodeActionDetail) {}
+
+    /// Called when a node wait-freezes event occurs.
+    fn on_node_wait_freezes(&self, _noti_type: NotificationType, _detail: NodeWaitFreezesDetail) {}
 
     /// Called when a node pipeline node event occurs.
     fn on_node_pipeline_node(&self, _noti_type: NotificationType, _detail: NodePipelineNodeDetail) {
@@ -472,6 +518,14 @@ pub enum MaaEvent {
     NodeActionSucceeded(NodeActionDetail),
     /// Triggered if a node action fails.
     NodeActionFailed(NodeActionDetail),
+
+    // --- Node Wait Freezes Events ---
+    /// Triggered when wait-freezes processing starts.
+    NodeWaitFreezesStarting(NodeWaitFreezesDetail),
+    /// Triggered when wait-freezes processing succeeds.
+    NodeWaitFreezesSucceeded(NodeWaitFreezesDetail),
+    /// Triggered when wait-freezes processing fails.
+    NodeWaitFreezesFailed(NodeWaitFreezesDetail),
 
     // --- Node Next List Events ---
     /// Triggered when processing the "next" list for a node.
@@ -677,6 +731,32 @@ impl MaaEvent {
                 },
             },
 
+            // Node Wait Freezes
+            msg::NODE_WAIT_FREEZES_STARTING => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodeWaitFreezesStarting(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::NODE_WAIT_FREEZES_SUCCEEDED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodeWaitFreezesSucceeded(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+            msg::NODE_WAIT_FREEZES_FAILED => match serde_json::from_str(details) {
+                Ok(d) => MaaEvent::NodeWaitFreezesFailed(d),
+                Err(e) => MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                },
+            },
+
             // Node Next List
             msg::NODE_NEXT_LIST_STARTING => match serde_json::from_str(details) {
                 Ok(d) => MaaEvent::NodeNextListStarting(d),
@@ -773,6 +853,29 @@ mod tests {
 
     #[test]
     fn test_context_event_parsing_logic() {
+        let msg_wf = "Node.WaitFreezes.Succeeded";
+        let detail_wf = json!({
+            "task_id": 1,
+            "wf_id": 10,
+            "name": "WF",
+            "phase": "pre",
+            "roi": [1, 2, 3, 4],
+            "param": {},
+            "reco_ids": [100, 101],
+            "elapsed": 233,
+            "focus": null
+        }).to_string();
+
+        if let Some(ContextEvent::NodeWaitFreezes(t, d)) =
+            ContextEvent::from_notification(msg_wf, &detail_wf)
+        {
+            assert_eq!(t, NotificationType::Succeeded);
+            assert_eq!(d.wf_id, 10);
+            assert_eq!(d.reco_ids, vec![100, 101]);
+            assert_eq!(d.elapsed, Some(233));
+        } else {
+            panic!("Node.WaitFreezes parse failed");
+        }
         let msg_reco = "Node.Recognition.Succeeded";
         let detail_reco =
             json!({ "task_id": 1, "reco_id": 100, "name": "R", "focus": null, "anchor": "A1" }).to_string();
