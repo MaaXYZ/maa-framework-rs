@@ -649,6 +649,27 @@ impl Controller {
         common::check_bool(ret)
     }
 
+    /// Sets the interpolation method used when resizing screenshots.
+    ///
+    /// Values correspond to OpenCV interpolation flags:
+    /// 0 = INTER_NEAREST
+    /// 1 = INTER_LINEAR
+    /// 2 = INTER_CUBIC
+    /// 3 = INTER_AREA
+    /// 4 = INTER_LANCZOS4
+    pub fn set_screenshot_resize_method(&self, method: i32) -> MaaResult<()> {
+        let mut val = method;
+        let ret = unsafe {
+            sys::MaaControllerSetOption(
+                self.inner.handle.as_ptr(),
+                sys::MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotResizeMethod as i32,
+                &mut val as *mut _ as *mut c_void,
+                std::mem::size_of::<i32>() as u64,
+            )
+        };
+        common::check_bool(ret)
+    }
+
     /// Sets whether to enable mouse-lock-follow mode.
     ///
     /// For Win32 controllers, useful for TPS/FPS games that lock the mouse

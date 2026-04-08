@@ -781,6 +781,9 @@ fn test_controller_screencap() {
     controller
         .set_screenshot_use_raw_size(false)
         .expect("set_screenshot_use_raw_size failed");
+    controller
+        .set_screenshot_resize_method(3)
+        .expect("set_screenshot_resize_method failed");
     println!("  screenshot options set: OK");
 
     // Test screencap
