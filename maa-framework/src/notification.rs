@@ -163,6 +163,8 @@ pub struct NodeRecognitionDetail {
     /// Focus configuration
     #[serde(default)]
     pub focus: Value,
+    /// Anchor name
+    pub anchor: Option<String>,
 }
 
 /// Node action event detail.
@@ -773,12 +775,13 @@ mod tests {
     fn test_context_event_parsing_logic() {
         let msg_reco = "Node.Recognition.Succeeded";
         let detail_reco =
-            json!({ "task_id": 1, "reco_id": 100, "name": "R", "focus": null }).to_string();
+            json!({ "task_id": 1, "reco_id": 100, "name": "R", "focus": null, "anchor": "A1" }).to_string();
 
-        if let Some(ContextEvent::NodeRecognition(t, _)) =
+        if let Some(ContextEvent::NodeRecognition(t, d)) =
             ContextEvent::from_notification(msg_reco, &detail_reco)
         {
             assert_eq!(t, NotificationType::Succeeded);
+            assert_eq!(d.anchor.as_deref(), Some("A1"));
         } else {
             panic!("Node.Recognition parse failed");
         }
