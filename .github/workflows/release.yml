@@ -97,6 +97,7 @@ jobs:
 
       - name: Generate Changelog
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}
         run: git-cliff --config .github/cliff.toml --latest --strip header > CHANGELOG.md
 
