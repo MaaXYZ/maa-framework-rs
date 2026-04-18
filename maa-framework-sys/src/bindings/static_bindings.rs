@@ -690,9 +690,10 @@ unsafe extern "C" {
     ) -> *mut MaaController;
 }
 unsafe extern "C" {
-    #[doc = " @brief Create a wlroots controller for Linux.\n\n @param wlr_socket_path The wayland socket path (e.g., \"/run/user/1000/wayland-0\").\n @return The controller handle, or nullptr on failure.\n\n @note This controller is designed for wlroots on Linux."]
+    #[doc = " @brief Create a wlroots controller for Linux.\n\n @param wlr_socket_path The wayland socket path (e.g., \"/run/user/1000/wayland-0\").\n @param use_win32_vk_code If true, key codes passed to click_key / key_down / key_up are\n        interpreted as Win32 Virtual-Key codes (VK_*) and translated to Linux evdev codes\n        internally. If false, key codes are passed through as raw evdev codes.\n @return The controller handle, or nullptr on failure.\n\n @note This controller is designed for wlroots on Linux."]
     pub fn MaaWlRootsControllerCreate(
         wlr_socket_path: *const ::std::os::raw::c_char,
+        use_win32_vk_code: MaaBool,
     ) -> *mut MaaController;
 }
 unsafe extern "C" {

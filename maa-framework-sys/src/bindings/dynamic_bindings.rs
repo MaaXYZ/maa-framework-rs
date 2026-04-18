@@ -887,7 +887,10 @@ pub struct MaaFramework {
         ::libloading::Error,
     >,
     pub MaaWlRootsControllerCreate: Result<
-        unsafe extern "C" fn(wlr_socket_path: *const ::std::os::raw::c_char) -> *mut MaaController,
+        unsafe extern "C" fn(
+            wlr_socket_path: *const ::std::os::raw::c_char,
+            use_win32_vk_code: MaaBool,
+        ) -> *mut MaaController,
         ::libloading::Error,
     >,
     pub MaaGamepadControllerCreate: Result<
@@ -3115,16 +3118,19 @@ impl MaaFramework {
                 .expect("Expected function, got error."))(address, uuid)
         }
     }
-    #[doc = " @brief Create a wlroots controller for Linux.\n\n @param wlr_socket_path The wayland socket path (e.g., \"/run/user/1000/wayland-0\").\n @return The controller handle, or nullptr on failure.\n\n @note This controller is designed for wlroots on Linux."]
+    #[doc = " @brief Create a wlroots controller for Linux.\n\n @param wlr_socket_path The wayland socket path (e.g., \"/run/user/1000/wayland-0\").\n @param use_win32_vk_code If true, key codes passed to click_key / key_down / key_up are\n        interpreted as Win32 Virtual-Key codes (VK_*) and translated to Linux evdev codes\n        internally. If false, key codes are passed through as raw evdev codes.\n @return The controller handle, or nullptr on failure.\n\n @note This controller is designed for wlroots on Linux."]
     pub unsafe fn MaaWlRootsControllerCreate(
         &self,
         wlr_socket_path: *const ::std::os::raw::c_char,
+        use_win32_vk_code: MaaBool,
     ) -> *mut MaaController {
         unsafe {
             (self
                 .MaaWlRootsControllerCreate
                 .as_ref()
-                .expect("Expected function, got error."))(wlr_socket_path)
+                .expect("Expected function, got error."))(
+                wlr_socket_path, use_win32_vk_code
+            )
         }
     }
     #[doc = " @brief Create a virtual gamepad controller for Windows.\n\n @param hWnd Window handle for screencap (optional, can be nullptr if screencap not needed).\n @param gamepad_type Type of virtual gamepad (MaaGamepadType_Xbox360 or MaaGamepadType_DualShock4).\n @param screencap_method Win32 screencap method to use. Ignored if hWnd is nullptr.\n @return The controller handle, or nullptr on failure.\n\n @note Requires ViGEm Bus Driver to be installed on the system.\n @note For gamepad control, use:\n       - click_key/key_down/key_up: For digital buttons (A, B, X, Y, LB, RB, etc.)\n         See MaaGamepadButton_* constants for available buttons.\n       - touch_down/touch_move/touch_up: For analog inputs (sticks and triggers)\n         - contact 0 (MaaGamepadTouch_LeftStick): Left stick (x: -32768~32767, y: -32768~32767)\n         - contact 1 (MaaGamepadTouch_RightStick): Right stick (x: -32768~32767, y: -32768~32767)\n         - contact 2 (MaaGamepadTouch_LeftTrigger): Left trigger (pressure: 0~255, x/y ignored)\n         - contact 3 (MaaGamepadTouch_RightTrigger): Right trigger (pressure: 0~255, x/y ignored)\n @note click and swipe are not directly supported for gamepad.\n @note input_text, start_app, stop_app, scroll are not supported.\n @see MaaGamepadButton, MaaGamepadTouch, MaaGamepadType"]
