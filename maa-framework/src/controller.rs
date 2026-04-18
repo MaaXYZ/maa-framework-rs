@@ -200,8 +200,23 @@ impl Controller {
     /// # Arguments
     /// * `wlr_socket_path` - Wayland socket path
     pub fn new_wlroots(wlr_socket_path: &str) -> MaaResult<Self> {
+        Self::new_wlroots_with_vk_code(wlr_socket_path, false)
+    }
+
+    /// Create a new WlRoots controller for apps running in wlroots compositor on Linux.
+    ///
+    /// # Arguments
+    /// * `wlr_socket_path` - Wayland socket path
+    /// * `use_win32_vk_code` - Interpret key codes as Win32 Virtual-Key codes and translate
+    ///   them to Linux evdev codes internally when set to `true`
+    pub fn new_wlroots_with_vk_code(
+        wlr_socket_path: &str,
+        use_win32_vk_code: bool,
+    ) -> MaaResult<Self> {
         let c_path = CString::new(wlr_socket_path)?;
-        let handle = unsafe { sys::MaaWlRootsControllerCreate(c_path.as_ptr()) };
+        let handle = unsafe {
+            sys::MaaWlRootsControllerCreate(c_path.as_ptr(), use_win32_vk_code as sys::MaaBool)
+        };
 
         Self::from_handle(handle)
     }
