@@ -1,6 +1,6 @@
 [package]
 name = "maa-framework-sys"
-version = "5.10.2"
+version = "5.10.3"
 authors.workspace = true
 edition.workspace = true
 description = "Low-level Rust bindings for MaaFramework"
