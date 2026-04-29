@@ -835,6 +835,102 @@ fn test_controller_sink_operations() {
     println!("  PASS: controller sink operations");
 }
 
+#[test]
+fn test_controller_background_managed_keys() {
+    println!("\n=== test_controller_background_managed_keys ===");
+
+    let _ = init_test_env();
+
+    let test_res_dir = get_test_resources_dir();
+    let screenshot_dir = test_res_dir.join("Screenshot");
+
+    if !screenshot_dir.exists() {
+        panic!(
+            "Screenshot directory not found at {:?}. Run: git submodule update --init",
+            screenshot_dir
+        );
+    }
+
+    // Test with DbgController (non-Win32, should fail)
+    let controller = Controller::new_dbg(screenshot_dir.to_str().unwrap())
+        .expect("Failed to create dbg controller");
+    let result = controller.set_background_managed_keys(&[0x57, 0x41]);
+    println!("  dbg_controller set_background_managed_keys: {:?}", result);
+    assert!(
+        result.is_err(),
+        "DbgController should not support BackgroundManagedKeys"
+    );
+
+    // Test with Win32 controller if available
+    if cfg!(all(target_os = "windows", feature = "win32")) {
+        match Toolkit::find_desktop_windows() {
+            Ok(desktop_windows) if !desktop_windows.is_empty() => {
+                let mut win32_ctrl = None;
+                for window in desktop_windows {
+                    if let Ok(ctrl) = Controller::new_win32(
+                        window.hwnd as *mut std::os::raw::c_void,
+                        maa_framework::sys::MaaWin32ScreencapMethod_GDI
+                            as maa_framework::sys::MaaWin32ScreencapMethod,
+                        maa_framework::sys::MaaWin32InputMethod_Seize
+                            as maa_framework::sys::MaaWin32InputMethod,
+                        maa_framework::sys::MaaWin32InputMethod_Seize
+                            as maa_framework::sys::MaaWin32InputMethod,
+                    ) {
+                        win32_ctrl = Some(ctrl);
+                        break;
+                    }
+                }
+
+                if let Some(ctrl) = win32_ctrl {
+                    // Set option before connection (should succeed)
+                    let ret = ctrl.set_background_managed_keys(&[0x57, 0x41]);
+                    println!(
+                        "  win32_controller set_background_managed_keys (before connection): {:?}",
+                        ret
+                    );
+                    assert!(
+                        ret.is_ok(),
+                        "Win32Controller should support BackgroundManagedKeys before connection"
+                    );
+
+                    // After connection, setting non-empty array should succeed
+                    let conn_id = ctrl.post_connection().expect("Failed to post connection");
+                    ctrl.wait(conn_id);
+                    let ret_post = ctrl.set_background_managed_keys(&[0x57, 0x41]);
+                    println!(
+                        "  win32_controller set_background_managed_keys (after connection): {:?}",
+                        ret_post
+                    );
+                    assert!(
+                        ret_post.is_ok(),
+                        "Win32Controller should support BackgroundManagedKeys after connection"
+                    );
+
+                    // Empty array should clear managed keys
+                    let ret_clear = ctrl.set_background_managed_keys(&[]);
+                    println!(
+                        "  win32_controller set_background_managed_keys (clear with empty): {:?}",
+                        ret_clear
+                    );
+                    assert!(
+                        ret_clear.is_ok(),
+                        "Win32Controller should support clearing BackgroundManagedKeys with empty array"
+                    );
+                } else {
+                    println!("  SKIP: failed to create Win32 controller");
+                }
+            }
+            _ => {
+                println!("  SKIP: no desktop windows found for Win32 test");
+            }
+        }
+    } else {
+        println!("  SKIP: Win32 test requires Windows target with win32 feature");
+    }
+
+    println!("  PASS: background managed keys API");
+}
+
 // ============================================================================
 // Tasker API Tests
 // ============================================================================

@@ -702,6 +702,25 @@ impl Controller {
         common::check_bool(ret)
     }
 
+    /// Configure background managed key domain for Win32 controllers.
+    ///
+    /// Must be set before connection. After setting, matching ClickKey / LongPressKey / KeyDown / KeyUp
+    /// operations automatically route through the background guardian path.
+    /// Only supported by Win32 controllers; other controllers will fail.
+    ///
+    /// Pass an empty slice to clear managed keys.
+    pub fn set_background_managed_keys(&self, keys: &[i32]) -> MaaResult<()> {
+        let ret = unsafe {
+            sys::MaaControllerSetOption(
+                self.inner.handle.as_ptr(),
+                sys::MaaCtrlOptionEnum_MaaCtrlOption_BackgroundManagedKeys as i32,
+                keys.as_ptr() as *mut c_void,
+                std::mem::size_of_val(keys) as u64,
+            )
+        };
+        common::check_bool(ret)
+    }
+
     // === New controller types ===
 
     pub fn new_dbg(read_path: &str) -> MaaResult<Self> {
