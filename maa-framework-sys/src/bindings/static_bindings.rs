@@ -205,6 +205,8 @@ pub const MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotUseRawSize: MaaCtrlOptionEnu
 pub const MaaCtrlOptionEnum_MaaCtrlOption_MouseLockFollow: MaaCtrlOptionEnum = 4;
 #[doc = " Set the interpolation method used when resizing screenshots.\n Value corresponds to cv::InterpolationFlags:\n   INTER_NEAREST=0, INTER_LINEAR=1, INTER_CUBIC=2, INTER_AREA=3, INTER_LANCZOS4=4\n Default is INTER_AREA (3).\n\n value: int, eg: 3; val_size: sizeof(int)"]
 pub const MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotResizeMethod: MaaCtrlOptionEnum = 6;
+#[doc = " Configure background managed key domain for Win32 controllers.\n Must be set before connection. After setting, matching ClickKey / LongPressKey / KeyDown / KeyUp\n operations automatically route through the background guardian path.\n Only supported by Win32 controllers; other controllers will fail.\n\n value: int32_t array of virtual key codes; val_size: sizeof(int32_t) * count"]
+pub const MaaCtrlOptionEnum_MaaCtrlOption_BackgroundManagedKeys: MaaCtrlOptionEnum = 7;
 #[doc = " @brief Option keys for controller instance options. See MaaControllerSetOption().\n"]
 pub type MaaCtrlOptionEnum = ::std::os::raw::c_uint;
 pub type MaaTaskerOption = MaaOption;
