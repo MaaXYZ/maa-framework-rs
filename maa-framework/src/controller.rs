@@ -221,6 +221,29 @@ impl Controller {
         Self::from_handle(handle)
     }
 
+    /// Create a new KWin (pure Wayland) controller for Linux.
+    ///
+    /// Input is simulated via `/dev/uinput` (kernel-level virtual touchscreen) and
+    /// screencap is implemented via PipeWire / xdg-desktop-portal (KDE/KWin),
+    /// capturing the foreground monitor in fullscreen mode.
+    ///
+    /// # Arguments
+    /// * `device_node` - The uinput device node path (e.g. `/dev/uinput`)
+    /// * `screen_width` - The screen width in pixels
+    /// * `screen_height` - The screen height in pixels
+    ///
+    /// # Notes
+    /// * Requires user authorization via the screen sharing dialog (xdg-desktop-portal).
+    /// * Requires write permission to `/dev/uinput` (typically via the `input` group).
+    /// * Only single touch is supported (contact must be `0`).
+    pub fn new_kwin(device_node: &str, screen_width: i32, screen_height: i32) -> MaaResult<Self> {
+        let c_node = CString::new(device_node)?;
+        let handle =
+            unsafe { sys::MaaKWinControllerCreate(c_node.as_ptr(), screen_width, screen_height) };
+
+        Self::from_handle(handle)
+    }
+
     /// Create a custom controller with user-defined callbacks.
     #[cfg(feature = "custom")]
     pub fn new_custom<T: crate::custom_controller::CustomControllerCallback + 'static>(
