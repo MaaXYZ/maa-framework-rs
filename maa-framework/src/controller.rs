@@ -236,6 +236,10 @@ impl Controller {
     /// * Requires user authorization via the screen sharing dialog (xdg-desktop-portal).
     /// * Requires write permission to `/dev/uinput` (typically via the `input` group).
     /// * Only single touch is supported (contact must be `0`).
+    ///
+    /// Only available on Linux: the underlying `MaaKWinControllerCreate` symbol is
+    /// not exported by the Windows/macOS builds of MaaFramework.
+    #[cfg(target_os = "linux")]
     pub fn new_kwin(device_node: &str, screen_width: i32, screen_height: i32) -> MaaResult<Self> {
         let c_node = CString::new(device_node)?;
         let handle =
