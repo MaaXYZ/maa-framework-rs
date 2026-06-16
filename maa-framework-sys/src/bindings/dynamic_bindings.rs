@@ -895,6 +895,14 @@ pub struct MaaFramework {
         ) -> *mut MaaController,
         ::libloading::Error,
     >,
+    pub MaaKWinControllerCreate: Result<
+        unsafe extern "C" fn(
+            device_node: *const ::std::os::raw::c_char,
+            screen_width: ::std::os::raw::c_int,
+            screen_height: ::std::os::raw::c_int,
+        ) -> *mut MaaController,
+        ::libloading::Error,
+    >,
     pub MaaGamepadControllerCreate: Result<
         unsafe extern "C" fn(
             hWnd: *mut ::std::os::raw::c_void,
@@ -1745,6 +1753,8 @@ impl MaaFramework {
             unsafe { __library.get(b"MaaPlayCoverControllerCreate\0") }.map(|sym| *sym);
         let MaaWlRootsControllerCreate =
             unsafe { __library.get(b"MaaWlRootsControllerCreate\0") }.map(|sym| *sym);
+        let MaaKWinControllerCreate =
+            unsafe { __library.get(b"MaaKWinControllerCreate\0") }.map(|sym| *sym);
         let MaaGamepadControllerCreate =
             unsafe { __library.get(b"MaaGamepadControllerCreate\0") }.map(|sym| *sym);
         let MaaControllerDestroy =
@@ -2102,6 +2112,7 @@ impl MaaFramework {
             MaaRecordControllerCreate,
             MaaPlayCoverControllerCreate,
             MaaWlRootsControllerCreate,
+            MaaKWinControllerCreate,
             MaaGamepadControllerCreate,
             MaaControllerDestroy,
             MaaControllerAddSink,
@@ -3132,6 +3143,22 @@ impl MaaFramework {
                 .as_ref()
                 .expect("Expected function, got error."))(
                 wlr_socket_path, use_win32_vk_code
+            )
+        }
+    }
+    #[doc = " @brief Create a KWin (pure Wayland) controller for Linux.\n\n @param device_node The uinput device node path (e.g., \"/dev/uinput\").\n @param screen_width The screen width in pixels.\n @param screen_height The screen height in pixels.\n @return The controller handle, or nullptr on failure.\n\n @note This controller is designed for KWin (pure Wayland) on Linux.\n @note Input is simulated via /dev/uinput (kernel-level virtual touchscreen).\n @note Screencap is implemented via PipeWire / xdg-desktop-portal (KDE/KWin).\n       Captures the foreground monitor in fullscreen mode.\n @note Requires user authorization via the screen sharing dialog (xdg-desktop-portal).\n @note Requires write permission to /dev/uinput (typically via the \"input\" group).\n @note Only single touch is supported (contact must be 0)."]
+    pub unsafe fn MaaKWinControllerCreate(
+        &self,
+        device_node: *const ::std::os::raw::c_char,
+        screen_width: ::std::os::raw::c_int,
+        screen_height: ::std::os::raw::c_int,
+    ) -> *mut MaaController {
+        unsafe {
+            (self
+                .MaaKWinControllerCreate
+                .as_ref()
+                .expect("Expected function, got error."))(
+                device_node, screen_width, screen_height
             )
         }
     }

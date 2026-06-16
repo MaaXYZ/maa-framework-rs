@@ -68,6 +68,7 @@ shim ! (MaaReplayControllerCreate (recording_path : * const :: std :: os :: raw 
 shim ! (MaaRecordControllerCreate (inner : * mut MaaController , recording_path : * const :: std :: os :: raw :: c_char) -> * mut MaaController) ;
 shim ! (MaaPlayCoverControllerCreate (address : * const :: std :: os :: raw :: c_char , uuid : * const :: std :: os :: raw :: c_char) -> * mut MaaController) ;
 shim ! (MaaWlRootsControllerCreate (wlr_socket_path : * const :: std :: os :: raw :: c_char , use_win32_vk_code : MaaBool) -> * mut MaaController) ;
+shim ! (MaaKWinControllerCreate (device_node : * const :: std :: os :: raw :: c_char , screen_width : :: std :: os :: raw :: c_int , screen_height : :: std :: os :: raw :: c_int) -> * mut MaaController) ;
 shim ! (MaaGamepadControllerCreate (hWnd : * mut :: std :: os :: raw :: c_void , gamepad_type : MaaGamepadType , screencap_method : MaaWin32ScreencapMethod) -> * mut MaaController) ;
 shim ! (MaaControllerDestroy (ctrl : * mut MaaController) -> ()) ;
 shim ! (MaaControllerAddSink (ctrl : * mut MaaController , sink : MaaEventCallback , trans_arg : * mut :: std :: os :: raw :: c_void) -> MaaSinkId) ;
