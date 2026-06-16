@@ -153,7 +153,7 @@ jobs:
       - name: Install dep
         run: |
             sudo apt-get update -y
-            sudo apt-get install -y ninja-build cmake ccache libclang-dev
+            sudo apt-get install -y ninja-build cmake ccache libclang-dev libpipewire-0.3-dev libdbus-1-dev
 
       - name: Checkout self
         uses: actions/checkout@v4
