@@ -699,6 +699,14 @@ unsafe extern "C" {
     ) -> *mut MaaController;
 }
 unsafe extern "C" {
+    #[doc = " @brief Create a KWin (pure Wayland) controller for Linux.\n\n @param device_node The uinput device node path (e.g., \"/dev/uinput\").\n @param screen_width The screen width in pixels.\n @param screen_height The screen height in pixels.\n @return The controller handle, or nullptr on failure.\n\n @note This controller is designed for KWin (pure Wayland) on Linux.\n @note Input is simulated via /dev/uinput (kernel-level virtual touchscreen).\n @note Screencap is implemented via PipeWire / xdg-desktop-portal (KDE/KWin).\n       Captures the foreground monitor in fullscreen mode.\n @note Requires user authorization via the screen sharing dialog (xdg-desktop-portal).\n @note Requires write permission to /dev/uinput (typically via the \"input\" group).\n @note Only single touch is supported (contact must be 0)."]
+    pub fn MaaKWinControllerCreate(
+        device_node: *const ::std::os::raw::c_char,
+        screen_width: ::std::os::raw::c_int,
+        screen_height: ::std::os::raw::c_int,
+    ) -> *mut MaaController;
+}
+unsafe extern "C" {
     #[doc = " @brief Create a virtual gamepad controller for Windows.\n\n @param hWnd Window handle for screencap (optional, can be nullptr if screencap not needed).\n @param gamepad_type Type of virtual gamepad (MaaGamepadType_Xbox360 or MaaGamepadType_DualShock4).\n @param screencap_method Win32 screencap method to use. Ignored if hWnd is nullptr.\n @return The controller handle, or nullptr on failure.\n\n @note Requires ViGEm Bus Driver to be installed on the system.\n @note For gamepad control, use:\n       - click_key/key_down/key_up: For digital buttons (A, B, X, Y, LB, RB, etc.)\n         See MaaGamepadButton_* constants for available buttons.\n       - touch_down/touch_move/touch_up: For analog inputs (sticks and triggers)\n         - contact 0 (MaaGamepadTouch_LeftStick): Left stick (x: -32768~32767, y: -32768~32767)\n         - contact 1 (MaaGamepadTouch_RightStick): Right stick (x: -32768~32767, y: -32768~32767)\n         - contact 2 (MaaGamepadTouch_LeftTrigger): Left trigger (pressure: 0~255, x/y ignored)\n         - contact 3 (MaaGamepadTouch_RightTrigger): Right trigger (pressure: 0~255, x/y ignored)\n @note click and swipe are not directly supported for gamepad.\n @note input_text, start_app, stop_app, scroll are not supported.\n @see MaaGamepadButton, MaaGamepadTouch, MaaGamepadType"]
     pub fn MaaGamepadControllerCreate(
         hWnd: *mut ::std::os::raw::c_void,
