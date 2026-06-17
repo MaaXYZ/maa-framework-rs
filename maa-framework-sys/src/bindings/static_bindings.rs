@@ -699,11 +699,12 @@ unsafe extern "C" {
     ) -> *mut MaaController;
 }
 unsafe extern "C" {
-    #[doc = " @brief Create a KWin (pure Wayland) controller for Linux.\n\n @param device_node The uinput device node path (e.g., \"/dev/uinput\").\n @param screen_width The screen width in pixels.\n @param screen_height The screen height in pixels.\n @return The controller handle, or nullptr on failure.\n\n @note This controller is designed for KWin (pure Wayland) on Linux.\n @note Input is simulated via /dev/uinput (kernel-level virtual touchscreen).\n @note Screencap is implemented via PipeWire / xdg-desktop-portal (KDE/KWin).\n       Captures the foreground monitor in fullscreen mode.\n @note Requires user authorization via the screen sharing dialog (xdg-desktop-portal).\n @note Requires write permission to /dev/uinput (typically via the \"input\" group).\n @note Only single touch is supported (contact must be 0)."]
+    #[doc = " @brief Create a KWin (pure Wayland) controller for Linux.\n\n @param device_node The uinput device node path (e.g., \"/dev/uinput\").\n @param screen_width The screen width in pixels.\n @param screen_height The screen height in pixels.\n @param use_win32_vk_code If true, key codes passed to click_key / key_down / key_up are\n        interpreted as Win32 Virtual-Key codes (VK_*) and translated to Linux evdev codes\n        internally. If false, key codes are passed through as raw evdev codes.\n @return The controller handle, or nullptr on failure.\n\n @note This controller is designed for KWin (pure Wayland) on Linux.\n @note Input is simulated via /dev/uinput (kernel-level virtual touchscreen).\n @note Screencap is implemented via PipeWire / xdg-desktop-portal (KDE/KWin).\n       Captures the foreground monitor in fullscreen mode.\n @note Requires user authorization via the screen sharing dialog (xdg-desktop-portal).\n @note Requires write permission to /dev/uinput (typically via the \"input\" group).\n @note Only single touch is supported (contact must be 0)."]
     pub fn MaaKWinControllerCreate(
         device_node: *const ::std::os::raw::c_char,
         screen_width: ::std::os::raw::c_int,
         screen_height: ::std::os::raw::c_int,
+        use_win32_vk_code: MaaBool,
     ) -> *mut MaaController;
 }
 unsafe extern "C" {
