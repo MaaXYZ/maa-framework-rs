@@ -241,9 +241,36 @@ impl Controller {
     /// not exported by the Windows/macOS builds of MaaFramework.
     #[cfg(target_os = "linux")]
     pub fn new_kwin(device_node: &str, screen_width: i32, screen_height: i32) -> MaaResult<Self> {
+        Self::new_kwin_with_vk_code(device_node, screen_width, screen_height, false)
+    }
+
+    /// Create a new KWin (pure Wayland) controller for Linux.
+    ///
+    /// Same as [`new_kwin`](Self::new_kwin), but lets you control how key codes are
+    /// interpreted.
+    ///
+    /// # Arguments
+    /// * `device_node` - The uinput device node path (e.g. `/dev/uinput`)
+    /// * `screen_width` - The screen width in pixels
+    /// * `screen_height` - The screen height in pixels
+    /// * `use_win32_vk_code` - Interpret key codes as Win32 Virtual-Key codes and translate
+    ///   them to Linux evdev codes internally when set to `true`
+    #[cfg(target_os = "linux")]
+    pub fn new_kwin_with_vk_code(
+        device_node: &str,
+        screen_width: i32,
+        screen_height: i32,
+        use_win32_vk_code: bool,
+    ) -> MaaResult<Self> {
         let c_node = CString::new(device_node)?;
-        let handle =
-            unsafe { sys::MaaKWinControllerCreate(c_node.as_ptr(), screen_width, screen_height) };
+        let handle = unsafe {
+            sys::MaaKWinControllerCreate(
+                c_node.as_ptr(),
+                screen_width,
+                screen_height,
+                use_win32_vk_code as sys::MaaBool,
+            )
+        };
 
         Self::from_handle(handle)
     }
