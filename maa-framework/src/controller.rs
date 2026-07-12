@@ -221,11 +221,13 @@ impl Controller {
         Self::from_handle(handle)
     }
 
-    /// Create a new KWin (pure Wayland) controller for Linux.
+    /// Create a new KWin / Linux Wayland controller.
     ///
-    /// Input is simulated via `/dev/uinput` (kernel-level virtual touchscreen) and
-    /// screencap is implemented via PipeWire / xdg-desktop-portal (KDE/KWin),
-    /// capturing the foreground monitor in fullscreen mode.
+    /// Despite its name, this controller works with any Wayland compositor that implements
+    /// the XDG Screencast Portal (e.g. GNOME), provided the kernel supports uinput.
+    ///
+    /// Screencap is provided by PipeWire / xdg-desktop-portal and input is simulated
+    /// through `/dev/uinput`.
     ///
     /// # Arguments
     /// * `device_node` - The uinput device node path (e.g. `/dev/uinput`)
@@ -233,9 +235,9 @@ impl Controller {
     /// * `screen_height` - The screen height in pixels
     ///
     /// # Notes
+    /// * Requires PipeWire 1.0+ and xdg-desktop-portal.
     /// * Requires user authorization via the screen sharing dialog (xdg-desktop-portal).
     /// * Requires write permission to `/dev/uinput` (typically via the `input` group).
-    /// * Only single touch is supported (contact must be `0`).
     ///
     /// Only available on Linux: the underlying `MaaKWinControllerCreate` symbol is
     /// not exported by the Windows/macOS builds of MaaFramework.
@@ -244,7 +246,7 @@ impl Controller {
         Self::new_kwin_with_vk_code(device_node, screen_width, screen_height, false)
     }
 
-    /// Create a new KWin (pure Wayland) controller for Linux.
+    /// Create a new KWin / Linux Wayland controller.
     ///
     /// Same as [`new_kwin`](Self::new_kwin), but lets you control how key codes are
     /// interpreted.
