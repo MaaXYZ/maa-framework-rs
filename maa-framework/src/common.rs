@@ -431,11 +431,15 @@ bitflags::bitflags! {
         const SEND_MESSAGE = 1 << 1;
         const POST_MESSAGE = 1 << 2;
         const LEGACY_EVENT = 1 << 3;
+        /// Deprecated and no longer implemented by MaaFramework.
         const POST_THREAD_MESSAGE = 1 << 4;
         const SEND_MESSAGE_WITH_CURSOR_POS = 1 << 5;
         const POST_MESSAGE_WITH_CURSOR_POS = 1 << 6;
         const SEND_MESSAGE_WITH_WINDOW_POS = 1 << 7;
         const POST_MESSAGE_WITH_WINDOW_POS = 1 << 8;
+        /// Driver-level input injection via the Interception driver. Requires administrator
+        /// rights.
+        const INTERCEPTION = sys::MaaWin32InputMethod_Interception as u64;
     }
 }
 
