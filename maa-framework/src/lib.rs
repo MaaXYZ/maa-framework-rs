@@ -45,7 +45,7 @@
 //! |--------|-------------|
 //! | [`tasker`] | Task execution and pipeline management |
 //! | [`resource`] | Resource loading (images, models, pipelines) |
-//! | [`controller`] | Device control (ADB, Win32, macOS, Android Native, PlayCover, WlRoots) |
+//! | [`controller`] | Device control (ADB, Win32, macOS, Android Native, PlayCover, Linux) |
 //! | [`context`] | Task execution context for custom components |
 //! | [`toolkit`] | Device discovery utilities |
 //! | [`pipeline`] | Pipeline configuration types |
@@ -95,6 +95,9 @@ pub mod util;
 pub use common::AndroidNativeControllerConfig;
 pub use common::AndroidScreenResolution;
 pub use common::ControllerFeature;
+pub use common::LinuxControllerConfig;
+pub use common::LinuxInputMethod;
+pub use common::LinuxScreencapMethod;
 pub use common::MaaStatus;
 pub use error::{MaaError, MaaResult};
 

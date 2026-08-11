@@ -394,6 +394,64 @@ impl Default for AdbInputMethod {
 }
 
 // ============================================================================
+// Linux Controller Methods
+// ============================================================================
+
+bitflags::bitflags! {
+    /// Linux screencap method (select ONE only, no bitwise OR).
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    pub struct LinuxScreencapMethod: u64 {
+        const NONE = sys::MaaLinuxScreencapMethod_None as u64;
+        /// Screencap using the `wlr-screencopy-unstable-v1` protocol.
+        const WLR = sys::MaaLinuxScreencapMethod_Wlr as u64;
+        /// Screencap using PipeWire.
+        const PIPEWIRE = sys::MaaLinuxScreencapMethod_PipeWire as u64;
+    }
+}
+
+bitflags::bitflags! {
+    /// Linux input method (select ONE only, no bitwise OR).
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    pub struct LinuxInputMethod: u64 {
+        const NONE = sys::MaaLinuxInputMethod_None as u64;
+        /// Input using the Wayland virtual keyboard and pointer protocols.
+        const WLR = sys::MaaLinuxInputMethod_Wlr as u64;
+        /// Input using `/dev/uinput`.
+        const UINPUT = sys::MaaLinuxInputMethod_UInput as u64;
+    }
+}
+
+/// Configuration for [`crate::controller::Controller::new_linux`].
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LinuxControllerConfig {
+    /// Screencap method. Use [`LinuxScreencapMethod::bits`] to obtain the value.
+    pub screencap_method: sys::MaaLinuxScreencapMethod,
+    /// Input method. Use [`LinuxInputMethod::bits`] to obtain the value.
+    pub input_method: sys::MaaLinuxInputMethod,
+    /// Wayland socket path required by WLR screencap or input.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wlr_socket_path: Option<String>,
+    /// PipeWire socket file descriptor.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pw_socket_fd: Option<i32>,
+    /// PipeWire node ID.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pw_node_id: Option<u32>,
+    /// PipeWire stream width in pixels.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pw_screen_width: Option<i32>,
+    /// PipeWire stream height in pixels.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pw_screen_height: Option<i32>,
+    /// UInput device path. MaaFramework defaults to `/dev/uinput` when omitted.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub uinput_path: Option<String>,
+    /// Interpret key codes as Win32 virtual-key codes instead of raw evdev codes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub use_win32_vk_code: Option<bool>,
+}
+
+// ============================================================================
 // Win32 Controller Methods
 // ============================================================================
 
@@ -946,7 +1004,10 @@ pub struct CustomRecognitionResult {
 
 #[cfg(test)]
 mod tests {
-    use super::{AndroidNativeControllerConfig, AndroidScreenResolution};
+    use super::{
+        AndroidNativeControllerConfig, AndroidScreenResolution, LinuxControllerConfig,
+        LinuxInputMethod, LinuxScreencapMethod,
+    };
     use serde_json::json;
 
     #[test]
@@ -973,6 +1034,36 @@ mod tests {
                 },
                 "display_id": 1,
                 "force_stop": true
+            })
+        );
+    }
+
+    #[test]
+    fn linux_controller_config_serializes_expected_shape() {
+        let config = LinuxControllerConfig {
+            screencap_method: LinuxScreencapMethod::PIPEWIRE.bits(),
+            input_method: LinuxInputMethod::UINPUT.bits(),
+            wlr_socket_path: None,
+            pw_socket_fd: Some(42),
+            pw_node_id: Some(7),
+            pw_screen_width: Some(1920),
+            pw_screen_height: Some(1080),
+            uinput_path: None,
+            use_win32_vk_code: Some(true),
+        };
+
+        let value = serde_json::to_value(config).unwrap();
+
+        assert_eq!(
+            value,
+            json!({
+                "screencap_method": 4,
+                "input_method": 2,
+                "pw_socket_fd": 42,
+                "pw_node_id": 7,
+                "pw_screen_width": 1920,
+                "pw_screen_height": 1080,
+                "use_win32_vk_code": true
             })
         );
     }

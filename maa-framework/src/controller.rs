@@ -195,10 +195,32 @@ impl Controller {
         Self::from_handle(handle)
     }
 
+    /// Create a new controller for native Linux applications.
+    ///
+    /// The config is serialized to JSON and passed to `MaaLinuxControllerCreate`.
+    /// You can pass either a [`common::LinuxControllerConfig`] value or any other
+    /// serializable type that matches the expected JSON schema.
+    ///
+    /// This controller is only available on Linux.
+    pub fn new_linux<T: Serialize>(config: &T) -> MaaResult<Self> {
+        let config_json = serde_json::to_string(config).map_err(|e| {
+            MaaError::InvalidConfig(format!(
+                "Failed to serialize Linux controller config: {}",
+                e
+            ))
+        })?;
+        let c_config = CString::new(config_json)?;
+        let handle = unsafe { sys::MaaLinuxControllerCreate(c_config.as_ptr()) };
+
+        Self::from_handle(handle)
+    }
+
     /// Create a new WlRoots controller for apps running in wlroots compositor on Linux.
     ///
     /// # Arguments
     /// * `wlr_socket_path` - Wayland socket path
+    #[allow(deprecated)]
+    #[deprecated(note = "Use `Controller::new_linux` instead")]
     pub fn new_wlroots(wlr_socket_path: &str) -> MaaResult<Self> {
         Self::new_wlroots_with_vk_code(wlr_socket_path, false)
     }
@@ -209,6 +231,7 @@ impl Controller {
     /// * `wlr_socket_path` - Wayland socket path
     /// * `use_win32_vk_code` - Interpret key codes as Win32 Virtual-Key codes and translate
     ///   them to Linux evdev codes internally when set to `true`
+    #[deprecated(note = "Use `Controller::new_linux` instead")]
     pub fn new_wlroots_with_vk_code(
         wlr_socket_path: &str,
         use_win32_vk_code: bool,
@@ -242,6 +265,8 @@ impl Controller {
     /// Only available on Linux: the underlying `MaaKWinControllerCreate` symbol is
     /// not exported by the Windows/macOS builds of MaaFramework.
     #[cfg(target_os = "linux")]
+    #[allow(deprecated)]
+    #[deprecated(note = "Use `Controller::new_linux` instead")]
     pub fn new_kwin(device_node: &str, screen_width: i32, screen_height: i32) -> MaaResult<Self> {
         Self::new_kwin_with_vk_code(device_node, screen_width, screen_height, false)
     }
@@ -258,6 +283,7 @@ impl Controller {
     /// * `use_win32_vk_code` - Interpret key codes as Win32 Virtual-Key codes and translate
     ///   them to Linux evdev codes internally when set to `true`
     #[cfg(target_os = "linux")]
+    #[deprecated(note = "Use `Controller::new_linux` instead")]
     pub fn new_kwin_with_vk_code(
         device_node: &str,
         screen_width: i32,
