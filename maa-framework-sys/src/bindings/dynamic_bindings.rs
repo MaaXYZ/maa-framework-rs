@@ -47,6 +47,13 @@ pub const MaaMacOSScreencapMethod_ScreenCaptureKit: u32 = 1;
 pub const MaaMacOSInputMethod_None: u32 = 0;
 pub const MaaMacOSInputMethod_GlobalEvent: u32 = 1;
 pub const MaaMacOSInputMethod_PostToPid: u32 = 2;
+pub const MaaLinuxScreencapMethod_None: u32 = 0;
+pub const MaaLinuxScreencapMethod_Wlr: u32 = 1;
+pub const MaaLinuxScreencapMethod_ExtImage: u32 = 2;
+pub const MaaLinuxScreencapMethod_PipeWire: u32 = 4;
+pub const MaaLinuxInputMethod_None: u32 = 0;
+pub const MaaLinuxInputMethod_Wlr: u32 = 1;
+pub const MaaLinuxInputMethod_UInput: u32 = 2;
 pub const MaaGamepadType_Xbox360: u32 = 0;
 pub const MaaGamepadType_DualShock4: u32 = 1;
 pub const MaaGamepadButton_A: u32 = 4096;
@@ -228,6 +235,10 @@ pub type MaaWin32InputMethod = u64;
 pub type MaaMacOSScreencapMethod = u64;
 #[doc = " @brief macOS input method\n\n Select ONE method only.\n\n | Method          | Description                                    |\n |-----------------|------------------------------------------------|\n | GlobalEvent     | Injects into the global HID event stream via CGEventPost(kCGHIDEventTap), dispatched by the OS to the front window |\n | PostToPid       | Directly send to target process using CGEventPostToPid |"]
 pub type MaaMacOSInputMethod = u64;
+#[doc = " @brief Linux Screencap method\n\n Select ONE method only.\n\n | Method          | Description                                           |\n |-----------------|-------------------------------------------------------|\n | Wlr             | Screencap using `wlr-screencopy-unstable-v1` protocol |\n | PipeWire        | Screencap using PipeWire                              |"]
+pub type MaaLinuxScreencapMethod = u64;
+#[doc = " @brief Linux Input method\n\n Select ONE method only.\n\n | Method          | Description                                                                               |\n |-----------------|-------------------------------------------------------------------------------------------|\n | Wlr             | Input using `virtual-keyboard-unstable-v1` and `wlr-virtual-pointer-unstable-v1` protocol |\n | UInput          | Input using `/dev/uinput`                                                                 |"]
+pub type MaaLinuxInputMethod = u64;
 #[doc = " @brief Virtual gamepad type\n\n Select ONE type only.\n\n | Type          | Description                                    |\n |---------------|------------------------------------------------|\n | Xbox360       | Microsoft Xbox 360 Controller (wired)          |\n | DualShock4    | Sony DualShock 4 Controller (wired)            |"]
 pub type MaaGamepadType = u64;
 #[doc = " @brief Virtual gamepad button codes for click_key/key_down/key_up\n\n Use these values with MaaControllerPostClickKey, MaaControllerPostKeyDown, MaaControllerPostKeyUp.\n Values are based on XUSB (Xbox 360) button flags. DS4 face buttons are mapped to Xbox equivalents.\n\n Xbox 360 buttons:\n\n | Value   | Button              | Description            |\n |---------|---------------------|------------------------|\n | 0x1000  | A                   | A button               |\n | 0x2000  | B                   | B button               |\n | 0x4000  | X                   | X button               |\n | 0x8000  | Y                   | Y button               |\n | 0x0100  | LB (Left Shoulder)  | Left bumper            |\n | 0x0200  | RB (Right Shoulder) | Right bumper           |\n | 0x0040  | L_THUMB             | Left stick click       |\n | 0x0080  | R_THUMB             | Right stick click      |\n | 0x0010  | START               | Start button           |\n | 0x0020  | BACK                | Back button            |\n | 0x0400  | GUIDE               | Guide/Home button      |\n | 0x0001  | DPAD_UP             | D-pad up               |\n | 0x0002  | DPAD_DOWN           | D-pad down             |\n | 0x0004  | DPAD_LEFT           | D-pad left             |\n | 0x0008  | DPAD_RIGHT          | D-pad right            |\n\n DualShock 4 buttons (aliases to Xbox buttons):\n\n | Value   | Button    | Xbox Equivalent | Description               |\n |---------|-----------|-----------------|---------------------------|\n | 0x1000  | CROSS     | A                   | Cross (X) button          |\n | 0x2000  | CIRCLE    | B                   | Circle button             |\n | 0x4000  | SQUARE    | X                   | Square button             |\n | 0x8000  | TRIANGLE  | Y                   | Triangle button           |\n | 0x0100  | L1        | LB                  | L1 button                 |\n | 0x0200  | R1        | RB                  | R1 button                 |\n | 0x0040  | L3        | L_THUMB             | Left stick click          |\n | 0x0080  | R3        | R_THUMB             | Right stick click         |\n | 0x0010  | OPTIONS   | START               | Options button            |\n | 0x0020  | SHARE     | BACK                | Share button              |\n | 0x10000 | PS        | -                   | PS button (DS4 special)   |\n | 0x20000 | TOUCHPAD  | -                   | Touchpad click (DS4 only) |"]
@@ -483,6 +494,11 @@ pub struct MaaToolkitDesktopWindow {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct MaaToolkitDesktopWindowList {
+    _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaToolkitPortalHelper {
     _unused: [u8; 0],
 }
 pub const MaaMacOSPermissionEnum_MaaMacOSPermissionScreenCapture: MaaMacOSPermissionEnum = 1;
@@ -903,6 +919,10 @@ pub struct MaaFramework {
             screen_height: ::std::os::raw::c_int,
             use_win32_vk_code: MaaBool,
         ) -> *mut MaaController,
+        ::libloading::Error,
+    >,
+    pub MaaLinuxControllerCreate: Result<
+        unsafe extern "C" fn(config_json: *const ::std::os::raw::c_char) -> *mut MaaController,
         ::libloading::Error,
     >,
     pub MaaGamepadControllerCreate: Result<
@@ -1757,6 +1777,8 @@ impl MaaFramework {
             unsafe { __library.get(b"MaaWlRootsControllerCreate\0") }.map(|sym| *sym);
         let MaaKWinControllerCreate =
             unsafe { __library.get(b"MaaKWinControllerCreate\0") }.map(|sym| *sym);
+        let MaaLinuxControllerCreate =
+            unsafe { __library.get(b"MaaLinuxControllerCreate\0") }.map(|sym| *sym);
         let MaaGamepadControllerCreate =
             unsafe { __library.get(b"MaaGamepadControllerCreate\0") }.map(|sym| *sym);
         let MaaControllerDestroy =
@@ -2115,6 +2137,7 @@ impl MaaFramework {
             MaaPlayCoverControllerCreate,
             MaaWlRootsControllerCreate,
             MaaKWinControllerCreate,
+            MaaLinuxControllerCreate,
             MaaGamepadControllerCreate,
             MaaControllerDestroy,
             MaaControllerAddSink,
@@ -3133,7 +3156,7 @@ impl MaaFramework {
                 .expect("Expected function, got error."))(address, uuid)
         }
     }
-    #[doc = " @brief Create a wlroots controller for Linux.\n\n @param wlr_socket_path The wayland socket path (e.g., \"/run/user/1000/wayland-0\").\n @param use_win32_vk_code If true, key codes passed to click_key / key_down / key_up are\n        interpreted as Win32 Virtual-Key codes (VK_*) and translated to Linux evdev codes\n        internally. If false, key codes are passed through as raw evdev codes.\n @return The controller handle, or nullptr on failure.\n\n @note This controller is designed for wlroots on Linux."]
+    #[doc = " @brief Create a wlroots controller for Linux.\n\n @deprecated Use MaaLinuxControllerCreate instead."]
     pub unsafe fn MaaWlRootsControllerCreate(
         &self,
         wlr_socket_path: *const ::std::os::raw::c_char,
@@ -3148,7 +3171,7 @@ impl MaaFramework {
             )
         }
     }
-    #[doc = " @brief Create a KWin / Linux Wayland controller via PipeWire and /dev/uinput.\n\n Despite the name \"KWin\", this controller works with any Wayland compositor that\n implements the XDG Screencast Portal and kernel has uinput support (e.g., GNOME).\n\n @param device_node The uinput device node path (e.g., \"/dev/uinput\").\n @param screen_width The screen width in pixels.\n @param screen_height The screen height in pixels.\n @param use_win32_vk_code If true, key codes passed to click_key / key_down / key_up are\n        interpreted as Win32 Virtual-Key codes (VK_*) and translated to Linux evdev codes\n        internally. If false, key codes are passed through as raw evdev codes.\n @return The controller handle, or nullptr on failure.\n\n @note Dependencies: pipewire (1.0+), xdg-desktop-portal.\n @note Screencap is implemented via PipeWire / xdg-desktop-portal.\n @note Input is simulated via /dev/uinput (kernel-level virtual input devices).\n @note Requires user authorization via the screen sharing dialog (xdg-desktop-portal).\n @note Requires write permission to /dev/uinput (typically via the \"input\" group).\n       It is recommended to configure a udev rule:\n       KERNEL==\"uinput\", MODE=\"0660\", GROUP=\"input\"."]
+    #[doc = " @brief Create a KWin / Linux Wayland controller via PipeWire and /dev/uinput.\n\n @deprecated Use MaaLinuxControllerCreate instead."]
     pub unsafe fn MaaKWinControllerCreate(
         &self,
         device_node: *const ::std::os::raw::c_char,
@@ -3166,6 +3189,18 @@ impl MaaFramework {
                 screen_height,
                 use_win32_vk_code,
             )
+        }
+    }
+    #[doc = " @brief Create a Linux controller for native Linux applications.\n @param config_json JSON config for the control unit. Required fields:\n                    - screencap_method: screencap method to use, see MaaLinuxScreencapMethod.\n                    - input_method: input method to use, see MaaLinuxInputMethod.\n                    Wlroots Required fields:\n                    - wlr_socket_path: wayland socket path (e.g., \"/run/user/1000/wayland-0\").\n                    PipeWire Required fields:\n                    - pw_socket_fd: The PipeWire socket FD.\n                    - pw_node_id: The PipeWire Node ID.\n                    - pw_screen_width: The screen width in pixels.\n                    - pw_screen_height: The screen height in pixels.\n                    UInput Optional fields:\n                    - uinput_path: The uinput device node path, default is \"/dev/uinput\".\n                    Optional fields:\n                    - use_win32_vk_code: If true, key codes passed to click_key / key_down / key_up are\n                      interpreted as Win32 Virtual-Key codes (VK_*) and translated to Linux evdev codes\n                      internally. If false, key codes are passed through as raw evdev codes.\n @return The controller handle, or nullptr on failure.\n\n @note This controller is only available on Linux.\n @note UInput Requires write permission to /dev/uinput (typically via the \"input\" group).\n       It is recommended to configure a udev rule:\n       KERNEL==\"uinput\", MODE=\"0660\", GROUP=\"input\"."]
+    pub unsafe fn MaaLinuxControllerCreate(
+        &self,
+        config_json: *const ::std::os::raw::c_char,
+    ) -> *mut MaaController {
+        unsafe {
+            (self
+                .MaaLinuxControllerCreate
+                .as_ref()
+                .expect("Expected function, got error."))(config_json)
         }
     }
     #[doc = " @brief Create a virtual gamepad controller for Windows.\n\n @param hWnd Window handle for screencap (optional, can be nullptr if screencap not needed).\n @param gamepad_type Type of virtual gamepad (MaaGamepadType_Xbox360 or MaaGamepadType_DualShock4).\n @param screencap_method Win32 screencap method to use. Ignored if hWnd is nullptr.\n @return The controller handle, or nullptr on failure.\n\n @note Requires ViGEm Bus Driver to be installed on the system.\n @note For gamepad control, use:\n       - click_key/key_down/key_up: For digital buttons (A, B, X, Y, LB, RB, etc.)\n         See MaaGamepadButton_* constants for available buttons.\n       - touch_down/touch_move/touch_up: For analog inputs (sticks and triggers)\n         - contact 0 (MaaGamepadTouch_LeftStick): Left stick (x: -32768~32767, y: -32768~32767)\n         - contact 1 (MaaGamepadTouch_RightStick): Right stick (x: -32768~32767, y: -32768~32767)\n         - contact 2 (MaaGamepadTouch_LeftTrigger): Left trigger (pressure: 0~255, x/y ignored)\n         - contact 3 (MaaGamepadTouch_RightTrigger): Right trigger (pressure: 0~255, x/y ignored)\n @note click and swipe are not directly supported for gamepad.\n @note input_text, start_app, stop_app, scroll are not supported.\n @see MaaGamepadButton, MaaGamepadTouch, MaaGamepadType"]
