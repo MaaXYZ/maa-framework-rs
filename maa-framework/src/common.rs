@@ -448,27 +448,19 @@ pub struct LinuxControllerConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pw_node_id: Option<u32>,
     /// Screen width in pixels for the uinput absolute axis range.
-    ///
-    /// Retains its original Rust name for compatibility and serializes as
-    /// `uinput_screen_width` for MaaFramework v5.13.0-beta.3 and later.
     #[serde(
         default,
-        rename = "uinput_screen_width",
         alias = "pw_screen_width",
         skip_serializing_if = "Option::is_none"
     )]
-    pub pw_screen_width: Option<i32>,
+    pub uinput_screen_width: Option<i32>,
     /// Screen height in pixels for the uinput absolute axis range.
-    ///
-    /// Retains its original Rust name for compatibility and serializes as
-    /// `uinput_screen_height` for MaaFramework v5.13.0-beta.3 and later.
     #[serde(
         default,
-        rename = "uinput_screen_height",
         alias = "pw_screen_height",
         skip_serializing_if = "Option::is_none"
     )]
-    pub pw_screen_height: Option<i32>,
+    pub uinput_screen_height: Option<i32>,
     /// UInput device path. MaaFramework defaults to `/dev/uinput` when omitted.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub uinput_path: Option<String>,
@@ -1082,8 +1074,8 @@ mod tests {
             wlr_socket_path: None,
             pw_socket_fd: Some(42),
             pw_node_id: Some(7),
-            pw_screen_width: Some(1920),
-            pw_screen_height: Some(1080),
+            uinput_screen_width: Some(1920),
+            uinput_screen_height: Some(1080),
             uinput_path: None,
             eis_socket_path: Some("/run/user/1000/gamescope-0-ei".into()),
             use_win32_vk_code: Some(true),
@@ -1116,7 +1108,7 @@ mod tests {
         }))
         .unwrap();
 
-        assert_eq!(config.pw_screen_width, Some(1920));
-        assert_eq!(config.pw_screen_height, Some(1080));
+        assert_eq!(config.uinput_screen_width, Some(1920));
+        assert_eq!(config.uinput_screen_height, Some(1080));
     }
 }
