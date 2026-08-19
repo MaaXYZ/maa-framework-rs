@@ -153,7 +153,17 @@ jobs:
       - name: Install dep
         run: |
             sudo apt-get update -y
-            sudo apt-get install -y ninja-build cmake ccache libclang-dev libpipewire-0.3-dev libdbus-1-dev
+            sudo apt-get install -y ninja-build cmake ccache libclang-dev libpipewire-0.3-dev libdbus-1-dev meson python3-jinja2
+
+      # Ubuntu 24.04 ships libei 1.2.1, but MaaFramework requires 1.6.0.
+      - name: Build libei 1.6.0 (host)
+        run: |
+            curl -fsSL -o /tmp/libei.tar.gz https://gitlab.freedesktop.org/libinput/libei/-/archive/1.6.0/libei-1.6.0.tar.gz
+            tar xzf /tmp/libei.tar.gz -C /tmp
+            sed -i "/subdir('tools')/d" /tmp/libei-1.6.0/meson.build
+            meson setup /tmp/libei-1.6.0/build /tmp/libei-1.6.0 \
+              -Dprefix=/usr -Dtests=disabled -Dliboeffis=disabled -Dlibeis=disabled -Ddocumentation= -Dbuildtype=release
+            sudo meson install -C /tmp/libei-1.6.0/build
 
       - name: Checkout self
         uses: actions/checkout@v4

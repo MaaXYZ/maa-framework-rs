@@ -418,6 +418,8 @@ bitflags::bitflags! {
         const WLR = sys::MaaLinuxInputMethod_Wlr as u64;
         /// Input using `/dev/uinput`.
         const UINPUT = sys::MaaLinuxInputMethod_UInput as u64;
+        /// Input using libei (EIS socket, e.g. the one provided by gamescope).
+        const LIBEI = sys::MaaLinuxInputMethod_Libei as u64;
     }
 }
 
@@ -431,21 +433,47 @@ pub struct LinuxControllerConfig {
     /// Wayland socket path required by WLR screencap or input.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub wlr_socket_path: Option<String>,
-    /// PipeWire socket file descriptor.
+    /// PipeWire socket FD obtained from the ScreenCast portal.
+    ///
+    /// Only required for PipeWire monitor capture via `xdg-desktop-portal`
+    /// (see [`crate::toolkit::PortalHelper`]). Ignored for PipeWire
+    /// session-daemon node capture.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pw_socket_fd: Option<i32>,
     /// PipeWire node ID.
+    ///
+    /// Used together with `pw_socket_fd` for portal monitor capture, or alone
+    /// to attach to a session-daemon node directly (e.g. a gamescope instance
+    /// found via [`crate::toolkit::Toolkit::find_gamescope_instances`]).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pw_node_id: Option<u32>,
-    /// PipeWire stream width in pixels.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub pw_screen_width: Option<i32>,
-    /// PipeWire stream height in pixels.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub pw_screen_height: Option<i32>,
+    /// Screen width in pixels for the uinput absolute axis range.
+    #[serde(
+        default,
+        alias = "pw_screen_width",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub uinput_screen_width: Option<i32>,
+    /// Screen height in pixels for the uinput absolute axis range.
+    #[serde(
+        default,
+        alias = "pw_screen_height",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub uinput_screen_height: Option<i32>,
     /// UInput device path. MaaFramework defaults to `/dev/uinput` when omitted.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub uinput_path: Option<String>,
+    /// Libei (EIS) socket path, e.g. `/run/user/1000/gamescope-0-ei`.
+    ///
+    /// Required by the [`LinuxInputMethod::LIBEI`] input method. The socket is
+    /// provided by the compositor (e.g. gamescope's `gamescope-<n>-ei`) and can
+    /// be discovered via [`crate::toolkit::Toolkit::find_gamescope_instances`].
+    ///
+    /// Requires the system `libei` library at runtime; text input additionally
+    /// needs `libei >= 1.6.0` (Ubuntu 24.04 ships 1.2.1 and needs an upgrade).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub eis_socket_path: Option<String>,
     /// Interpret key codes as Win32 virtual-key codes instead of raw evdev codes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub use_win32_vk_code: Option<bool>,
@@ -1046,9 +1074,10 @@ mod tests {
             wlr_socket_path: None,
             pw_socket_fd: Some(42),
             pw_node_id: Some(7),
-            pw_screen_width: Some(1920),
-            pw_screen_height: Some(1080),
+            uinput_screen_width: Some(1920),
+            uinput_screen_height: Some(1080),
             uinput_path: None,
+            eis_socket_path: Some("/run/user/1000/gamescope-0-ei".into()),
             use_win32_vk_code: Some(true),
         };
 
@@ -1061,10 +1090,25 @@ mod tests {
                 "input_method": 2,
                 "pw_socket_fd": 42,
                 "pw_node_id": 7,
-                "pw_screen_width": 1920,
-                "pw_screen_height": 1080,
+                "uinput_screen_width": 1920,
+                "uinput_screen_height": 1080,
+                "eis_socket_path": "/run/user/1000/gamescope-0-ei",
                 "use_win32_vk_code": true
             })
         );
+    }
+
+    #[test]
+    fn linux_controller_config_accepts_legacy_size_keys() {
+        let config: LinuxControllerConfig = serde_json::from_value(json!({
+            "screencap_method": 4,
+            "input_method": 2,
+            "pw_screen_width": 1920,
+            "pw_screen_height": 1080
+        }))
+        .unwrap();
+
+        assert_eq!(config.uinput_screen_width, Some(1920));
+        assert_eq!(config.uinput_screen_height, Some(1080));
     }
 }

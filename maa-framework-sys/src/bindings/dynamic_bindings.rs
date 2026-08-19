@@ -54,6 +54,7 @@ pub const MaaLinuxScreencapMethod_PipeWire: u32 = 4;
 pub const MaaLinuxInputMethod_None: u32 = 0;
 pub const MaaLinuxInputMethod_Wlr: u32 = 1;
 pub const MaaLinuxInputMethod_UInput: u32 = 2;
+pub const MaaLinuxInputMethod_Libei: u32 = 4;
 pub const MaaGamepadType_Xbox360: u32 = 0;
 pub const MaaGamepadType_DualShock4: u32 = 1;
 pub const MaaGamepadButton_A: u32 = 4096;
@@ -235,9 +236,9 @@ pub type MaaWin32InputMethod = u64;
 pub type MaaMacOSScreencapMethod = u64;
 #[doc = " @brief macOS input method\n\n Select ONE method only.\n\n | Method          | Description                                    |\n |-----------------|------------------------------------------------|\n | GlobalEvent     | Injects into the global HID event stream via CGEventPost(kCGHIDEventTap), dispatched by the OS to the front window |\n | PostToPid       | Directly send to target process using CGEventPostToPid |"]
 pub type MaaMacOSInputMethod = u64;
-#[doc = " @brief Linux Screencap method\n\n Select ONE method only.\n\n | Method          | Description                                           |\n |-----------------|-------------------------------------------------------|\n | Wlr             | Screencap using `wlr-screencopy-unstable-v1` protocol |\n | PipeWire        | Screencap using PipeWire                              |"]
+#[doc = " @brief Linux Screencap method\n\n Select ONE method only.\n\n | Method          | Description                                                              |\n |-----------------|--------------------------------------------------------------------------|\n | Wlr             | Screencap using `wlr-screencopy-unstable-v1` protocol                    |\n | PipeWire        | Screencap using PipeWire (portal fd or session-daemon node)              |"]
 pub type MaaLinuxScreencapMethod = u64;
-#[doc = " @brief Linux Input method\n\n Select ONE method only.\n\n | Method          | Description                                                                               |\n |-----------------|-------------------------------------------------------------------------------------------|\n | Wlr             | Input using `virtual-keyboard-unstable-v1` and `wlr-virtual-pointer-unstable-v1` protocol |\n | UInput          | Input using `/dev/uinput`                                                                 |"]
+#[doc = " @brief Linux Input method\n\n Select ONE method only.\n\n | Method          | Description                                                                               |\n |-----------------|-------------------------------------------------------------------------------------------|\n | Wlr             | Input using `virtual-keyboard-unstable-v1` and `wlr-virtual-pointer-unstable-v1` protocol |\n | UInput          | Input using `/dev/uinput`                                                                 |\n | Libei           | Input using libei (EIS socket, e.g. the one provided by gamescope)                        |"]
 pub type MaaLinuxInputMethod = u64;
 #[doc = " @brief Virtual gamepad type\n\n Select ONE type only.\n\n | Type          | Description                                    |\n |---------------|------------------------------------------------|\n | Xbox360       | Microsoft Xbox 360 Controller (wired)          |\n | DualShock4    | Sony DualShock 4 Controller (wired)            |"]
 pub type MaaGamepadType = u64;
@@ -499,6 +500,16 @@ pub struct MaaToolkitDesktopWindowList {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct MaaToolkitPortalHelper {
+    _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaToolkitGamescopeInstance {
+    _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaToolkitGamescopeInstanceList {
     _unused: [u8; 0],
 }
 pub const MaaMacOSPermissionEnum_MaaMacOSPermissionScreenCapture: MaaMacOSPermissionEnum = 1;
@@ -1640,6 +1651,76 @@ pub struct MaaFramework {
         Result<unsafe extern "C" fn(perm: MaaMacOSPermission) -> MaaBool, ::libloading::Error>,
     pub MaaToolkitMacOSRevealPermissionSettings:
         Result<unsafe extern "C" fn(perm: MaaMacOSPermission) -> MaaBool, ::libloading::Error>,
+    pub MaaToolkitPortalHelperCreate:
+        Result<unsafe extern "C" fn() -> *mut MaaToolkitPortalHelper, ::libloading::Error>,
+    pub MaaToolkitPortalHelperDestroy:
+        Result<unsafe extern "C" fn(helper: *mut MaaToolkitPortalHelper), ::libloading::Error>,
+    pub MaaToolkitPortalHelperOpenStream: Result<
+        unsafe extern "C" fn(helper: *mut MaaToolkitPortalHelper) -> MaaBool,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitPortalHelperGetPersist: Result<
+        unsafe extern "C" fn(helper: *mut MaaToolkitPortalHelper) -> MaaBool,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitPortalHelperSetPersist: Result<
+        unsafe extern "C" fn(helper: *mut MaaToolkitPortalHelper, enable: MaaBool),
+        ::libloading::Error,
+    >,
+    pub MaaToolkitPortalHelperGetPipeWireFD: Result<
+        unsafe extern "C" fn(helper: *mut MaaToolkitPortalHelper) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitPortalHelperGetPipeWireNodeID: Result<
+        unsafe extern "C" fn(helper: *mut MaaToolkitPortalHelper) -> u32,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitPortalHelperGetRestoreToken: Result<
+        unsafe extern "C" fn(helper: *mut MaaToolkitPortalHelper) -> *const ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitPortalHelperSetRestoreToken: Result<
+        unsafe extern "C" fn(
+            helper: *mut MaaToolkitPortalHelper,
+            token: *const ::std::os::raw::c_char,
+        ),
+        ::libloading::Error,
+    >,
+    pub MaaToolkitGamescopeInstanceListCreate:
+        Result<unsafe extern "C" fn() -> *mut MaaToolkitGamescopeInstanceList, ::libloading::Error>,
+    pub MaaToolkitGamescopeInstanceListDestroy: Result<
+        unsafe extern "C" fn(handle: *mut MaaToolkitGamescopeInstanceList),
+        ::libloading::Error,
+    >,
+    pub MaaToolkitGamescopeInstanceFindAll: Result<
+        unsafe extern "C" fn(buffer: *mut MaaToolkitGamescopeInstanceList) -> MaaBool,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitGamescopeInstanceListSize: Result<
+        unsafe extern "C" fn(list: *const MaaToolkitGamescopeInstanceList) -> MaaSize,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitGamescopeInstanceListAt: Result<
+        unsafe extern "C" fn(
+            list: *const MaaToolkitGamescopeInstanceList,
+            index: MaaSize,
+        ) -> *const MaaToolkitGamescopeInstance,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitGamescopeInstanceGetDisplayNo: Result<
+        unsafe extern "C" fn(instance: *const MaaToolkitGamescopeInstance) -> u32,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitGamescopeInstanceGetPipeWireNodeId: Result<
+        unsafe extern "C" fn(instance: *const MaaToolkitGamescopeInstance) -> u32,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitGamescopeInstanceGetEisSocketPath: Result<
+        unsafe extern "C" fn(
+            instance: *const MaaToolkitGamescopeInstance,
+        ) -> *const ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
 }
 impl MaaFramework {
     pub unsafe fn new<P>(path: P) -> Result<Self, ::libloading::Error>
@@ -2064,6 +2145,42 @@ impl MaaFramework {
             unsafe { __library.get(b"MaaToolkitMacOSRequestPermission\0") }.map(|sym| *sym);
         let MaaToolkitMacOSRevealPermissionSettings =
             unsafe { __library.get(b"MaaToolkitMacOSRevealPermissionSettings\0") }.map(|sym| *sym);
+        let MaaToolkitPortalHelperCreate =
+            unsafe { __library.get(b"MaaToolkitPortalHelperCreate\0") }.map(|sym| *sym);
+        let MaaToolkitPortalHelperDestroy =
+            unsafe { __library.get(b"MaaToolkitPortalHelperDestroy\0") }.map(|sym| *sym);
+        let MaaToolkitPortalHelperOpenStream =
+            unsafe { __library.get(b"MaaToolkitPortalHelperOpenStream\0") }.map(|sym| *sym);
+        let MaaToolkitPortalHelperGetPersist =
+            unsafe { __library.get(b"MaaToolkitPortalHelperGetPersist\0") }.map(|sym| *sym);
+        let MaaToolkitPortalHelperSetPersist =
+            unsafe { __library.get(b"MaaToolkitPortalHelperSetPersist\0") }.map(|sym| *sym);
+        let MaaToolkitPortalHelperGetPipeWireFD =
+            unsafe { __library.get(b"MaaToolkitPortalHelperGetPipeWireFD\0") }.map(|sym| *sym);
+        let MaaToolkitPortalHelperGetPipeWireNodeID =
+            unsafe { __library.get(b"MaaToolkitPortalHelperGetPipeWireNodeID\0") }.map(|sym| *sym);
+        let MaaToolkitPortalHelperGetRestoreToken =
+            unsafe { __library.get(b"MaaToolkitPortalHelperGetRestoreToken\0") }.map(|sym| *sym);
+        let MaaToolkitPortalHelperSetRestoreToken =
+            unsafe { __library.get(b"MaaToolkitPortalHelperSetRestoreToken\0") }.map(|sym| *sym);
+        let MaaToolkitGamescopeInstanceListCreate =
+            unsafe { __library.get(b"MaaToolkitGamescopeInstanceListCreate\0") }.map(|sym| *sym);
+        let MaaToolkitGamescopeInstanceListDestroy =
+            unsafe { __library.get(b"MaaToolkitGamescopeInstanceListDestroy\0") }.map(|sym| *sym);
+        let MaaToolkitGamescopeInstanceFindAll =
+            unsafe { __library.get(b"MaaToolkitGamescopeInstanceFindAll\0") }.map(|sym| *sym);
+        let MaaToolkitGamescopeInstanceListSize =
+            unsafe { __library.get(b"MaaToolkitGamescopeInstanceListSize\0") }.map(|sym| *sym);
+        let MaaToolkitGamescopeInstanceListAt =
+            unsafe { __library.get(b"MaaToolkitGamescopeInstanceListAt\0") }.map(|sym| *sym);
+        let MaaToolkitGamescopeInstanceGetDisplayNo =
+            unsafe { __library.get(b"MaaToolkitGamescopeInstanceGetDisplayNo\0") }.map(|sym| *sym);
+        let MaaToolkitGamescopeInstanceGetPipeWireNodeId =
+            unsafe { __library.get(b"MaaToolkitGamescopeInstanceGetPipeWireNodeId\0") }
+                .map(|sym| *sym);
+        let MaaToolkitGamescopeInstanceGetEisSocketPath =
+            unsafe { __library.get(b"MaaToolkitGamescopeInstanceGetEisSocketPath\0") }
+                .map(|sym| *sym);
         Ok(MaaFramework {
             __library,
             MaaTaskerCreate,
@@ -2289,6 +2406,23 @@ impl MaaFramework {
             MaaToolkitMacOSCheckPermission,
             MaaToolkitMacOSRequestPermission,
             MaaToolkitMacOSRevealPermissionSettings,
+            MaaToolkitPortalHelperCreate,
+            MaaToolkitPortalHelperDestroy,
+            MaaToolkitPortalHelperOpenStream,
+            MaaToolkitPortalHelperGetPersist,
+            MaaToolkitPortalHelperSetPersist,
+            MaaToolkitPortalHelperGetPipeWireFD,
+            MaaToolkitPortalHelperGetPipeWireNodeID,
+            MaaToolkitPortalHelperGetRestoreToken,
+            MaaToolkitPortalHelperSetRestoreToken,
+            MaaToolkitGamescopeInstanceListCreate,
+            MaaToolkitGamescopeInstanceListDestroy,
+            MaaToolkitGamescopeInstanceFindAll,
+            MaaToolkitGamescopeInstanceListSize,
+            MaaToolkitGamescopeInstanceListAt,
+            MaaToolkitGamescopeInstanceGetDisplayNo,
+            MaaToolkitGamescopeInstanceGetPipeWireNodeId,
+            MaaToolkitGamescopeInstanceGetEisSocketPath,
         })
     }
     pub unsafe fn MaaTaskerCreate(&self) -> *mut MaaTasker {
@@ -3082,7 +3216,7 @@ impl MaaFramework {
             )
         }
     }
-    #[doc = " @brief Create an Android native controller backed by MaaAndroidNativeControlUnit.\n\n @param config_json JSON config for the control unit. Required fields:\n                    - library_path: path to the Android native control unit library\n                    - screen_resolution.width / screen_resolution.height: raw screenshot and touch resolution\n                    Optional fields:\n                    - display_id: target display id, defaults to 0\n                    - force_stop: whether to force stop before start_app, defaults to false\n @return The controller handle, or nullptr on failure.\n\n @note This controller is only available on Android.\n @note The configured screen_resolution must match the control unit's raw screenshot/touch coordinate space."]
+    #[doc = " @brief Create an Android native controller backed by MaaAndroidNativeControlUnit.\n\n @param config_json JSON config for the control unit. Required fields:\n                    - library_path: path to the Android native control unit library\n                    - screen_resolution.width / screen_resolution.height: raw screenshot and touch resolution\n                    Optional fields:\n                    - display_id: target display id, defaults to 0\n                    - force_stop: whether to force stop before start_app, defaults to false\n @return The controller handle, or nullptr on failure.\n\n @note This controller is only available on Android.\n @note The configured screen_resolution must match the control unit's raw screenshot/touch coordinate space.\n @note Multi-touch is supported: contact is the finger id (0 for the first finger). The external\n       library's TouchArgs must carry contact."]
     pub unsafe fn MaaAndroidNativeControllerCreate(
         &self,
         config_json: *const ::std::os::raw::c_char,
@@ -3191,7 +3325,7 @@ impl MaaFramework {
             )
         }
     }
-    #[doc = " @brief Create a Linux controller for native Linux applications.\n @param config_json JSON config for the control unit. Required fields:\n                    - screencap_method: screencap method to use, see MaaLinuxScreencapMethod.\n                    - input_method: input method to use, see MaaLinuxInputMethod.\n                    Wlroots Required fields:\n                    - wlr_socket_path: wayland socket path (e.g., \"/run/user/1000/wayland-0\").\n                    PipeWire Required fields:\n                    - pw_socket_fd: The PipeWire socket FD.\n                    - pw_node_id: The PipeWire Node ID.\n                    - pw_screen_width: The screen width in pixels.\n                    - pw_screen_height: The screen height in pixels.\n                    UInput Optional fields:\n                    - uinput_path: The uinput device node path, default is \"/dev/uinput\".\n                    Optional fields:\n                    - use_win32_vk_code: If true, key codes passed to click_key / key_down / key_up are\n                      interpreted as Win32 Virtual-Key codes (VK_*) and translated to Linux evdev codes\n                      internally. If false, key codes are passed through as raw evdev codes.\n @return The controller handle, or nullptr on failure.\n\n @note This controller is only available on Linux.\n @note UInput Requires write permission to /dev/uinput (typically via the \"input\" group).\n       It is recommended to configure a udev rule:\n       KERNEL==\"uinput\", MODE=\"0660\", GROUP=\"input\"."]
+    #[doc = " @brief Create a Linux controller for native Linux applications.\n @param config_json JSON config for the control unit. Required fields:\n                    - screencap_method: screencap method to use, see MaaLinuxScreencapMethod.\n                    - input_method: input method to use, see MaaLinuxInputMethod.\n                    Wlroots Required fields:\n                    - wlr_socket_path: wayland socket path (e.g., \"/run/user/1000/wayland-0\").\n                    PipeWire monitor capture (via xdg-desktop-portal):\n                    - pw_socket_fd: The PipeWire socket FD (from the ScreenCast portal).\n                    - pw_node_id: The PipeWire Node ID.\n                    PipeWire session-daemon node capture (gamescope etc.):\n                    - pw_node_id: attach to a session-daemon node directly; discover the\n                      node with MaaToolkitGamescopeInstanceFindAll.\n                    UInput Optional fields:\n                    - uinput_path: The uinput device node path, default is \"/dev/uinput\".\n                    - uinput_screen_width / uinput_screen_height: screen size for the uinput\n                      absolute axis range. Optional.\n                    Libei (EIS) Required fields:\n                    - eis_socket_path: the EIS socket path, e.g. \"/run/user/1000/gamescope-0-ei\".\n                    Optional fields:\n                    - use_win32_vk_code: If true, key codes passed to click_key / key_down / key_up are\n                      interpreted as Win32 Virtual-Key codes (VK_*) and translated to Linux evdev codes\n                      internally. If false, key codes are passed through as raw evdev codes.\n @return The controller handle, or nullptr on failure.\n\n @note This controller is only available on Linux.\n @note UInput Requires write permission to /dev/uinput (typically via the \"input\" group).\n       It is recommended to configure a udev rule:\n       KERNEL==\"uinput\", MODE=\"0660\", GROUP=\"input\"."]
     pub unsafe fn MaaLinuxControllerCreate(
         &self,
         config_json: *const ::std::os::raw::c_char,
@@ -4863,6 +4997,189 @@ impl MaaFramework {
                 .MaaToolkitMacOSRevealPermissionSettings
                 .as_ref()
                 .expect("Expected function, got error."))(perm)
+        }
+    }
+    pub unsafe fn MaaToolkitPortalHelperCreate(&self) -> *mut MaaToolkitPortalHelper {
+        unsafe {
+            (self
+                .MaaToolkitPortalHelperCreate
+                .as_ref()
+                .expect("Expected function, got error."))()
+        }
+    }
+    pub unsafe fn MaaToolkitPortalHelperDestroy(&self, helper: *mut MaaToolkitPortalHelper) {
+        unsafe {
+            (self
+                .MaaToolkitPortalHelperDestroy
+                .as_ref()
+                .expect("Expected function, got error."))(helper)
+        }
+    }
+    pub unsafe fn MaaToolkitPortalHelperOpenStream(
+        &self,
+        helper: *mut MaaToolkitPortalHelper,
+    ) -> MaaBool {
+        unsafe {
+            (self
+                .MaaToolkitPortalHelperOpenStream
+                .as_ref()
+                .expect("Expected function, got error."))(helper)
+        }
+    }
+    pub unsafe fn MaaToolkitPortalHelperGetPersist(
+        &self,
+        helper: *mut MaaToolkitPortalHelper,
+    ) -> MaaBool {
+        unsafe {
+            (self
+                .MaaToolkitPortalHelperGetPersist
+                .as_ref()
+                .expect("Expected function, got error."))(helper)
+        }
+    }
+    pub unsafe fn MaaToolkitPortalHelperSetPersist(
+        &self,
+        helper: *mut MaaToolkitPortalHelper,
+        enable: MaaBool,
+    ) {
+        unsafe {
+            (self
+                .MaaToolkitPortalHelperSetPersist
+                .as_ref()
+                .expect("Expected function, got error."))(helper, enable)
+        }
+    }
+    pub unsafe fn MaaToolkitPortalHelperGetPipeWireFD(
+        &self,
+        helper: *mut MaaToolkitPortalHelper,
+    ) -> ::std::os::raw::c_int {
+        unsafe {
+            (self
+                .MaaToolkitPortalHelperGetPipeWireFD
+                .as_ref()
+                .expect("Expected function, got error."))(helper)
+        }
+    }
+    pub unsafe fn MaaToolkitPortalHelperGetPipeWireNodeID(
+        &self,
+        helper: *mut MaaToolkitPortalHelper,
+    ) -> u32 {
+        unsafe {
+            (self
+                .MaaToolkitPortalHelperGetPipeWireNodeID
+                .as_ref()
+                .expect("Expected function, got error."))(helper)
+        }
+    }
+    pub unsafe fn MaaToolkitPortalHelperGetRestoreToken(
+        &self,
+        helper: *mut MaaToolkitPortalHelper,
+    ) -> *const ::std::os::raw::c_char {
+        unsafe {
+            (self
+                .MaaToolkitPortalHelperGetRestoreToken
+                .as_ref()
+                .expect("Expected function, got error."))(helper)
+        }
+    }
+    pub unsafe fn MaaToolkitPortalHelperSetRestoreToken(
+        &self,
+        helper: *mut MaaToolkitPortalHelper,
+        token: *const ::std::os::raw::c_char,
+    ) {
+        unsafe {
+            (self
+                .MaaToolkitPortalHelperSetRestoreToken
+                .as_ref()
+                .expect("Expected function, got error."))(helper, token)
+        }
+    }
+    pub unsafe fn MaaToolkitGamescopeInstanceListCreate(
+        &self,
+    ) -> *mut MaaToolkitGamescopeInstanceList {
+        unsafe {
+            (self
+                .MaaToolkitGamescopeInstanceListCreate
+                .as_ref()
+                .expect("Expected function, got error."))()
+        }
+    }
+    pub unsafe fn MaaToolkitGamescopeInstanceListDestroy(
+        &self,
+        handle: *mut MaaToolkitGamescopeInstanceList,
+    ) {
+        unsafe {
+            (self
+                .MaaToolkitGamescopeInstanceListDestroy
+                .as_ref()
+                .expect("Expected function, got error."))(handle)
+        }
+    }
+    pub unsafe fn MaaToolkitGamescopeInstanceFindAll(
+        &self,
+        buffer: *mut MaaToolkitGamescopeInstanceList,
+    ) -> MaaBool {
+        unsafe {
+            (self
+                .MaaToolkitGamescopeInstanceFindAll
+                .as_ref()
+                .expect("Expected function, got error."))(buffer)
+        }
+    }
+    pub unsafe fn MaaToolkitGamescopeInstanceListSize(
+        &self,
+        list: *const MaaToolkitGamescopeInstanceList,
+    ) -> MaaSize {
+        unsafe {
+            (self
+                .MaaToolkitGamescopeInstanceListSize
+                .as_ref()
+                .expect("Expected function, got error."))(list)
+        }
+    }
+    pub unsafe fn MaaToolkitGamescopeInstanceListAt(
+        &self,
+        list: *const MaaToolkitGamescopeInstanceList,
+        index: MaaSize,
+    ) -> *const MaaToolkitGamescopeInstance {
+        unsafe {
+            (self
+                .MaaToolkitGamescopeInstanceListAt
+                .as_ref()
+                .expect("Expected function, got error."))(list, index)
+        }
+    }
+    pub unsafe fn MaaToolkitGamescopeInstanceGetDisplayNo(
+        &self,
+        instance: *const MaaToolkitGamescopeInstance,
+    ) -> u32 {
+        unsafe {
+            (self
+                .MaaToolkitGamescopeInstanceGetDisplayNo
+                .as_ref()
+                .expect("Expected function, got error."))(instance)
+        }
+    }
+    pub unsafe fn MaaToolkitGamescopeInstanceGetPipeWireNodeId(
+        &self,
+        instance: *const MaaToolkitGamescopeInstance,
+    ) -> u32 {
+        unsafe {
+            (self
+                .MaaToolkitGamescopeInstanceGetPipeWireNodeId
+                .as_ref()
+                .expect("Expected function, got error."))(instance)
+        }
+    }
+    pub unsafe fn MaaToolkitGamescopeInstanceGetEisSocketPath(
+        &self,
+        instance: *const MaaToolkitGamescopeInstance,
+    ) -> *const ::std::os::raw::c_char {
+        unsafe {
+            (self
+                .MaaToolkitGamescopeInstanceGetEisSocketPath
+                .as_ref()
+                .expect("Expected function, got error."))(instance)
         }
     }
 }
