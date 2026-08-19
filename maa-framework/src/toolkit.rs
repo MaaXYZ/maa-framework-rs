@@ -314,11 +314,14 @@ impl Toolkit {
                 let display_no = sys::MaaToolkitGamescopeInstanceGetDisplayNo(instance_ptr);
                 let pipewire_node_id =
                     sys::MaaToolkitGamescopeInstanceGetPipeWireNodeId(instance_ptr);
-                let eis_socket_path = CStr::from_ptr(
-                    sys::MaaToolkitGamescopeInstanceGetEisSocketPath(instance_ptr),
-                )
-                .to_string_lossy()
-                .into_owned();
+                let eis_socket_path =
+                    sys::MaaToolkitGamescopeInstanceGetEisSocketPath(instance_ptr);
+                if eis_socket_path.is_null() {
+                    return Err(MaaError::NullPointer);
+                }
+                let eis_socket_path = CStr::from_ptr(eis_socket_path)
+                    .to_string_lossy()
+                    .into_owned();
 
                 instances.push(GamescopeInstance {
                     display_no,

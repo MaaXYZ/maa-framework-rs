@@ -3,6 +3,7 @@
 unsafe impl Send for MaaFramework {}
 unsafe impl Sync for MaaFramework {}
 
+pub const MaaNullSize: i32 = -1;
 pub const MaaAdbScreencapMethod_EncodeToFileAndPull: u32 = 1;
 pub const MaaAdbScreencapMethod_Encode: u32 = 2;
 pub const MaaAdbScreencapMethod_RawWithGzip: u32 = 4;
@@ -3215,7 +3216,7 @@ impl MaaFramework {
             )
         }
     }
-    #[doc = " @brief Create an Android native controller backed by MaaAndroidNativeControlUnit.\n\n @param config_json JSON config for the control unit. Required fields:\n                    - library_path: path to the Android native control unit library\n                    - screen_resolution.width / screen_resolution.height: raw screenshot and touch resolution\n                    Optional fields:\n                    - display_id: target display id, defaults to 0\n                    - force_stop: whether to force stop before start_app, defaults to false\n @return The controller handle, or nullptr on failure.\n\n @note This controller is only available on Android.\n @note The configured screen_resolution must match the control unit's raw screenshot/touch coordinate space."]
+    #[doc = " @brief Create an Android native controller backed by MaaAndroidNativeControlUnit.\n\n @param config_json JSON config for the control unit. Required fields:\n                    - library_path: path to the Android native control unit library\n                    - screen_resolution.width / screen_resolution.height: raw screenshot and touch resolution\n                    Optional fields:\n                    - display_id: target display id, defaults to 0\n                    - force_stop: whether to force stop before start_app, defaults to false\n @return The controller handle, or nullptr on failure.\n\n @note This controller is only available on Android.\n @note The configured screen_resolution must match the control unit's raw screenshot/touch coordinate space.\n @note Multi-touch is supported: contact is the finger id (0 for the first finger). The external\n       library's TouchArgs must carry contact."]
     pub unsafe fn MaaAndroidNativeControllerCreate(
         &self,
         config_json: *const ::std::os::raw::c_char,

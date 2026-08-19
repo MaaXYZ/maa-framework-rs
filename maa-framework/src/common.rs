@@ -448,11 +448,27 @@ pub struct LinuxControllerConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pw_node_id: Option<u32>,
     /// Screen width in pixels for the uinput absolute axis range.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub uinput_screen_width: Option<i32>,
+    ///
+    /// Retains its original Rust name for compatibility and serializes as
+    /// `uinput_screen_width` for MaaFramework v5.13.0-beta.3 and later.
+    #[serde(
+        default,
+        rename = "uinput_screen_width",
+        alias = "pw_screen_width",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub pw_screen_width: Option<i32>,
     /// Screen height in pixels for the uinput absolute axis range.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub uinput_screen_height: Option<i32>,
+    ///
+    /// Retains its original Rust name for compatibility and serializes as
+    /// `uinput_screen_height` for MaaFramework v5.13.0-beta.3 and later.
+    #[serde(
+        default,
+        rename = "uinput_screen_height",
+        alias = "pw_screen_height",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub pw_screen_height: Option<i32>,
     /// UInput device path. MaaFramework defaults to `/dev/uinput` when omitted.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub uinput_path: Option<String>,
@@ -1066,8 +1082,8 @@ mod tests {
             wlr_socket_path: None,
             pw_socket_fd: Some(42),
             pw_node_id: Some(7),
-            uinput_screen_width: Some(1920),
-            uinput_screen_height: Some(1080),
+            pw_screen_width: Some(1920),
+            pw_screen_height: Some(1080),
             uinput_path: None,
             eis_socket_path: Some("/run/user/1000/gamescope-0-ei".into()),
             use_win32_vk_code: Some(true),
@@ -1088,5 +1104,19 @@ mod tests {
                 "use_win32_vk_code": true
             })
         );
+    }
+
+    #[test]
+    fn linux_controller_config_accepts_legacy_size_keys() {
+        let config: LinuxControllerConfig = serde_json::from_value(json!({
+            "screencap_method": 4,
+            "input_method": 2,
+            "pw_screen_width": 1920,
+            "pw_screen_height": 1080
+        }))
+        .unwrap();
+
+        assert_eq!(config.pw_screen_width, Some(1920));
+        assert_eq!(config.pw_screen_height, Some(1080));
     }
 }

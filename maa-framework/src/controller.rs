@@ -201,8 +201,7 @@ impl Controller {
     /// You can pass either a [`common::LinuxControllerConfig`] value or any other
     /// serializable type that matches the expected JSON schema.
     ///
-    /// This controller is only available on Linux.
-    #[cfg(target_os = "linux")]
+    /// The underlying controller is only available on Linux.
     pub fn new_linux<T: Serialize>(config: &T) -> MaaResult<Self> {
         let config_json = serde_json::to_string(config).map_err(|e| {
             MaaError::InvalidConfig(format!(
