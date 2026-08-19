@@ -57,6 +57,20 @@ fn main() {
     println!("cargo:rerun-if-env-changed=CARGO_FEATURE_DYNAMIC");
     println!("cargo:rerun-if-env-changed=CARGO_FEATURE_GENERATE_BINDINGS");
 
+    // Track pre-generated bindings and wrapper headers so updates to them
+    // trigger a rebuild instead of reusing a stale cached build-script output.
+    for rel in [
+        "src/bindings/static_bindings.rs",
+        "src/bindings/dynamic_bindings.rs",
+        "src/bindings/shims.rs",
+        "headers/wrapper.h",
+        "headers/maa_toolkit.h",
+        "headers/maa_framework.h",
+        "headers/maa.h",
+    ] {
+        println!("cargo:rerun-if-changed={rel}");
+    }
+
     let is_dynamic = std::env::var("CARGO_FEATURE_DYNAMIC").is_ok();
     let is_static = std::env::var("CARGO_FEATURE_STATIC").is_ok();
 

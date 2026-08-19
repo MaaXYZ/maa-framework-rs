@@ -35,6 +35,22 @@ pub struct DesktopWindow {
     pub window_name: String,
 }
 
+/// A gamescope instance discovered from the session.
+///
+/// Combines the display number, PipeWire capture node and libei (EIS) socket of
+/// a single gamescope instance into one model.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GamescopeInstance {
+    /// Display number (`n` in `gamescope-<n>`).
+    pub display_no: u32,
+    /// PipeWire node ID. Usable as `pw_node_id` in
+    /// [`crate::common::LinuxControllerConfig`]. `0` means no capture node.
+    pub pipewire_node_id: u32,
+    /// EIS socket path. Usable as `eis_socket_path` in
+    /// [`crate::common::LinuxControllerConfig`]. Empty when no EIS socket exists.
+    pub eis_socket_path: String,
+}
+
 /// macOS system permission types used by toolkit helpers.
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -261,6 +277,58 @@ impl Toolkit {
         };
         Ok(ret != 0)
     }
+
+    /// Find gamescope instances on the session.
+    ///
+    /// Each instance bundles a display number, a PipeWire capture node and an
+    /// EIS socket. The `pipewire_node_id` / `eis_socket_path` can be passed to
+    /// [`crate::common::LinuxControllerConfig`] to capture and control a
+    /// gamescope window directly, without going through the ScreenCast portal.
+    ///
+    /// Returns an empty list when gamescope is not running, and on non-Linux
+    /// platforms (where the underlying C API returns no instances).
+    pub fn find_gamescope_instances() -> MaaResult<Vec<GamescopeInstance>> {
+        if crate::is_agent_server_context() {
+            return Err(Self::unsupported("Toolkit::find_gamescope_instances"));
+        }
+
+        let list = unsafe { sys::MaaToolkitGamescopeInstanceListCreate() };
+        if list.is_null() {
+            return Err(MaaError::NullPointer);
+        }
+
+        let _guard = GamescopeInstanceListGuard(list);
+
+        unsafe {
+            common::check_bool(sys::MaaToolkitGamescopeInstanceFindAll(list))?;
+
+            let count = sys::MaaToolkitGamescopeInstanceListSize(list);
+            let mut instances = Vec::with_capacity(count as usize);
+
+            for i in 0..count {
+                let instance_ptr = sys::MaaToolkitGamescopeInstanceListAt(list, i);
+                if instance_ptr.is_null() {
+                    continue;
+                }
+
+                let display_no = sys::MaaToolkitGamescopeInstanceGetDisplayNo(instance_ptr);
+                let pipewire_node_id =
+                    sys::MaaToolkitGamescopeInstanceGetPipeWireNodeId(instance_ptr);
+                let eis_socket_path = CStr::from_ptr(
+                    sys::MaaToolkitGamescopeInstanceGetEisSocketPath(instance_ptr),
+                )
+                .to_string_lossy()
+                .into_owned();
+
+                instances.push(GamescopeInstance {
+                    display_no,
+                    pipewire_node_id,
+                    eis_socket_path,
+                });
+            }
+            Ok(instances)
+        }
+    }
 }
 
 struct AdbDeviceListGuard(*mut sys::MaaToolkitAdbDeviceList);
@@ -274,5 +342,87 @@ struct DesktopWindowListGuard(*mut sys::MaaToolkitDesktopWindowList);
 impl Drop for DesktopWindowListGuard {
     fn drop(&mut self) {
         unsafe { sys::MaaToolkitDesktopWindowListDestroy(self.0) }
+    }
+}
+
+struct GamescopeInstanceListGuard(*mut sys::MaaToolkitGamescopeInstanceList);
+impl Drop for GamescopeInstanceListGuard {
+    fn drop(&mut self) {
+        unsafe { sys::MaaToolkitGamescopeInstanceListDestroy(self.0) }
+    }
+}
+
+/// XDG Desktop Portal ScreenCast helper (Linux only).
+///
+/// Opens a ScreenCast portal session to obtain a PipeWire stream, whose FD and
+/// node ID can be handed to [`crate::controller::Controller::new_linux`] via
+/// [`crate::common::LinuxControllerConfig`]'s `pw_socket_fd` / `pw_node_id`.
+///
+/// On non-Linux platforms, [`PortalHelper::new`] returns
+/// [`MaaError::NullPointer`] because the underlying C API is unavailable there.
+pub struct PortalHelper {
+    handle: *mut sys::MaaToolkitPortalHelper,
+}
+
+impl PortalHelper {
+    /// Create a new portal helper.
+    pub fn new() -> MaaResult<Self> {
+        let handle = unsafe { sys::MaaToolkitPortalHelperCreate() };
+        if handle.is_null() {
+            return Err(MaaError::NullPointer);
+        }
+        Ok(Self { handle })
+    }
+
+    /// Open the ScreenCast portal stream (create DBus session, select sources,
+    /// and start the stream).
+    pub fn open_stream(&self) -> MaaResult<()> {
+        common::check_bool(unsafe { sys::MaaToolkitPortalHelperOpenStream(self.handle) })
+    }
+
+    /// Whether the portal session is persistent (i.e. can be restored later).
+    pub fn get_persist(&self) -> bool {
+        unsafe { sys::MaaToolkitPortalHelperGetPersist(self.handle) != 0 }
+    }
+
+    /// Set whether the portal session should persist for later restoration.
+    pub fn set_persist(&self, enable: bool) {
+        unsafe { sys::MaaToolkitPortalHelperSetPersist(self.handle, enable as sys::MaaBool) };
+    }
+
+    /// The PipeWire socket FD, or `-1` if the stream has not been opened yet.
+    pub fn get_pipewire_fd(&self) -> i32 {
+        unsafe { sys::MaaToolkitPortalHelperGetPipeWireFD(self.handle) }
+    }
+
+    /// The PipeWire node ID, or `0` if the stream has not been opened yet.
+    pub fn get_pipewire_node_id(&self) -> u32 {
+        unsafe { sys::MaaToolkitPortalHelperGetPipeWireNodeID(self.handle) }
+    }
+
+    /// The restore token used to restore a persistent session.
+    ///
+    /// Returns an empty string when no token is available.
+    pub fn get_restore_token(&self) -> String {
+        let ptr = unsafe { sys::MaaToolkitPortalHelperGetRestoreToken(self.handle) };
+        if ptr.is_null() {
+            return String::new();
+        }
+        unsafe { CStr::from_ptr(ptr) }
+            .to_string_lossy()
+            .into_owned()
+    }
+
+    /// Set the restore token to restore a previous portal session.
+    pub fn set_restore_token(&self, token: &str) -> MaaResult<()> {
+        let c_token = CString::new(token)?;
+        unsafe { sys::MaaToolkitPortalHelperSetRestoreToken(self.handle, c_token.as_ptr()) };
+        Ok(())
+    }
+}
+
+impl Drop for PortalHelper {
+    fn drop(&mut self) {
+        unsafe { sys::MaaToolkitPortalHelperDestroy(self.handle) };
     }
 }

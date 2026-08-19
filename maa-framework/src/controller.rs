@@ -202,6 +202,7 @@ impl Controller {
     /// serializable type that matches the expected JSON schema.
     ///
     /// This controller is only available on Linux.
+    #[cfg(target_os = "linux")]
     pub fn new_linux<T: Serialize>(config: &T) -> MaaResult<Self> {
         let config_json = serde_json::to_string(config).map_err(|e| {
             MaaError::InvalidConfig(format!(

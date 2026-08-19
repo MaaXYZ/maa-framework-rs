@@ -24,6 +24,8 @@
 #include <MaaToolkit/DesktopWindow/MaaToolkitDesktopWindow.h>
 #include <MaaToolkit/Config/MaaToolkitConfig.h>
 #include <MaaToolkit/MacOS/MaaToolkitMacOS.h>
+#include <MaaToolkit/Portal/MaaToolkitPortal.h>
+#include <MaaToolkit/Gamescope/MaaToolkitGamescope.h>
 
 #endif // MAA_FRAMEWORK_RS_WRAPPER_H
 
