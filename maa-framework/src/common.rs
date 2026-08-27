@@ -526,6 +526,12 @@ bitflags::bitflags! {
         /// Driver-level input injection via the Interception driver. Requires administrator
         /// rights.
         const INTERCEPTION = sys::MaaWin32InputMethod_Interception as u64;
+        /// Synthetic touch input via `WM_POINTER`.
+        ///
+        /// Does not move the cursor or change the foreground window, but may briefly raise an
+        /// occluded target window to topmost. Supports clicking and swiping; scrolling and
+        /// minimized target windows are not supported.
+        const ANCHORED_TOUCH = sys::MaaWin32InputMethod_AnchoredTouch as u64;
     }
 }
 
