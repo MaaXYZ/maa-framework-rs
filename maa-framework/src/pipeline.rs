@@ -275,11 +275,13 @@ pub struct FeatureMatch {
 /// Matches pixels within specified color bounds.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ColorMatch {
-    /// Lower color bounds. Required. Format depends on method.
-    #[serde(deserialize_with = "scalar_or_vec")]
+    /// Lower color bounds. Format depends on method.
+    /// Omitted or empty falls back to the default pipeline value (empty when unset).
+    #[serde(default, deserialize_with = "scalar_or_vec")]
     pub lower: Vec<Vec<i32>>,
-    /// Upper color bounds. Required. Format depends on method.
-    #[serde(deserialize_with = "scalar_or_vec")]
+    /// Upper color bounds. Format depends on method.
+    /// Omitted or empty falls back to the default pipeline value (empty when unset).
+    #[serde(default, deserialize_with = "scalar_or_vec")]
     pub upper: Vec<Vec<i32>>,
     /// Recognition region. Default: \\[0,0,0,0\\] (full screen).
     #[serde(default = "default_roi_zero")]

@@ -1526,6 +1526,65 @@ fn test_and_sub_recognition_dumper_roundtrip() {
     println!("PASS: And sub-recognition dumper/parser round-trip");
 }
 
+/// ColorMatch with default (empty) lower/upper survives dump -> reload - matching Python
+/// test_color_match_dumper_roundtrip.
+#[test]
+fn test_color_match_dumper_roundtrip() {
+    println!("\n=== test_color_match_dumper_roundtrip ===");
+    init_test_env().unwrap();
+
+    let temp_root = create_temp_test_resource_dir();
+    let source_dir = temp_root.join("source");
+    let source_pipeline_dir = source_dir.join("pipeline");
+    fs::create_dir_all(&source_pipeline_dir).expect("create source pipeline dir");
+    fs::write(
+        source_pipeline_dir.join("source.json"),
+        r#"{"ColorMatchDefault": {"recognition": "ColorMatch"}}"#,
+    )
+    .expect("write source pipeline");
+
+    let resource = Resource::new().unwrap();
+    let status = resource
+        .post_bundle(source_dir.to_str().unwrap())
+        .unwrap()
+        .wait();
+    assert!(status.succeeded(), "source resource should load");
+
+    let dumped = resource
+        .get_node_data("ColorMatchDefault")
+        .expect("get_node_data MUST work")
+        .expect("dumped ColorMatch node MUST exist");
+    println!("  dumped: {dumped}");
+
+    let node = resource
+        .get_node_object("ColorMatchDefault")
+        .expect("get_node_object MUST work")
+        .expect("ColorMatchDefault MUST exist");
+    let Recognition::ColorMatch(color) = node.recognition else {
+        panic!("Expected ColorMatch recognition");
+    };
+    assert!(color.lower.is_empty(), "default lower should be empty");
+    assert!(color.upper.is_empty(), "default upper should be empty");
+
+    let roundtrip_dir = temp_root.join("roundtrip");
+    let roundtrip_pipeline_dir = roundtrip_dir.join("pipeline");
+    fs::create_dir_all(&roundtrip_pipeline_dir).expect("create roundtrip pipeline dir");
+    fs::write(
+        roundtrip_pipeline_dir.join("roundtrip.json"),
+        format!(r#"{{"ColorMatchDefault": {dumped}}}"#),
+    )
+    .expect("write roundtrip pipeline");
+
+    let roundtrip_resource = Resource::new().unwrap();
+    let status = roundtrip_resource
+        .post_bundle(roundtrip_dir.to_str().unwrap())
+        .unwrap()
+        .wait();
+    assert!(status.succeeded(), "dumped resource should load again");
+
+    println!("PASS: ColorMatch dumper/parser round-trip");
+}
+
 #[test]
 fn test_pipeline_smoking() {
     println!("\n=== test_pipeline_smoking ===");
