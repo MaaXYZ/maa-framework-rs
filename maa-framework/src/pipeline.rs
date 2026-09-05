@@ -173,7 +173,21 @@ pub enum Recognition {
 #[serde(untagged)]
 pub enum RecognitionRef {
     NodeName(String),
-    Inline(Recognition),
+    Inline(InlineRecognition),
+}
+
+/// Inline sub-recognition inside an `And` / `Or` node.
+///
+/// Wire format (MaaFramework >= 5.13.0-beta.6, PipelineDumper and PipelineParser agree):
+/// `{"sub_name": "...", "recognition": {"type": ..., "param": {...}}}`.
+/// `sub_name` is optional on input; the framework defaults it to the recognition type name.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct InlineRecognition {
+    /// Optional label for this sub-recognition, used in reco detail output.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sub_name: Option<String>,
+    /// The inline recognition definition.
+    pub recognition: Recognition,
 }
 
 // --- Specific Recognition Structs ---

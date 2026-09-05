@@ -23,7 +23,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use maa_framework::context::Context;
 use maa_framework::controller::Controller;
 use maa_framework::custom::{CustomAction, CustomRecognition};
-use maa_framework::pipeline::{Action, Recognition};
+use maa_framework::pipeline::{Action, Recognition, RecognitionRef};
 use maa_framework::resource::Resource;
 use maa_framework::tasker::Tasker;
 use maa_framework::{self, MaaResult, sys};
@@ -1430,6 +1430,100 @@ fn test_pipeline_node_execution() {
     );
 
     println!("PASS: pipeline node execution");
+}
+
+/// And inline sub-recognition survives dump -> reload - matching Python
+/// test_and_sub_recognition_dumper_roundtrip. Since MaaFramework 5.13.0-beta.6 the
+/// dumper emits `{"sub_name", "recognition": {...}}` for each inline sub item.
+#[test]
+fn test_and_sub_recognition_dumper_roundtrip() {
+    println!("\n=== test_and_sub_recognition_dumper_roundtrip ===");
+    init_test_env().unwrap();
+
+    let temp_root = create_temp_test_resource_dir();
+    let source_dir = temp_root.join("source");
+    let source_pipeline_dir = source_dir.join("pipeline");
+    fs::create_dir_all(&source_pipeline_dir).expect("create source pipeline dir");
+    fs::write(
+        source_pipeline_dir.join("source.json"),
+        r#"{
+        "AndTask": {
+            "recognition": {
+                "type": "And",
+                "param": {
+                    "all_of": [
+                        {
+                            "sub_name": "OCR1",
+                            "recognition": {"type": "OCR", "param": {"expected": ["test"]}}
+                        },
+                        {"recognition": {"type": "DirectHit"}},
+                        "AndTask"
+                    ],
+                    "box_index": 1
+                }
+            }
+        }
+    }"#,
+    )
+    .expect("write source pipeline");
+
+    let resource = Resource::new().unwrap();
+    let status = resource
+        .post_bundle(source_dir.to_str().unwrap())
+        .unwrap()
+        .wait();
+    assert!(status.succeeded(), "source resource should load");
+
+    let dumped = resource
+        .get_node_data("AndTask")
+        .expect("get_node_data MUST work")
+        .expect("dumped And node MUST exist");
+    println!("  dumped: {dumped}");
+
+    // Typed parse of the dumped node must understand the nested inline format.
+    let node: maa_framework::pipeline::PipelineData =
+        serde_json::from_str(&dumped).expect("dumped And node MUST parse into PipelineData");
+    let Recognition::And(and) = node.recognition else {
+        panic!("Expected And recognition");
+    };
+    assert_eq!(and.all_of.len(), 3, "all_of should keep 3 entries");
+    assert_eq!(and.box_index, 1, "box_index should round-trip");
+    match &and.all_of[0] {
+        RecognitionRef::Inline(inline) => {
+            assert_eq!(inline.sub_name.as_deref(), Some("OCR1"));
+            assert!(matches!(inline.recognition, Recognition::OCR(_)));
+        }
+        other => panic!("Expected inline OCR, got {other:?}"),
+    }
+    match &and.all_of[1] {
+        RecognitionRef::Inline(inline) => {
+            assert!(matches!(inline.recognition, Recognition::DirectHit(_)));
+        }
+        other => panic!("Expected inline DirectHit, got {other:?}"),
+    }
+    assert!(
+        matches!(&and.all_of[2], RecognitionRef::NodeName(n) if n == "AndTask"),
+        "node-name reference should round-trip"
+    );
+
+    // The dumped JSON must be accepted by the framework parser again.
+    let roundtrip_dir = temp_root.join("roundtrip");
+    let roundtrip_pipeline_dir = roundtrip_dir.join("pipeline");
+    fs::create_dir_all(&roundtrip_pipeline_dir).expect("create roundtrip pipeline dir");
+    fs::write(
+        roundtrip_pipeline_dir.join("roundtrip.json"),
+        format!(r#"{{"AndTask": {dumped}}}"#),
+    )
+    .expect("write roundtrip pipeline");
+
+    let roundtrip_resource = Resource::new().unwrap();
+    let status = roundtrip_resource
+        .post_bundle(roundtrip_dir.to_str().unwrap())
+        .unwrap()
+        .wait();
+    assert!(status.succeeded(), "dumped resource should load again");
+
+    println!("PASS: And sub-recognition dumper/parser round-trip");
 }
 
 #[test]
