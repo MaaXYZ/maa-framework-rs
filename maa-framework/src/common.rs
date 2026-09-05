@@ -538,6 +538,8 @@ bitflags::bitflags! {
 /// Details of a recognition operation result.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct RecognitionDetail {
+    /// Recognition ID this detail belongs to
+    pub reco_id: MaaId,
     /// Name of the node that performed recognition
     pub node_name: String,
     /// Algorithm used
@@ -588,6 +590,8 @@ impl RecognitionDetail {
 /// Details of an action operation result.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ActionDetail {
+    /// Action ID this detail belongs to. Also populated for failed actions.
+    pub action_id: MaaId,
     /// Name of the node that performed the action
     pub node_name: String,
     /// Action type

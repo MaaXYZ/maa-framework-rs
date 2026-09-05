@@ -330,7 +330,10 @@ impl Resource {
     /// Register a custom action implementation.
     ///
     /// The action will be kept alive as long as it is registered in the Resource.
-    /// Re-registering with the same name will drop the previous implementation.
+    ///
+    /// The framework rejects an empty name and any name already taken by a custom
+    /// recognition or action on this Resource; in that case the previous registration is
+    /// kept and `Err(MaaError::InvalidArgument)` is returned. Unregister first to replace.
     pub fn register_custom_action(
         &self,
         name: &str,
@@ -349,7 +352,9 @@ impl Resource {
             );
             if ret == 0 {
                 let _ = Box::from_raw(action_ptr);
-                return Err(MaaError::FrameworkError(0));
+                return Err(MaaError::InvalidArgument(format!(
+                    "custom action name '{name}' is empty or already registered"
+                )));
             }
         }
 
@@ -366,7 +371,10 @@ impl Resource {
     /// Register a custom recognition implementation.
     ///
     /// The recognizer will be kept alive as long as it is registered in the Resource.
-    /// Re-registering with the same name will drop the previous implementation.
+    ///
+    /// The framework rejects an empty name and any name already taken by a custom
+    /// recognition or action on this Resource; in that case the previous registration is
+    /// kept and `Err(MaaError::InvalidArgument)` is returned. Unregister first to replace.
     pub fn register_custom_recognition(
         &self,
         name: &str,
@@ -385,7 +393,9 @@ impl Resource {
             );
             if ret == 0 {
                 let _ = Box::from_raw(reco_ptr);
-                return Err(MaaError::FrameworkError(0));
+                return Err(MaaError::InvalidArgument(format!(
+                    "custom recognition name '{name}' is empty or already registered"
+                )));
             }
         }
 

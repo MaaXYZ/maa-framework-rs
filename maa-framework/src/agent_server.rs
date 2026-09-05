@@ -21,6 +21,9 @@ impl AgentServer {
     /// Register a custom recognition with the AgentServer.
     ///
     /// The recognition will be available to connected AgentClients.
+    ///
+    /// The framework rejects an empty name and any name already taken by a custom
+    /// recognition or action on this server; `Err(MaaError::InvalidArgument)` is returned.
     pub fn register_custom_recognition(
         name: &str,
         reco: Box<dyn crate::custom::CustomRecognition>,
@@ -38,7 +41,9 @@ impl AgentServer {
             );
             if ret == 0 {
                 let _ = Box::from_raw(reco_ptr);
-                return Err(MaaError::FrameworkError(0));
+                return Err(MaaError::InvalidArgument(format!(
+                    "custom recognition name '{name}' is empty or already registered"
+                )));
             }
         }
 
@@ -48,6 +53,9 @@ impl AgentServer {
     /// Register a custom action with the AgentServer.
     ///
     /// The action will be available to connected AgentClients.
+    ///
+    /// The framework rejects an empty name and any name already taken by a custom
+    /// recognition or action on this server; `Err(MaaError::InvalidArgument)` is returned.
     pub fn register_custom_action(
         name: &str,
         action: Box<dyn crate::custom::CustomAction>,
@@ -65,7 +73,9 @@ impl AgentServer {
             );
             if ret == 0 {
                 let _ = Box::from_raw(action_ptr);
-                return Err(MaaError::FrameworkError(0));
+                return Err(MaaError::InvalidArgument(format!(
+                    "custom action name '{name}' is empty or already registered"
+                )));
             }
         }
         Ok(())

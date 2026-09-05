@@ -138,6 +138,24 @@ fn agent_server_main() {
     AgentServer::register_custom_recognition("MyRec", Box::new(ServerRecognition)).unwrap();
     AgentServer::register_custom_action("MyAct", Box::new(ServerAction)).unwrap();
 
+    // Duplicate or empty names are rejected; the first registration stays.
+    assert!(
+        AgentServer::register_custom_recognition("MyRec", Box::new(ServerRecognition)).is_err(),
+        "[Server] duplicate recognition name should be rejected"
+    );
+    assert!(
+        AgentServer::register_custom_action("MyAct", Box::new(ServerAction)).is_err(),
+        "[Server] duplicate action name should be rejected"
+    );
+    assert!(
+        AgentServer::register_custom_action("MyRec", Box::new(ServerAction)).is_err(),
+        "[Server] action name clashing with a recognition should be rejected"
+    );
+    assert!(
+        AgentServer::register_custom_recognition("", Box::new(ServerRecognition)).is_err(),
+        "[Server] empty recognition name should be rejected"
+    );
+
     eprintln!("[Server] Running. Waiting for client...");
 
     loop {

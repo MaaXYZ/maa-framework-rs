@@ -203,6 +203,7 @@ impl Tasker {
         }
 
         Ok(Some(crate::common::RecognitionDetail {
+            reco_id,
             node_name: node_name.as_str().to_string(),
             algorithm: algorithm_enum,
             hit: hit != 0,
@@ -246,6 +247,7 @@ impl Tasker {
         }
 
         Ok(Some(crate::common::ActionDetail {
+            action_id: act_id,
             node_name: node_name.as_str().to_string(),
             action: crate::common::ActionEnum::from(action.as_str().to_string()),
             box_rect: crate::common::Rect::from(result_box),

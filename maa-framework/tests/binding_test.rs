@@ -89,6 +89,30 @@ impl CustomRecognition for MyRecognition {
             // Verify run_action_direct
             let action_direct = context.run_action_direct("Click", "{}", &rect, "");
             println!("  run_action_direct result: {:?}", action_direct);
+
+            // A failed action must still carry its action_id and action type,
+            // so it can be correlated with failure events.
+            let failed_action_detail = context
+                .run_action_direct("Click", r#"{"target": "__missing_target__"}"#, &rect, "")
+                .expect("run_action_direct MUST not error")
+                .expect("failed action detail MUST exist");
+            println!(
+                "  failed run_action_direct result: {:?}",
+                failed_action_detail
+            );
+            assert_ne!(
+                failed_action_detail.action_id, 0,
+                "failed action MUST keep action_id"
+            );
+            assert_eq!(
+                failed_action_detail.action,
+                maa_framework::common::ActionEnum::Click,
+                "failed action MUST keep action type"
+            );
+            assert!(
+                !failed_action_detail.success,
+                "action on missing target MUST fail"
+            );
         }
 
         // Verify context cloning and dynamic pipeline overrides
@@ -448,6 +472,72 @@ fn test_resource_custom_registration() {
         action_list.contains(&"MyAct".to_string()),
         "MyAct should be registered"
     );
+
+    // Duplicate names are rejected by the framework; the first registration stays.
+    assert!(
+        resource
+            .register_custom_recognition("MyRec", Box::new(MyRecognition))
+            .is_err(),
+        "duplicate recognition name should be rejected"
+    );
+    assert!(
+        resource
+            .register_custom_action("MyAct", Box::new(MyAction))
+            .is_err(),
+        "duplicate action name should be rejected"
+    );
+    assert!(
+        resource
+            .register_custom_action("MyRec", Box::new(MyAction))
+            .is_err(),
+        "action name clashing with a recognition should be rejected"
+    );
+    assert!(
+        resource
+            .register_custom_recognition("MyAct", Box::new(MyRecognition))
+            .is_err(),
+        "recognition name clashing with an action should be rejected"
+    );
+    assert!(
+        resource
+            .register_custom_recognition("", Box::new(MyRecognition))
+            .is_err(),
+        "empty recognition name should be rejected"
+    );
+    assert!(
+        resource
+            .register_custom_action("", Box::new(MyAction))
+            .is_err(),
+        "empty action name should be rejected"
+    );
+    resource
+        .register_custom_recognition("CaseSensitive", Box::new(MyRecognition))
+        .expect("names are case sensitive");
+    resource
+        .register_custom_action("casesensitive", Box::new(MyAction))
+        .expect("names are case sensitive");
+    let reco_list = resource
+        .custom_recognition_list()
+        .expect("Failed to get reco list");
+    let action_list = resource
+        .custom_action_list()
+        .expect("Failed to get action list");
+    assert_eq!(
+        reco_list.iter().filter(|n| *n == "MyRec").count(),
+        1,
+        "MyRec should be registered exactly once"
+    );
+    assert_eq!(
+        action_list.iter().filter(|n| *n == "MyAct").count(),
+        1,
+        "MyAct should be registered exactly once"
+    );
+    resource
+        .unregister_custom_recognition("CaseSensitive")
+        .expect("Failed to unregister recognition");
+    resource
+        .unregister_custom_action("casesensitive")
+        .expect("Failed to unregister action");
 
     // Test unregister
     resource
