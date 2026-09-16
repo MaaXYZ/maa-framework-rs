@@ -221,6 +221,8 @@ pub const MaaCtrlOptionEnum_MaaCtrlOption_MouseLockFollow: MaaCtrlOptionEnum = 4
 pub const MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotResizeMethod: MaaCtrlOptionEnum = 6;
 #[doc = " Configure background managed key domain for Win32 controllers.\n Must be set before connection. After setting, matching ClickKey / LongPressKey / KeyDown / KeyUp\n operations automatically route through the background guardian path.\n Only supported by Win32 controllers; other controllers will fail.\n\n value: int32_t array of virtual key codes; val_size: sizeof(int32_t) * count"]
 pub const MaaCtrlOptionEnum_MaaCtrlOption_BackgroundManagedKeys: MaaCtrlOptionEnum = 7;
+#[doc = " Scale screenshot to fit a reference (width, height) using Unity Canvas\n Scaler \"Expand\" semantics: scale = max(W / raw_width, H / raw_height),\n applied uniformly to both axes so the source aspect ratio is preserved\n and both output dimensions are >= the reference (W, H).\n Mutually exclusive with ScreenshotTargetLongSide / ScreenshotTargetShortSide;\n setting any of these resets the others. Ignored when ScreenshotUseRawSize is true.\n\n value: int32_t[2] = { width, height }; val_size: sizeof(int32_t) * 2"]
+pub const MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotTargetExpand: MaaCtrlOptionEnum = 8;
 #[doc = " @brief Option keys for controller instance options. See MaaControllerSetOption().\n"]
 pub type MaaCtrlOptionEnum = ::std::os::raw::c_uint;
 pub type MaaTaskerOption = MaaOption;
@@ -703,7 +705,7 @@ unsafe extern "C" {
     ) -> *mut MaaController;
 }
 unsafe extern "C" {
-    #[doc = " @brief Create a PlayCover controller for macOS.\n\n @param address The PlayTools service address in \"host:port\" format.\n @param uuid The application bundle identifier (e.g., \"com.hypergryph.arknights\").\n @return The controller handle, or nullptr on failure.\n\n @note This controller is designed for PlayCover on macOS.\n @note Some features are not supported: start_app, input_text, click_key, key_down, key_up, scroll.\n @note Only single touch is supported (contact must be 0)."]
+    #[doc = " @brief Create a PlayCover controller for macOS.\n\n @param address The PlayTools service address in \"host:port\" format.\n @param uuid The application bundle identifier (e.g., \"com.hypergryph.arknights\").\n @return The controller handle, or nullptr on failure.\n\n @note This controller is designed for PlayCover on macOS.\n @note Some features are not supported: start_app, input_text, click_key, key_down, key_up, scroll."]
     pub fn MaaPlayCoverControllerCreate(
         address: *const ::std::os::raw::c_char,
         uuid: *const ::std::os::raw::c_char,
