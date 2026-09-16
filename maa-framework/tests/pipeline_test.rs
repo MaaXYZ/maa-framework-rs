@@ -1432,6 +1432,78 @@ fn test_pipeline_node_execution() {
     println!("PASS: pipeline node execution");
 }
 
+#[test]
+fn test_neural_network_expected_roundtrip() {
+    use maa_framework::pipeline::NeuralNetworkExpected;
+    use serde_json::json;
+
+    init_test_env().unwrap();
+    let resource = Resource::new().unwrap();
+    let cases: Vec<(_, Vec<NeuralNetworkExpected>)> = vec![
+        (json!(2), vec![2.into()]),
+        (json!("Cat"), vec!["Cat".into()]),
+        (json!([0, 2]), vec![0.into(), 2.into()]),
+        (json!(["Cat", "Mouse"]), vec!["Cat".into(), "Mouse".into()]),
+        (
+            json!([0, "Mouse"]),
+            vec![0.into(), String::from("Mouse").into()],
+        ),
+        (json!([]), vec![]),
+    ];
+
+    for algorithm in ["NeuralNetworkClassify", "NeuralNetworkDetect"] {
+        for (input, expected) in &cases {
+            let recognition: Recognition = serde_json::from_value(json!({
+                "type": algorithm,
+                "param": {
+                    "model": "test.onnx",
+                    "labels": ["Cat", "Dog", "Mouse"],
+                    "expected": input
+                }
+            }))
+            .unwrap();
+            let actual = match &recognition {
+                Recognition::NeuralNetworkClassify(nn) => &nn.expected,
+                Recognition::NeuralNetworkDetect(nn) => &nn.expected,
+                _ => unreachable!(),
+            };
+            assert_eq!(actual, expected);
+
+            resource
+                .override_pipeline(
+                    &json!({"ExpectedTest": {"recognition": recognition}}).to_string(),
+                )
+                .unwrap();
+            let node = resource.get_node_object("ExpectedTest").unwrap().unwrap();
+            let dumped = serde_json::to_value(node.recognition).unwrap();
+            assert_eq!(dumped["param"]["expected"], json!(expected));
+        }
+    }
+}
+
+#[test]
+fn test_neural_network_expected_rejects_invalid_types() {
+    use serde_json::json;
+
+    for algorithm in ["NeuralNetworkClassify", "NeuralNetworkDetect"] {
+        for expected in [
+            json!(true),
+            json!(1.5),
+            json!(null),
+            json!([0, false]),
+            json!({}),
+        ] {
+            assert!(
+                serde_json::from_value::<Recognition>(json!({
+                    "type": algorithm,
+                    "param": {"model": "test.onnx", "expected": expected}
+                }))
+                .is_err()
+            );
+        }
+    }
+}
+
 /// And inline sub-recognition survives dump -> reload - matching Python
 /// test_and_sub_recognition_dumper_roundtrip. Since MaaFramework 5.13.0-beta.6 the
 /// dumper emits `{"sub_name", "recognition": {...}}` for each inline sub item.

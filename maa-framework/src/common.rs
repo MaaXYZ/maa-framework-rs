@@ -524,13 +524,17 @@ bitflags::bitflags! {
         const SEND_MESSAGE_WITH_WINDOW_POS = 1 << 7;
         const POST_MESSAGE_WITH_WINDOW_POS = 1 << 8;
         /// Driver-level input injection via the Interception driver. Requires administrator
-        /// rights.
+        /// rights. Set `MAA_INTERCEPTION_KEYBOARD_DEVICE` to select a keyboard by slot (0-9)
+        /// or hardware ID.
         const INTERCEPTION = sys::MaaWin32InputMethod_Interception as u64;
         /// Synthetic touch input via `WM_POINTER`.
         ///
-        /// Does not move the cursor or change the foreground window, but may briefly raise an
-        /// occluded target window to topmost. Supports clicking and swiping; scrolling and
-        /// minimized target windows are not supported.
+        /// Does not move the cursor or target window. Activation is suppressed during touch,
+        /// but the target application can still bring itself to the foreground. An occluded
+        /// target may be temporarily raised at low opacity and intercept mouse clicks in its area.
+        /// Touch points must be on a monitor, and minimized targets must be restored first
+        /// (screencap methods with pseudo-minimize can do this). Supports clicking and swiping,
+        /// but not scrolling; keyboard input must use another method.
         const ANCHORED_TOUCH = sys::MaaWin32InputMethod_AnchoredTouch as u64;
     }
 }

@@ -343,6 +343,32 @@ pub struct OCR {
     pub color_filter: String,
 }
 
+/// A neural network class selected by its index or label name.
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(untagged)]
+pub enum NeuralNetworkExpected {
+    Index(i32),
+    Label(String),
+}
+
+impl From<i32> for NeuralNetworkExpected {
+    fn from(index: i32) -> Self {
+        Self::Index(index)
+    }
+}
+
+impl From<String> for NeuralNetworkExpected {
+    fn from(label: String) -> Self {
+        Self::Label(label)
+    }
+}
+
+impl From<&str> for NeuralNetworkExpected {
+    fn from(label: &str) -> Self {
+        Self::Label(label.to_owned())
+    }
+}
+
 /// Neural network classification - classifies fixed regions.
 ///
 /// Uses ONNX model to classify images at fixed positions.
@@ -350,16 +376,17 @@ pub struct OCR {
 pub struct NeuralNetworkClassify {
     /// Model file path relative to `model/classify`. Required.
     pub model: String,
-    /// Expected class indices to match. Default: match all.
+    /// Expected class indices or label names, which may be mixed. Default: match all.
+    /// For example: `vec![0.into(), "Cat".into()]`.
     #[serde(default, deserialize_with = "scalar_or_vec")]
-    pub expected: Vec<i32>,
+    pub expected: Vec<NeuralNetworkExpected>,
     /// Recognition region. Default: \\[0,0,0,0\\] (full screen).
     #[serde(default = "default_roi_zero")]
     pub roi: Target,
     /// Offset applied to the ROI.
     #[serde(default)]
     pub roi_offset: Rect,
-    /// Class labels for debugging. Default: "Unknown".
+    /// Class labels used for named expectations and result output. Default: "Unknown".
     #[serde(default)]
     pub labels: Vec<String>,
     /// Result sorting method. Default: "Horizontal".
@@ -377,16 +404,18 @@ pub struct NeuralNetworkClassify {
 pub struct NeuralNetworkDetect {
     /// Model file path relative to `model/detect`. Required.
     pub model: String,
-    /// Expected class indices to match. Default: match all.
+    /// Expected class indices or label names, which may be mixed. Default: match all.
+    /// For example: `vec![0.into(), "Cat".into()]`.
     #[serde(default, deserialize_with = "scalar_or_vec")]
-    pub expected: Vec<i32>,
+    pub expected: Vec<NeuralNetworkExpected>,
     /// Recognition region. Default: \\[0,0,0,0\\] (full screen).
     #[serde(default = "default_roi_zero")]
     pub roi: Target,
     /// Offset applied to the ROI.
     #[serde(default)]
     pub roi_offset: Rect,
-    /// Class labels (auto-read from model metadata). Default: "Unknown".
+    /// Class labels used for named expectations and result output.
+    /// Auto-read from model metadata when empty. Default: "Unknown".
     #[serde(default)]
     pub labels: Vec<String>,
     /// Confidence threshold(s). Default: [0.3].
@@ -653,7 +682,9 @@ pub struct InputText {
 /// App control action - for StartApp/StopApp.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct App {
-    /// Package name or activity (e.g., "com.example.app"). Required.
+    /// Package name or activity on ADB (e.g., "com.example.app"). Required.
+    /// On Win32, StartApp accepts an executable path or command line; StopApp accepts
+    /// a process name, or an empty string to stop the controller's window process.
     pub package: String,
 }
 

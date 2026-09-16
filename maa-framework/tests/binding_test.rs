@@ -835,6 +835,69 @@ fn test_controller_connection() {
 }
 
 #[test]
+fn test_controller_screenshot_target_expand() {
+    init_test_env().unwrap();
+
+    let mut image = maa_framework::buffer::MaaImageBuffer::new().unwrap();
+    image
+        .set_raw_data(&vec![0; 320 * 180 * 3], 320, 180, 16)
+        .unwrap();
+    let controller = Controller::new_custom(MyController {
+        count: Arc::new(AtomicUsize::new(0)),
+        image: image.to_vec().unwrap(),
+    })
+    .unwrap();
+    assert!(
+        controller
+            .wait(controller.post_connection().unwrap())
+            .succeeded()
+    );
+
+    let capture_size = || {
+        assert!(
+            controller
+                .wait(controller.post_screencap().unwrap())
+                .succeeded()
+        );
+        let image = controller.cached_image().unwrap();
+        (image.width(), image.height())
+    };
+
+    controller.set_screenshot_target_long_side(160).unwrap();
+    for (reference, expected) in [
+        ((160, 90), (160, 90)),
+        ((100, 100), (178, 100)),
+        ((400, 100), (400, 225)),
+    ] {
+        controller
+            .set_screenshot_target_expand(reference.0, reference.1)
+            .unwrap();
+        assert_eq!(capture_size(), expected);
+    }
+
+    controller.set_screenshot_target_expand(100, 100).unwrap();
+    for (width, height) in [(0, 100), (100, 0), (-1, 100), (100, -1)] {
+        assert!(
+            controller
+                .set_screenshot_target_expand(width, height)
+                .is_err()
+        );
+    }
+    assert_eq!(capture_size(), (178, 100));
+
+    controller.set_screenshot_use_raw_size(true).unwrap();
+    assert_eq!(capture_size(), (320, 180));
+    controller.set_screenshot_use_raw_size(false).unwrap();
+    assert_eq!(capture_size(), (178, 100));
+
+    controller.set_screenshot_target_long_side(160).unwrap();
+    assert_eq!(capture_size(), (160, 90));
+    controller.set_screenshot_target_expand(100, 100).unwrap();
+    controller.set_screenshot_target_short_side(90).unwrap();
+    assert_eq!(capture_size(), (160, 90));
+}
+
+#[test]
 fn test_controller_screencap() {
     println!("\n=== test_controller_screencap ===");
 

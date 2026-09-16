@@ -186,7 +186,8 @@ impl Controller {
     }
 
     /// Create a new PlayCover controller for iOS app control on macOS.
-
+    ///
+    /// Supports multiple contacts through the `post_touch_*` methods with compatible PlayTools.
     pub fn new_playcover(address: &str, uuid: &str) -> MaaResult<Self> {
         let c_addr = CString::new(address)?;
         let c_uuid = CString::new(uuid)?;
@@ -616,7 +617,7 @@ impl Controller {
     /// Start an application.
     ///
     /// # Arguments
-    /// * `intent` - Package name or activity (ADB), app identifier (Win32)
+    /// * `intent` - Package name or activity (ADB), executable path or command line (Win32).
     pub fn post_start_app(&self, intent: &str) -> MaaResult<common::MaaId> {
         let c_intent = CString::new(intent)?;
         let id = unsafe {
@@ -628,7 +629,8 @@ impl Controller {
     /// Stop an application.
     ///
     /// # Arguments
-    /// * `intent` - Package name (ADB)
+    /// * `intent` - Package name (ADB), process name (Win32). An empty string on Win32
+    ///   stops the process associated with the controller's window.
     pub fn post_stop_app(&self, intent: &str) -> MaaResult<common::MaaId> {
         let c_intent = CString::new(intent)?;
         let id =
@@ -705,6 +707,8 @@ impl Controller {
     // === Screenshot options ===
 
     /// Sets the target long side for screenshot scaling.
+    ///
+    /// Resets the short-side and expand targets. Ignored while raw screenshot size is enabled.
     pub fn set_screenshot_target_long_side(&self, long_side: i32) -> MaaResult<()> {
         let mut val = long_side;
         let ret = unsafe {
@@ -719,6 +723,8 @@ impl Controller {
     }
 
     /// Sets the target short side for screenshot scaling.
+    ///
+    /// Resets the long-side and expand targets. Ignored while raw screenshot size is enabled.
     pub fn set_screenshot_target_short_side(&self, short_side: i32) -> MaaResult<()> {
         let mut val = short_side;
         let ret = unsafe {
@@ -727,6 +733,24 @@ impl Controller {
                 sys::MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotTargetShortSide as i32,
                 &mut val as *mut _ as *mut c_void,
                 std::mem::size_of::<i32>() as u64,
+            )
+        };
+        common::check_bool(ret)
+    }
+
+    /// Scales screenshots to cover a reference size while preserving the source aspect ratio.
+    ///
+    /// Uses `max(width / raw_width, height / raw_height)`, so both output dimensions are at
+    /// least the reference size (Unity Canvas Scaler's Expand mode). Both inputs must be positive.
+    /// Resets the long-side and short-side targets. Ignored while raw screenshot size is enabled.
+    pub fn set_screenshot_target_expand(&self, width: i32, height: i32) -> MaaResult<()> {
+        let mut size = [width, height];
+        let ret = unsafe {
+            sys::MaaControllerSetOption(
+                self.inner.handle.as_ptr(),
+                sys::MaaCtrlOptionEnum_MaaCtrlOption_ScreenshotTargetExpand as i32,
+                size.as_mut_ptr().cast(),
+                std::mem::size_of_val(&size) as u64,
             )
         };
         common::check_bool(ret)

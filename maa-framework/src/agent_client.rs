@@ -167,6 +167,9 @@ impl AgentClient {
     }
 
     /// Connect to the AgentServer.
+    ///
+    /// On failure, registrations added by this connection attempt are removed and
+    /// MaaFramework attempts to shut down the remote session before returning an error.
     pub fn connect(&self) -> MaaResult<()> {
         let ret = unsafe { sys::MaaAgentClientConnect(self.handle.as_ptr()) };
         common::check_bool(ret)
