@@ -1433,6 +1433,42 @@ fn test_pipeline_node_execution() {
 }
 
 #[test]
+fn test_input_auto_up_roundtrip() {
+    use serde_json::json;
+
+    init_test_env().unwrap();
+    let resource = Resource::new().unwrap();
+
+    for (action_type, params) in [
+        (
+            "TouchDown",
+            json!({"contact": 1, "target": [100, 200, 50, 50], "pressure": 2}),
+        ),
+        ("KeyDown", json!({"key": 65})),
+    ] {
+        for auto_up in [None, Some(false), Some(true)] {
+            let mut params = params.clone();
+            if let Some(value) = auto_up {
+                params["auto_up"] = json!(value);
+            }
+            let action: Action = serde_json::from_value(json!({
+                "type": action_type,
+                "param": params
+            }))
+            .unwrap();
+            let serialized = serde_json::to_value(action).unwrap();
+            assert_eq!(serialized["param"]["auto_up"], auto_up.unwrap_or(false));
+
+            resource
+                .override_pipeline(&json!({"AutoUpTest": {"action": serialized}}).to_string())
+                .unwrap();
+            let node = resource.get_node_object("AutoUpTest").unwrap().unwrap();
+            assert_eq!(serde_json::to_value(node.action).unwrap(), serialized);
+        }
+    }
+}
+
+#[test]
 fn test_neural_network_expected_roundtrip() {
     use maa_framework::pipeline::NeuralNetworkExpected;
     use serde_json::json;

@@ -709,10 +709,13 @@ pub struct MultiSwipeActionResult {
     pub swipes: Vec<SwipeActionResult>,
 }
 
-/// Result of a ClickKey action.
+/// Result of a ClickKey, KeyDown, or KeyUp action.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ClickKeyActionResult {
     pub keycode: Vec<i32>,
+    /// Whether automatic release was requested for KeyDown. Default: false.
+    #[serde(default)]
+    pub auto_up: bool,
 }
 
 /// Result of a LongPressKey action.
@@ -750,6 +753,9 @@ pub struct TouchActionResult {
     pub point: Point,
     #[serde(default)]
     pub pressure: i32,
+    /// Whether automatic release was requested for TouchDown. Default: false.
+    #[serde(default)]
+    pub auto_up: bool,
 }
 
 /// Result of a Shell action.
@@ -1047,10 +1053,34 @@ pub struct CustomRecognitionResult {
 #[cfg(test)]
 mod tests {
     use super::{
-        AndroidNativeControllerConfig, AndroidScreenResolution, LinuxControllerConfig,
-        LinuxInputMethod, LinuxScreencapMethod,
+        AndroidNativeControllerConfig, AndroidScreenResolution, ClickKeyActionResult,
+        LinuxControllerConfig, LinuxInputMethod, LinuxScreencapMethod, TouchActionResult,
     };
     use serde_json::json;
+
+    #[test]
+    fn input_action_results_preserve_auto_up() {
+        for auto_up in [None, Some(false), Some(true)] {
+            let mut key = json!({"keycode": [65]});
+            let mut touch = json!({"contact": 1, "point": [100, 200], "pressure": 2});
+            if let Some(value) = auto_up {
+                key["auto_up"] = json!(value);
+                touch["auto_up"] = json!(value);
+            }
+            let key: ClickKeyActionResult = serde_json::from_value(key).unwrap();
+            let touch: TouchActionResult = serde_json::from_value(touch).unwrap();
+            assert_eq!(key.auto_up, auto_up.unwrap_or(false));
+            assert_eq!(touch.auto_up, auto_up.unwrap_or(false));
+            assert_eq!(
+                serde_json::to_value(key).unwrap()["auto_up"],
+                auto_up.unwrap_or(false)
+            );
+            assert_eq!(
+                serde_json::to_value(touch).unwrap()["auto_up"],
+                auto_up.unwrap_or(false)
+            );
+        }
+    }
 
     #[test]
     fn android_native_controller_config_serializes_expected_shape() {
