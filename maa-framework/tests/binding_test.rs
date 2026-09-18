@@ -1534,6 +1534,10 @@ fn test_tasker_with_native_dbg_controller() {
     assert!(conn_status.succeeded(), "DbgController connection failed");
     println!("  DbgController connected");
 
+    // DirectHit no longer captures screenshots; Click needs cached image bounds.
+    let screencap_id = controller.post_screencap().unwrap();
+    assert!(controller.wait(screencap_id).succeeded());
+
     // Prepare Resource
     let resource = Resource::new().unwrap();
     let res_job = resource

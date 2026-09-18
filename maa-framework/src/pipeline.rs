@@ -195,6 +195,8 @@ pub struct InlineRecognition {
 /// Direct hit recognition - always matches without performing actual recognition.
 ///
 /// Use when you want to execute an action without image matching.
+/// When all enabled candidates use DirectHit, MaaFramework skips recognition screenshots.
+/// Coordinate actions may still require a previously captured screenshot.
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct DirectHit {
     /// Recognition region. Default: \\[0,0,0,0\\] (full screen).
@@ -636,6 +638,10 @@ pub struct Touch {
     /// Touch pressure. Default: 0.
     #[serde(default)]
     pub pressure: i32,
+    /// Automatically release the contact when the task stops, finishes, or the controller
+    /// is destroyed. Only applies to TouchDown. Default: false.
+    #[serde(default)]
+    pub auto_up: bool,
 }
 
 /// Touch up action - releases a touch point.
@@ -670,6 +676,10 @@ pub struct KeyList {
 pub struct SingleKey {
     /// Virtual key code. Required.
     pub key: i32,
+    /// Automatically release the key when the task stops, finishes, or the controller
+    /// is destroyed. Only applies to KeyDown. Default: false.
+    #[serde(default)]
+    pub auto_up: bool,
 }
 
 /// Text input action.
