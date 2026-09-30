@@ -570,7 +570,7 @@ dependencies = [
 
 [[package]]
 name = "maa-framework"
-version = "1.25.1"
+version = "1.25.2"
 dependencies = [
  "bitflags",
  "ctor",

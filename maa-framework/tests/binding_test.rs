@@ -1534,10 +1534,6 @@ fn test_tasker_with_native_dbg_controller() {
     assert!(conn_status.succeeded(), "DbgController connection failed");
     println!("  DbgController connected");
 
-    // DirectHit no longer captures screenshots; Click needs cached image bounds.
-    let screencap_id = controller.post_screencap().unwrap();
-    assert!(controller.wait(screencap_id).succeeded());
-
     // Prepare Resource
     let resource = Resource::new().unwrap();
     let res_job = resource
@@ -1554,8 +1550,8 @@ fn test_tasker_with_native_dbg_controller() {
     assert!(tasker.inited(), "Tasker must be initialized");
     println!("  Tasker initialized with native DbgController");
 
-    // Run a simple task - just verify the path works
-    let ppover = r#"{"TestEntry": {"action": "Click", "target": [10, 10, 20, 20]}}"#;
+    // DirectHit must resolve explicit coordinates without a cached screenshot.
+    let ppover = r#"{"TestEntry": {"recognition": "DirectHit", "action": "Click", "target": [10, 10, 20, 20]}}"#;
     let job = tasker.post_task("TestEntry", ppover).unwrap();
     let status = job.wait();
 
