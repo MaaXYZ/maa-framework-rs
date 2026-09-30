@@ -196,7 +196,8 @@ pub struct InlineRecognition {
 ///
 /// Use when you want to execute an action without image matching.
 /// When all enabled candidates use DirectHit, MaaFramework skips recognition screenshots.
-/// Coordinate actions may still require a previously captured screenshot.
+/// Without a cached screenshot, coordinate targets use raw values plus offsets,
+/// without normalization or bounds checking. Image-dependent actions capture lazily.
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct DirectHit {
     /// Recognition region. Default: \\[0,0,0,0\\] (full screen).

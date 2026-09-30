@@ -24,14 +24,14 @@ pub struct AdbDevice {
     pub config: serde_json::Value,
 }
 
-/// Information about a desktop window (Win32).
+/// Information about a desktop window or Wayland display.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DesktopWindow {
-    /// Window handle (HWND).
+    /// HWND on Windows, CGWindowID on macOS, or the display number in `wayland-<n>` on Linux.
     pub hwnd: usize,
-    /// Window class name.
+    /// Window class on Windows, bundle ID on macOS, or Wayland socket path on Linux.
     pub class_name: String,
-    /// Window title.
+    /// Window title on Windows/macOS, or the `wayland-<n>` socket filename on Linux.
     pub window_name: String,
 }
 
@@ -189,10 +189,10 @@ impl Toolkit {
         }
     }
 
-    /// Find all desktop windows (Win32 only).
+    /// Find desktop windows on Windows/macOS or Wayland displays on Linux.
     ///
     /// # Returns
-    /// List of visible desktop windows.
+    /// List of visible desktop windows or available Wayland displays.
     pub fn find_desktop_windows() -> MaaResult<Vec<DesktopWindow>> {
         if crate::is_agent_server_context() {
             return Err(Self::unsupported("Toolkit::find_desktop_windows"));
