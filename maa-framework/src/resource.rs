@@ -350,6 +350,35 @@ impl Resource {
         common::check_bool(ret2)
     }
 
+    /// Use WebGPU for GPU-accelerated inference (Windows, Linux and macOS).
+    ///
+    /// # Arguments
+    /// * `device_id` - WebGPU device id (0 for the first device)
+    pub fn use_webgpu(&self, device_id: i32) -> MaaResult<()> {
+        let mut ep: i32 =
+            sys::MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_WebGPU as i32;
+        let ret1 = unsafe {
+            sys::MaaResourceSetOption(
+                self.inner.handle.as_ptr(),
+                sys::MaaResOptionEnum_MaaResOption_InferenceExecutionProvider as i32,
+                &mut ep as *mut _ as *mut std::ffi::c_void,
+                std::mem::size_of::<i32>() as u64,
+            )
+        };
+        common::check_bool(ret1)?;
+
+        let mut device = device_id;
+        let ret2 = unsafe {
+            sys::MaaResourceSetOption(
+                self.inner.handle.as_ptr(),
+                sys::MaaResOptionEnum_MaaResOption_InferenceDevice as i32,
+                &mut device as *mut _ as *mut std::ffi::c_void,
+                std::mem::size_of::<i32>() as u64,
+            )
+        };
+        common::check_bool(ret2)
+    }
+
     // === EventSink ===
 
     /// Register a raw callback to receive events.
@@ -450,6 +479,8 @@ impl Resource {
     // === Inference device (extended) ===
 
     /// Auto-select the best inference execution provider.
+    ///
+    /// Tries CUDA, then DirectML, then WebGPU, then CoreML, and falls back to CPU.
     pub fn use_auto_ep(&self) -> MaaResult<()> {
         let mut ep: i32 =
             sys::MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_Auto as i32;
@@ -477,8 +508,11 @@ impl Resource {
 
     /// Use CoreML for inference (macOS only).
     ///
+    /// MaaDeps no longer ships the CoreML execution provider since MaaFramework 5.14.3.
+    ///
     /// # Arguments
     /// * `coreml_flag` - CoreML configuration flag
+    #[deprecated(note = "MaaDeps no longer ships CoreML; use `use_webgpu` instead")]
     pub fn use_coreml(&self, coreml_flag: i32) -> MaaResult<()> {
         let mut ep: i32 =
             sys::MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_CoreML as i32;
