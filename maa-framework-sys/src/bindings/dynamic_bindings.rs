@@ -203,6 +203,8 @@ pub const MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_CoreML
     MaaInferenceExecutionProviderEnum = 3;
 pub const MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_CUDA:
     MaaInferenceExecutionProviderEnum = 4;
+pub const MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_WebGPU:
+    MaaInferenceExecutionProviderEnum = 5;
 pub type MaaInferenceExecutionProviderEnum = ::std::os::raw::c_uint;
 pub const MaaResOptionEnum_MaaResOption_Invalid: MaaResOptionEnum = 0;
 #[doc = " Use the specified inference device.\n Please set this option before loading the model.\n\n value: MaaInferenceDevice, eg: 0; val_size: sizeof(MaaInferenceDevice)\n default value is MaaInferenceDevice_Auto"]
