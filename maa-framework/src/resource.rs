@@ -379,6 +379,37 @@ impl Resource {
         common::check_bool(ret2)
     }
 
+    /// Use NCNN for inference (Android builds only, CPU only).
+    ///
+    /// Fails on builds without NCNN, and when switching to or from NCNN after
+    /// resource loading has started (until [`clear`](Self::clear)).
+    /// Models are loaded from `<model stem>.ncnn.param/.ncnn.bin/.ncnn.json`
+    /// with no fallback to onnxruntime.
+    pub fn use_ncnn(&self) -> MaaResult<()> {
+        let mut ep: i32 =
+            sys::MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_NCNN as i32;
+        let ret1 = unsafe {
+            sys::MaaResourceSetOption(
+                self.inner.handle.as_ptr(),
+                sys::MaaResOptionEnum_MaaResOption_InferenceExecutionProvider as i32,
+                &mut ep as *mut _ as *mut std::ffi::c_void,
+                std::mem::size_of::<i32>() as u64,
+            )
+        };
+        common::check_bool(ret1)?;
+
+        let mut device: i32 = sys::MaaInferenceDeviceEnum_MaaInferenceDevice_CPU as i32;
+        let ret2 = unsafe {
+            sys::MaaResourceSetOption(
+                self.inner.handle.as_ptr(),
+                sys::MaaResOptionEnum_MaaResOption_InferenceDevice as i32,
+                &mut device as *mut _ as *mut std::ffi::c_void,
+                std::mem::size_of::<i32>() as u64,
+            )
+        };
+        common::check_bool(ret2)
+    }
+
     // === EventSink ===
 
     /// Register a raw callback to receive events.

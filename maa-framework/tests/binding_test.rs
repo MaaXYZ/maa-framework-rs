@@ -393,6 +393,7 @@ fn test_resource_inference_settings() {
     let _ = r1.use_cpu();
     let _ = r1.use_directml(0);
     let _ = r1.use_webgpu(0);
+    let _ = r1.use_ncnn();
     let _ = r1.use_auto_ep();
 
     println!("  PASS: inference settings");
