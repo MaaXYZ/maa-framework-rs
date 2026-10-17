@@ -205,11 +205,13 @@ pub const MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_CUDA:
     MaaInferenceExecutionProviderEnum = 4;
 pub const MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_WebGPU:
     MaaInferenceExecutionProviderEnum = 5;
+pub const MaaInferenceExecutionProviderEnum_MaaInferenceExecutionProvider_NCNN:
+    MaaInferenceExecutionProviderEnum = 6;
 pub type MaaInferenceExecutionProviderEnum = ::std::os::raw::c_uint;
 pub const MaaResOptionEnum_MaaResOption_Invalid: MaaResOptionEnum = 0;
 #[doc = " Use the specified inference device.\n Please set this option before loading the model.\n\n value: MaaInferenceDevice, eg: 0; val_size: sizeof(MaaInferenceDevice)\n default value is MaaInferenceDevice_Auto"]
 pub const MaaResOptionEnum_MaaResOption_InferenceDevice: MaaResOptionEnum = 1;
-#[doc = " Use the specified inference execution provider\n Please set this option before loading the model.\n\n value: MaaInferenceExecutionProvider, eg: 0; val_size: sizeof(MaaInferenceExecutionProvider)\n default value is MaaInferenceExecutionProvider_Auto"]
+#[doc = " Use the specified inference execution provider\n Please set this option before loading the model.\n Once resource loading starts (any MaaResourcePost*), switching to or from NCNN fails until MaaResourceClear().\n\n value: MaaInferenceExecutionProvider, eg: 0; val_size: sizeof(MaaInferenceExecutionProvider)\n default value is MaaInferenceExecutionProvider_Auto"]
 pub const MaaResOptionEnum_MaaResOption_InferenceExecutionProvider: MaaResOptionEnum = 2;
 pub type MaaResOptionEnum = ::std::os::raw::c_uint;
 pub type MaaCtrlOption = MaaOption;
