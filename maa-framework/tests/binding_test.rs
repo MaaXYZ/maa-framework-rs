@@ -390,11 +390,28 @@ fn test_resource_inference_settings() {
 
     let r1 = Resource::new().expect("Failed to create resource");
     // Test inference device settings (should not panic)
-    let _ = r1.use_cpu();
     let _ = r1.use_directml(0);
     let _ = r1.use_webgpu(0);
-    let _ = r1.use_ncnn();
     let _ = r1.use_auto_ep();
+    let _ = r1.use_cpu();
+    // NCNN is only shipped in Android builds, so desktop builds must reject it
+    assert!(
+        r1.use_ncnn().is_err(),
+        "use_ncnn should fail on desktop builds"
+    );
+
+    let r2 = Resource::new().expect("Failed to create resource");
+    let _ = r2.use_directml(0);
+    let _ = r2.use_webgpu(0);
+    let _ = r2.use_cpu();
+    r2.post_bundle("C:/_maafw_testing_/aaabbbccc")
+        .expect("post_bundle failed")
+        .wait();
+    // Switching between onnxruntime EPs still works after loading starts
+    r2.use_cpu()
+        .expect("use_cpu should succeed after loading starts");
+    r2.use_auto_ep()
+        .expect("use_auto_ep should succeed after loading starts");
 
     println!("  PASS: inference settings");
 }
