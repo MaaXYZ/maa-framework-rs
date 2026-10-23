@@ -27,6 +27,8 @@ pub struct Controller {
 struct ControllerInner {
     handle: NonNull<sys::MaaController>,
     owns_handle: bool,
+    // Owned allocation passed to MaaCustomControllerCreate; freed after native destroy.
+    custom_callback_ptr: Option<usize>,
     _retained_handles: Vec<Arc<ControllerInner>>,
     callbacks: Mutex<HashMap<sys::MaaSinkId, usize>>,
     event_sinks: Mutex<HashMap<sys::MaaSinkId, usize>>,
@@ -315,14 +317,23 @@ impl Controller {
         let handle =
             unsafe { sys::MaaCustomControllerCreate(callbacks as *const _ as *mut _, cb_ptr) };
 
-        NonNull::new(handle).map(Self::new_owned).ok_or_else(|| {
-            unsafe {
-                let _ = Box::from_raw(
-                    cb_ptr as *mut Box<dyn crate::custom_controller::CustomControllerCallback>,
-                );
-            }
-            MaaError::FrameworkError(-1)
-        })
+        NonNull::new(handle)
+            .map(|ptr| {
+                let mut controller = Self::new_owned(ptr);
+                // new_owned creates the only strong reference, so this cannot fail.
+                Arc::get_mut(&mut controller.inner)
+                    .expect("new_owned returns a uniquely owned controller")
+                    .custom_callback_ptr = Some(cb_ptr as usize);
+                controller
+            })
+            .ok_or_else(|| {
+                unsafe {
+                    let _ = Box::from_raw(
+                        cb_ptr as *mut Box<dyn crate::custom_controller::CustomControllerCallback>,
+                    );
+                }
+                MaaError::FrameworkError(-1)
+            })
     }
 
     /// Helper to create controller from raw handle.
@@ -346,6 +357,7 @@ impl Controller {
             inner: Arc::new(ControllerInner {
                 handle,
                 owns_handle: true,
+                custom_callback_ptr: None,
                 _retained_handles: retained_handles,
                 callbacks: Mutex::new(HashMap::new()),
                 event_sinks: Mutex::new(HashMap::new()),
@@ -933,6 +945,13 @@ impl Drop for ControllerInner {
                     crate::callback::EventCallback::drop_sink(ptr as *mut c_void);
                 }
                 sys::MaaControllerDestroy(self.handle.as_ptr());
+                if let Some(ptr) = self.custom_callback_ptr.take() {
+                    // SAFETY: this allocation was created by new_custom and is freed only here,
+                    // after the native controller has been destroyed.
+                    drop(Box::from_raw(
+                        ptr as *mut Box<dyn crate::custom_controller::CustomControllerCallback>,
+                    ));
+                }
             }
         }
     }
