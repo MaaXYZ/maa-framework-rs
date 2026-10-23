@@ -5,7 +5,7 @@ on:
     branches:
       - "**"
     paths:
-      - ".github/workflows/test-rust.yml"
+      - ".github/workflows/test.yml"
       - "**/src/**"
       - "**/tests/**"
       - "**/Cargo.toml"
@@ -15,12 +15,12 @@ on:
     branches:
       - "**"
     paths:
-      - ".github/workflows/test-rust.yml"
-      - "src/**"
-      - "Cargo.toml"
-      - "build.rs"
-      - "tests/**"
-      - "examples/**"
+      - ".github/workflows/test.yml"
+      - "**/src/**"
+      - "**/tests/**"
+      - "**/Cargo.toml"
+      - "**/build.rs"
+      - "**/examples/**"
   workflow_dispatch:
 
 concurrency:
