@@ -292,6 +292,7 @@ pub type MaaEventCallback = ::std::option::Option<
         trans_arg: *mut ::std::os::raw::c_void,
     ),
 >;
+#[doc = " out_box is the final (single) result; out_detail carries arbitrary callback data.\n To return multiple results, write a JSON object into out_detail with the reserved keys\n \"$all\" / \"$filtered\", each an array of {\"box\": [x, y, w, h], \"detail\": any}; the framework\n keeps the callback's own order and selects the final box with the node's \"index\"."]
 pub type MaaCustomRecognitionCallback = ::std::option::Option<
     unsafe extern "C" fn(
         context: *mut MaaContext,
