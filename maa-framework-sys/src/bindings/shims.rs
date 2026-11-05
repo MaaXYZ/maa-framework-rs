@@ -59,6 +59,7 @@ shim ! (MaaResourceGetCustomActionList (res : * const MaaResource , buffer : * m
 shim ! (MaaResourceGetDefaultRecognitionParam (res : * const MaaResource , reco_type : * const :: std :: os :: raw :: c_char , buffer : * mut MaaStringBuffer) -> MaaBool) ;
 shim ! (MaaResourceGetDefaultActionParam (res : * const MaaResource , action_type : * const :: std :: os :: raw :: c_char , buffer : * mut MaaStringBuffer) -> MaaBool) ;
 shim ! (MaaAdbControllerCreate (adb_path : * const :: std :: os :: raw :: c_char , address : * const :: std :: os :: raw :: c_char , screencap_methods : MaaAdbScreencapMethod , input_methods : MaaAdbInputMethod , config : * const :: std :: os :: raw :: c_char , agent_path : * const :: std :: os :: raw :: c_char) -> * mut MaaController) ;
+shim ! (MaaIOSControllerCreate (udid : * const :: std :: os :: raw :: c_char , screencap_methods : MaaIOSScreencapMethod , connection_method : MaaIOSConnectionMethod , config_json : * const :: std :: os :: raw :: c_char) -> * mut MaaController) ;
 shim ! (MaaWin32ControllerCreate (hWnd : * mut :: std :: os :: raw :: c_void , screencap_method : MaaWin32ScreencapMethod , mouse_method : MaaWin32InputMethod , keyboard_method : MaaWin32InputMethod) -> * mut MaaController) ;
 shim ! (MaaMacOSControllerCreate (window_id : u32 , screencap_method : MaaMacOSScreencapMethod , input_method : MaaMacOSInputMethod) -> * mut MaaController) ;
 shim ! (MaaAndroidNativeControllerCreate (config_json : * const :: std :: os :: raw :: c_char) -> * mut MaaController) ;
