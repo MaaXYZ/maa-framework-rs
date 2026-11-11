@@ -18,6 +18,11 @@ pub const MaaAdbInputMethod_EmulatorExtras: u32 = 8;
 pub const MaaAdbInputMethod_None: u32 = 0;
 pub const MaaAdbInputMethod_All: i32 = -1;
 pub const MaaAdbInputMethod_Default: i32 = -9;
+pub const MaaIOSScreencapMethod_None: u32 = 0;
+pub const MaaIOSScreencapMethod_Stream: u32 = 1;
+pub const MaaIOSScreencapMethod_ScreenshotService: u32 = 2;
+pub const MaaIOSScreencapMethod_All: i32 = -1;
+pub const MaaIOSScreencapMethod_Default: i32 = -1;
 pub const MaaWin32ScreencapMethod_None: u32 = 0;
 pub const MaaWin32ScreencapMethod_GDI: u32 = 1;
 pub const MaaWin32ScreencapMethod_FramePool: u32 = 2;
@@ -236,6 +241,13 @@ pub type MaaTaskerOptionEnum = ::std::os::raw::c_uint;
 pub type MaaAdbScreencapMethod = u64;
 #[doc = " @brief Adb input method flags\n\n Use bitwise OR to set the methods you need.\n MaaFramework will select the first available method according to priority.\n\n Priority (high to low): EmulatorExtras > Maatouch > MinitouchAndAdbKey > AdbShell\n\n Default: All methods except EmulatorExtras\n\n | Method               | Speed | Compatibility | Notes                                 |\n |----------------------|-------|---------------|---------------------------------------|\n | AdbShell             | Slow  | High          |                                       |\n | MinitouchAndAdbKey   | Fast  | Medium        | Key press still uses AdbShell         |\n | Maatouch             | Fast  | Medium        |                                       |\n | EmulatorExtras       | Fast  | Low           | Emulators only: MuMu 12               |"]
 pub type MaaAdbInputMethod = u64;
+#[doc = " @brief iOS screencap method flags.\n\n Use bitwise OR to select the permitted backends. Video frames are preferred\n when Stream is enabled; ScreenshotService provides a lossless RPC fallback.\n Stream alone has no screenshot fallback. ScreenshotService alone starts no\n video session or background video decoder.\n\n Default: All methods. Reported availability describes supported backends,\n not a guarantee that every connected device/DDI exposes both services."]
+pub type MaaIOSScreencapMethod = u64;
+pub type MaaIOSConnectionMethod = i32;
+pub const MaaIOSConnectionMethodEnum_MaaIOSConnectionMethod_Auto: MaaIOSConnectionMethodEnum = 0;
+pub const MaaIOSConnectionMethodEnum_MaaIOSConnectionMethod_USB: MaaIOSConnectionMethodEnum = 1;
+pub const MaaIOSConnectionMethodEnum_MaaIOSConnectionMethod_WiFi: MaaIOSConnectionMethodEnum = 2;
+pub type MaaIOSConnectionMethodEnum = ::std::os::raw::c_uint;
 #[doc = " @brief Win32 screencap method flags\n\n Use bitwise OR to set the methods you need.\n MaaFramework will test all provided methods and use the fastest available one.\n\n No default value. Client should choose one as default.\n\n Predefined combinations:\n - Foreground: DXGI_DesktopDup_Window | ScreenDC\n - Background: FramePool | PrintWindow\n\n Different applications use different rendering methods, there is no universal solution.\n\n | Method                  | Speed     | Compatibility | Require Admin | Background Support | Notes                            |\n |-------------------------|-----------|---------------|---------------|--------------------|----------------------------------|\n | GDI                     | Fast      | Medium        | No            | No                 |                                  |\n | FramePool               | Very Fast | Medium        | No            | Yes                | Requires Windows 10 1903+        |\n | DXGI_DesktopDup         | Very Fast | Low           | No            | No                 | Desktop duplication (full screen)|\n | DXGI_DesktopDup_Window  | Very Fast | Low           | No            | No                 | Desktop duplication then crop    |\n | PrintWindow             | Medium    | Medium        | No            | Yes                |                                  |\n | ScreenDC                | Fast      | High          | No            | No                 |                                  |\n\n Note: FramePool and PrintWindow support pseudo-minimize — when the target window\n is minimized, they make it transparent and click-through, then restore it without\n activation, allowing screencap to continue without disturbing the user.\n Other screencap methods will fail when the target window is minimized."]
 pub type MaaWin32ScreencapMethod = u64;
 #[doc = " @brief Win32 input method\n\n No bitwise OR, select ONE method only.\n\n No default value. Client should choose one as default.\n\n Different applications process input differently, there is no universal solution.\n\n | Method                       | Compatibility | Require Admin | Seize Mouse | Background Support | Notes |\n |------------------------------|---------------|---------------|-------------|--------------------|-------------------------------------------------------------|\n | Seize                        | High          | No            | Yes         | No                 | | | SendMessage                  |\n Medium        | Maybe         | No          | Yes                |                                                             | |\n PostMessage                  | Medium        | Maybe         | No          | Yes                | | | LegacyEvent                  | Low\n | No            | Yes         | No                 |                                                             | | PostThreadMessage |\n Low           | Maybe         | No          | Yes                | Deprecated                                                  | |\n SendMessageWithCursorPos     | Medium        | Maybe         | Briefly     | Yes                | Moves cursor to target position, then\n restores              | | PostMessageWithCursorPos     | Medium        | Maybe         | Briefly     | Yes                | Moves cursor\n to target position, then restores              | | SendMessageWithWindowPos     | Medium        | Maybe         | No          | Yes |\n Moves window to align target with cursor, then restores     | | PostMessageWithWindowPos     | Medium        | Maybe         | No | Yes\n | Moves window to align target with cursor, then restores     | | Interception                 | Medium        | Yes           | No | No\n | Driver-level input injection via the Interception driver    | | AnchoredTouch                | Medium        | Maybe         | No\n | Yes                | Injects synthetic touch points, never moves the cursor       |\n\n Note:\n - Admin rights mainly depend on the target application's privilege level.\n   If the target runs as admin, MaaFramework should also run as admin for compatibility.\n - \"WithCursorPos\" methods briefly move the cursor to target position, send message,\n   then restore cursor position. This \"briefly\" seizes the mouse but won't block user operations.\n - \"WithWindowPos\" methods briefly move the window so the target aligns with the current cursor\n   position, send message, then restore the window position. The cursor is not moved.\n - \"AnchoredTouch\" injects synthetic touch points without moving the cursor or the target window.\n   The target receives WM_POINTER messages. Activation is suppressed during a touch sequence, but\n   the target application can still bring itself to the foreground. Its existing window styles\n   are preserved when the temporary activation styles are removed after the anchor is released.\n   A target already in the foreground is not given these temporary activation styles.\n   Each target point must be on an existing monitor; off-screen points are rejected.\n   When the target point is occluded, the window is temporarily raised and made nearly invisible.\n   While raised, it can take mouse clicks inside its rectangle from the windows underneath.\n   The window is restored after the touch sequence. If it cannot be raised and made hit-testable\n   at low opacity, the operation fails.\n   Raising requires WS_EX_LAYERED. Windows layered via UpdateLayeredWindow are not supported.\n   CS_OWNDC / CS_CLASSDC window classes produce a compatibility warning; the actual API results\n   determine whether raising can proceed. Layered style added by this method may remain until\n   inactive() or idle shutdown, and is retained if another module is using it.\n   A minimized target must be restored before input. Screencap methods with pseudo-minimize do\n   this before capture and can be used with AnchoredTouch.\n   Clicking and swiping only. Keyboard can be routed to another method, but scroll cannot:\n   it always goes through the mouse method and a synthetic touch device has no wheel."]
@@ -414,6 +426,7 @@ unsafe extern "C" {
     pub fn MaaTaskerGetController(tasker: *const MaaTasker) -> *mut MaaController;
 }
 unsafe extern "C" {
+    #[doc = " Clear historical details and latest-node references. Pending and running tasks\n retain their IDs, entry and status, but their node ID lists are reset.\n Previously cached node, recognition, action and wait-freezes IDs are invalidated."]
     pub fn MaaTaskerClearCache(tasker: *mut MaaTasker) -> MaaBool;
 }
 unsafe extern "C" {
@@ -665,6 +678,15 @@ unsafe extern "C" {
     ) -> *mut MaaController;
 }
 unsafe extern "C" {
+    #[doc = " Create an iOS controller using a running XDeviceBridge server.\n udid is required; transport and capture selections use their iOS enums.\n config_json: optional server_port (XDB_PORT or 17423), wifi_address, wifi_port (49152),\n shared_control (false), max_bitrate (omitted, bit/s), max_fps (0/unlimited), hardware_decode (false).\n Video options apply to Stream; max_fps limits receiver output, not device encoding.\n max_bitrate and max_fps require xdb Server 1.6.0 or later.\n xdb owns phone credentials and DDI setup.\n Stream obtains decoded BGRA; ScreenshotService obtains lossless PNG.\n Touch coordinates use the last delivered image geometry; contacts 0..4 are supported.\n Text accepts US-layout ASCII, tab and newline; unsupported text is rejected."]
+    pub fn MaaIOSControllerCreate(
+        udid: *const ::std::os::raw::c_char,
+        screencap_methods: MaaIOSScreencapMethod,
+        connection_method: MaaIOSConnectionMethod,
+        config_json: *const ::std::os::raw::c_char,
+    ) -> *mut MaaController;
+}
+unsafe extern "C" {
     pub fn MaaWin32ControllerCreate(
         hWnd: *mut ::std::os::raw::c_void,
         screencap_method: MaaWin32ScreencapMethod,
@@ -775,6 +797,7 @@ unsafe extern "C" {
     pub fn MaaControllerPostConnection(ctrl: *mut MaaController) -> MaaCtrlId;
 }
 unsafe extern "C" {
+    #[doc = " @brief Post a tap at (x, y).\n\n @note x/y are in the coordinate space of the **scaled** screenshot returned by\n       MaaControllerCachedImage, not raw device pixels. The framework rescales them\n       back to the raw space before handing them to the control unit\n       (MaaControllerGetResolution reports that raw size; setting\n       MaaCtrlOption_ScreenshotUseRawSize makes the two spaces identical).\n @see MaaControllerPostScreencap, MaaControllerGetResolution, MaaCtrlOption_ScreenshotUseRawSize"]
     pub fn MaaControllerPostClick(ctrl: *mut MaaController, x: i32, y: i32) -> MaaCtrlId;
 }
 unsafe extern "C" {
@@ -1520,6 +1543,16 @@ unsafe extern "C" {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+pub struct MaaToolkitIOSDevice {
+    _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MaaToolkitIOSDeviceList {
+    _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct MaaToolkitAdbDevice {
     _unused: [u8; 0],
 }
@@ -1609,6 +1642,65 @@ unsafe extern "C" {
 unsafe extern "C" {
     pub fn MaaToolkitAdbDeviceGetConfig(
         device: *const MaaToolkitAdbDevice,
+    ) -> *const ::std::os::raw::c_char;
+}
+pub type MaaToolkitIOSDeviceCancelCallback =
+    ::std::option::Option<unsafe extern "C" fn(userdata: *mut ::std::os::raw::c_void) -> MaaBool>;
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceListCreate() -> *mut MaaToolkitIOSDeviceList;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceListDestroy(list: *mut MaaToolkitIOSDeviceList);
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceFind(list: *mut MaaToolkitIOSDeviceList) -> MaaBool;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceFindWithOptions(
+        connection_method: MaaIOSConnectionMethod,
+        options_json: *const ::std::os::raw::c_char,
+        cancel_callback: MaaToolkitIOSDeviceCancelCallback,
+        userdata: *mut ::std::os::raw::c_void,
+        list: *mut MaaToolkitIOSDeviceList,
+    ) -> MaaBool;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceListSize(list: *const MaaToolkitIOSDeviceList) -> MaaSize;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceListAt(
+        list: *const MaaToolkitIOSDeviceList,
+        index: MaaSize,
+    ) -> *const MaaToolkitIOSDevice;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceGetName(
+        device: *const MaaToolkitIOSDevice,
+    ) -> *const ::std::os::raw::c_char;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceGetUdid(
+        device: *const MaaToolkitIOSDevice,
+    ) -> *const ::std::os::raw::c_char;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceGetState(
+        device: *const MaaToolkitIOSDevice,
+    ) -> *const ::std::os::raw::c_char;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceGetConnections(
+        device: *const MaaToolkitIOSDevice,
+    ) -> *const ::std::os::raw::c_char;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceGetScreencapMethods(
+        device: *const MaaToolkitIOSDevice,
+    ) -> MaaIOSScreencapMethod;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceListGetWarnings(
+        list: *const MaaToolkitIOSDeviceList,
     ) -> *const ::std::os::raw::c_char;
 }
 unsafe extern "C" {
