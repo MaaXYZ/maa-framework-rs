@@ -189,6 +189,8 @@ impl Controller {
     ///
     /// Creation does not connect the device; call [`Self::post_connection`].
     /// XDeviceBridge owns pairing credentials and DDI setup.
+    /// In dynamic mode, missing creation or cleanup symbols return
+    /// [`MaaError::ApiUnavailable`] before a native handle is created.
     ///
     /// # Arguments
     /// * `udid` - Device UDID (required)
@@ -210,6 +212,12 @@ impl Controller {
         })?;
         let c_udid = CString::new(udid)?;
         let c_config = CString::new(config_json)?;
+        #[cfg(feature = "dynamic")]
+        crate::require_symbols!(
+            MaaIOSControllerCreate,
+            MaaControllerClearSinks,
+            MaaControllerDestroy,
+        );
         let handle = unsafe {
             sys::MaaIOSControllerCreate(
                 c_udid.as_ptr(),

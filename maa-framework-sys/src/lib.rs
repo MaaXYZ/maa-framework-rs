@@ -118,6 +118,15 @@ pub unsafe fn load_library(path: &std::path::Path) -> Result<(), String> {
         .map_err(|_| "Library already loaded".to_string())
 }
 
+/// Return the loaded function table, or `None` before [`load_library`].
+///
+/// Optional functions remain `Err` when the library does not export them.
+/// The table and its libraries remain loaded for the lifetime of the process.
+#[cfg(feature = "dynamic")]
+pub fn library() -> Option<&'static MaaFramework> {
+    INSTANCE.get()
+}
+
 #[cfg(feature = "dynamic")]
 macro_rules! shim {
     ($name:ident ( $($arg:ident : $type:ty),* $(,)? ) -> $ret:ty) => {

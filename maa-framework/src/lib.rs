@@ -104,6 +104,21 @@ pub use error::{MaaError, MaaResult};
 
 pub use maa_framework_sys as sys;
 
+#[cfg(feature = "dynamic")]
+macro_rules! require_symbols {
+    ($($symbol:ident),+ $(,)?) => {{
+        let library = crate::sys::library().ok_or_else(|| {
+            crate::MaaError::ApiUnavailable("<library not loaded>".to_string())
+        })?;
+        $(library.$symbol.as_ref().map_err(|_| {
+            crate::MaaError::ApiUnavailable(stringify!($symbol).to_string())
+        })?;)+
+    }};
+}
+
+#[cfg(feature = "dynamic")]
+pub(crate) use require_symbols;
+
 use std::ffi::CString;
 use std::sync::atomic::{AtomicU8, Ordering};
 

@@ -52,6 +52,9 @@ pub enum MaaError {
     #[error("{0} is not available in AgentServer context")]
     UnsupportedInAgentServer(String),
 
+    #[error("MaaFramework API is unavailable: {0}")]
+    ApiUnavailable(String),
+
     #[error("iOS device discovery failed or was cancelled: {warnings:?}")]
     IosDiscoveryFailed { warnings: Vec<String> },
 }

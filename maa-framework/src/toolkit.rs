@@ -209,14 +209,19 @@ impl Toolkit {
     ///
     /// Discovery does not pair devices, install DDI or start media.
     /// Failure returns [`MaaError::IosDiscoveryFailed`] with the native warnings.
+    /// Missing dynamic symbols return [`MaaError::ApiUnavailable`] before allocation.
     pub fn find_ios_devices() -> MaaResult<Vec<IosDevice>> {
         if crate::is_agent_server_context() {
             return Err(Self::unsupported("Toolkit::find_ios_devices"));
         }
+        #[cfg(feature = "dynamic")]
+        crate::require_symbols!(MaaToolkitIOSDeviceFind);
         Self::find_ios_devices_impl(|list| unsafe { sys::MaaToolkitIOSDeviceFind(list) })
     }
 
     /// Find iOS devices with transport selection, options and cancellation.
+    ///
+    /// Missing dynamic symbols return [`MaaError::ApiUnavailable`] before allocation.
     ///
     /// # Arguments
     /// * `connection_method` - Transport to scan
@@ -231,6 +236,8 @@ impl Toolkit {
             return Err(Self::unsupported("Toolkit::find_ios_devices_with_options"));
         }
         let c_options = CString::new(serde_json::to_string(options)?)?;
+        #[cfg(feature = "dynamic")]
+        crate::require_symbols!(MaaToolkitIOSDeviceFindWithOptions);
         let (callback, userdata): (sys::MaaToolkitIOSDeviceCancelCallback, *mut c_void) =
             match cancel {
                 Some(flag) => (
@@ -253,6 +260,20 @@ impl Toolkit {
     fn find_ios_devices_impl(
         find: impl FnOnce(*mut sys::MaaToolkitIOSDeviceList) -> sys::MaaBool,
     ) -> MaaResult<Vec<IosDevice>> {
+        // Check cleanup and both success/error accessors before the guard owns a list.
+        #[cfg(feature = "dynamic")]
+        crate::require_symbols!(
+            MaaToolkitIOSDeviceListCreate,
+            MaaToolkitIOSDeviceListDestroy,
+            MaaToolkitIOSDeviceListSize,
+            MaaToolkitIOSDeviceListAt,
+            MaaToolkitIOSDeviceGetName,
+            MaaToolkitIOSDeviceGetUdid,
+            MaaToolkitIOSDeviceGetState,
+            MaaToolkitIOSDeviceGetConnections,
+            MaaToolkitIOSDeviceGetScreencapMethods,
+            MaaToolkitIOSDeviceListGetWarnings,
+        );
         let list = unsafe { sys::MaaToolkitIOSDeviceListCreate() };
         if list.is_null() {
             return Err(MaaError::NullPointer);
