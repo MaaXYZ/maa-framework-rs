@@ -683,7 +683,8 @@ fn test_recognition_types(context: &Context) -> MaaResult<()> {
             "recognition": "Custom",
             "custom_recognition": "MyCustomReco",
             "custom_recognition_param": {"key": "value"},
-            "roi": [0, 0, 100, 100]
+            "roi": [0, 0, 100, 100],
+            "index": -1
         }
     }"#,
     )?;
@@ -698,9 +699,26 @@ fn test_recognition_types(context: &Context) -> MaaResult<()> {
                     .and_then(|v| v.as_str()),
                 Some("value")
             );
+            assert_eq!(c.index, -1);
         }
         _ => panic!("Expected Custom"),
     }
+
+    // Custom result order comes from the callback, so order_by is rejected
+    assert!(
+        new_ctx
+            .override_pipeline(
+                r#"{
+                "RecoCustomOrderBy": {
+                    "recognition": "Custom",
+                    "custom_recognition": "MyCustomReco",
+                    "order_by": "Horizontal"
+                }
+            }"#,
+            )
+            .is_err(),
+        "custom order_by should be rejected"
+    );
 
     println!("    PASS: recognition types parsing");
     Ok(())

@@ -451,6 +451,9 @@ pub struct CustomRecognition {
     /// Custom parameters passed to the handler.
     #[serde(default)]
     pub custom_recognition_param: Value,
+    /// Which result to select (0-indexed, negative for reverse). Default: 0.
+    #[serde(default)]
+    pub index: i32,
 }
 
 /// Logical AND recognition - all sub-recognitions must match.
