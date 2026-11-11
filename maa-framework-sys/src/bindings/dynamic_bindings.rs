@@ -551,7 +551,7 @@ pub const MaaMacOSPermissionEnum_MaaMacOSPermissionAccessibility: MaaMacOSPermis
 pub type MaaMacOSPermissionEnum = ::std::os::raw::c_uint;
 pub type MaaMacOSPermission = i32;
 pub type MaaToolkitIOSDeviceCancelCallback = ::std::option::Option<
-    unsafe extern "system" fn(userdata: *mut ::std::os::raw::c_void) -> MaaBool,
+    unsafe extern "C" fn(userdata: *mut ::std::os::raw::c_void) -> MaaBool,
 >;
 pub struct MaaFramework {
     __library: CompositeLibrary,

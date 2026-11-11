@@ -185,39 +185,31 @@ impl Controller {
         Self::from_handle(handle)
     }
 
-    /// Create an iOS device controller using a running XDeviceBridge server.
+    /// Create an iOS controller using a running XDeviceBridge server.
     ///
-    /// Requires MaaFramework 5.16.0-beta.1+ with the iOS control unit available
-    /// and XDeviceBridge Server 1.6.0+.
-    /// Creation does not connect the device; use [`Self::post_connection`].
-    /// XDeviceBridge manages pairing credentials and DDI installation.
+    /// Creation does not connect the device; call [`Self::post_connection`].
+    /// XDeviceBridge owns pairing credentials and DDI setup.
     ///
-    /// `config` is serialized to JSON. Supported fields include `server_port`,
-    /// `wifi_address`, `wifi_port`, `shared_control`, `max_bitrate`, `max_fps`,
-    /// and `hardware_decode`. Bitrate/FPS limits require xdb Server 1.6.0+.
-    /// In dynamic mode, missing constructor or cleanup symbols return
-    /// [`MaaError::ApiUnavailable`] before a handle is allocated.
+    /// # Arguments
+    /// * `udid` - Device UDID (required)
+    /// * `screencap_methods` - Permitted capture backends
+    /// * `connection_method` - Transport selection
+    /// * `config` - Serialized to JSON: `server_port`, `wifi_address`, `wifi_port`,
+    ///   `shared_control`, `max_bitrate`, `max_fps` and `hardware_decode`
     pub fn new_ios<T: Serialize>(
         udid: &str,
         screencap_methods: common::IosScreencapMethod,
         connection_method: common::IosConnectionMethod,
         config: &T,
     ) -> MaaResult<Self> {
-        if crate::is_agent_server_context() {
-            return Err(MaaError::UnsupportedInAgentServer(
-                "Controller::new_ios".to_string(),
-            ));
-        }
         if udid.is_empty() {
             return Err(MaaError::InvalidArgument("iOS UDID is empty".to_string()));
         }
+        let config_json = serde_json::to_string(config).map_err(|e| {
+            MaaError::InvalidConfig(format!("Failed to serialize iOS controller config: {}", e))
+        })?;
         let c_udid = CString::new(udid)?;
-        let c_config = CString::new(serde_json::to_string(config)?)?;
-
-        #[cfg(feature = "dynamic")]
-        sys::require_ios_controller_api().map_err(MaaError::ApiUnavailable)?;
-
-        // The native constructor copies both strings before returning.
+        let c_config = CString::new(config_json)?;
         let handle = unsafe {
             sys::MaaIOSControllerCreate(
                 c_udid.as_ptr(),

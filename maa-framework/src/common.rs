@@ -201,40 +201,6 @@ impl Point {
 }
 
 // ============================================================================
-// iOS Controller Methods
-// ============================================================================
-
-/// Transport used by the XDeviceBridge iOS controller and device discovery.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[repr(i32)]
-pub enum IosConnectionMethod {
-    #[default]
-    Auto = sys::MaaIOSConnectionMethodEnum_MaaIOSConnectionMethod_Auto as i32,
-    Usb = sys::MaaIOSConnectionMethodEnum_MaaIOSConnectionMethod_USB as i32,
-    Wifi = sys::MaaIOSConnectionMethodEnum_MaaIOSConnectionMethod_WiFi as i32,
-}
-
-bitflags::bitflags! {
-    /// iOS capture methods. `ALL` includes future methods, as in the C API.
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-    pub struct IosScreencapMethod: u64 {
-        const NONE = sys::MaaIOSScreencapMethod_None as u64;
-        /// Decoded BGRA video stream.
-        const STREAM = sys::MaaIOSScreencapMethod_Stream as u64;
-        /// Lossless PNG from the screenshot service.
-        const SCREENSHOT_SERVICE = sys::MaaIOSScreencapMethod_ScreenshotService as u64;
-        const ALL = sys::MaaIOSScreencapMethod_All as u64;
-        const DEFAULT = sys::MaaIOSScreencapMethod_Default as u64;
-    }
-}
-
-impl Default for IosScreencapMethod {
-    fn default() -> Self {
-        Self::DEFAULT
-    }
-}
-
-// ============================================================================
 // Gamepad Types (Windows only, requires ViGEm Bus Driver)
 // ============================================================================
 
@@ -511,6 +477,40 @@ pub struct LinuxControllerConfig {
     /// Interpret key codes as Win32 virtual-key codes instead of raw evdev codes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub use_win32_vk_code: Option<bool>,
+}
+
+// ============================================================================
+// iOS Controller Methods
+// ============================================================================
+
+/// Transport used by the XDeviceBridge iOS controller and device discovery.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[repr(i32)]
+pub enum IosConnectionMethod {
+    #[default]
+    Auto = sys::MaaIOSConnectionMethodEnum_MaaIOSConnectionMethod_Auto as i32,
+    Usb = sys::MaaIOSConnectionMethodEnum_MaaIOSConnectionMethod_USB as i32,
+    Wifi = sys::MaaIOSConnectionMethodEnum_MaaIOSConnectionMethod_WiFi as i32,
+}
+
+bitflags::bitflags! {
+    /// iOS capture methods. `ALL` includes future methods, as in the C API.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    pub struct IosScreencapMethod: u64 {
+        const NONE = sys::MaaIOSScreencapMethod_None as u64;
+        /// Decoded BGRA video stream.
+        const STREAM = sys::MaaIOSScreencapMethod_Stream as u64;
+        /// Lossless PNG from the screenshot service.
+        const SCREENSHOT_SERVICE = sys::MaaIOSScreencapMethod_ScreenshotService as u64;
+        const ALL = sys::MaaIOSScreencapMethod_All as u64;
+        const DEFAULT = sys::MaaIOSScreencapMethod_Default as u64;
+    }
+}
+
+impl Default for IosScreencapMethod {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
 }
 
 // ============================================================================

@@ -1644,7 +1644,7 @@ unsafe extern "C" {
     ) -> *const ::std::os::raw::c_char;
 }
 pub type MaaToolkitIOSDeviceCancelCallback = ::std::option::Option<
-    unsafe extern "system" fn(userdata: *mut ::std::os::raw::c_void) -> MaaBool,
+    unsafe extern "C" fn(userdata: *mut ::std::os::raw::c_void) -> MaaBool,
 >;
 unsafe extern "C" {
     pub fn MaaToolkitIOSDeviceListCreate() -> *mut MaaToolkitIOSDeviceList;

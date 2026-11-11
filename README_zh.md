@@ -167,58 +167,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-## iOS 设备
-
-`Controller::new_ios` 和 `Toolkit::find_ios_devices` 通过 XDeviceBridge 支持
-iOS 真机。这些 API 从 MaaFramework **5.16.0-beta.1** 开始提供，5.15 SDK
-没有这些符号。Rust crate 的版本号不能保证原生 SDK 兼容性。
-
-```rust
-use maa_framework::{IosConnectionMethod, IosScreencapMethod};
-use maa_framework::{controller::Controller, toolkit::Toolkit};
-
-fn example() -> maa_framework::MaaResult<()> {
-    let result = Toolkit::find_ios_devices()?;
-    for warning in &result.warnings {
-        eprintln!("{warning}");
-    }
-    if let Some(device) = result.devices.first() {
-        let controller = Controller::new_ios(
-            &device.udid,
-            IosScreencapMethod::DEFAULT,
-            IosConnectionMethod::Auto,
-            &serde_json::json!({}),
-        )?;
-        let connection = controller.post_connection()?;
-        let status = controller.wait(connection);
-        println!("连接状态：{status:?}");
-    }
-    Ok(())
-}
-```
-
-`find_ios_devices_with_options` 接收连接方式、可序列化的选项（`timeout_ms`、
-`server_port`），以及可选的借用 `AtomicBool` 取消标志。结果拥有自己的字符串
-和传输信息 JSON。发现失败或取消时，返回带有警告信息的
-`MaaError::IosDiscoveryFailed`。发现记录或构造成功都不能证明已连通设备。
-
-动态模式允许加载旧 SDK；这些新增安全 API 在必要符号（包括清理函数）缺失时
-返回 `MaaError::ApiUnavailable`。原始 `sys` shim 保留现有的 panic 行为。
-静态模式在链接使用新 API 的代码时要求这些符号；重新生成绑定要求 5.16 头文件。
-两种模式都仍需 iOS control unit、`xdb_client` 和运行中的 XDeviceBridge Server 1.6.0+。
-即使符号齐全，缺少后端也会导致控制器返回空指针或发现失败。控制器配置中的
-`max_bitrate`、`max_fps` 要求 xdb Server 1.6.0 或更新版本。
-
-Linux 下无需设备的 FFI 契约测试使用一个小型 C 替身：
-
-```bash
-cargo test -p maa-framework --features dynamic --test ios_contract -- --test-threads=1
-python3 maa-framework/tests/fixtures/run_ios_static_smoke.py
-```
-
-这些测试验证 ABI、资源所有权、取消和缺失符号处理，不能替代真机发现、配对、
-输入或截图验证。
-
 ## 🔧 Features
 
 | Feature | 描述 | 默认 |

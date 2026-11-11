@@ -2,7 +2,9 @@
 
 #![allow(dead_code)]
 
-use std::path::PathBuf;
+use std::io::{BufRead, BufReader};
+use std::path::{Path, PathBuf};
+use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use maa_framework::custom_controller::CustomControllerCallback;
@@ -115,6 +117,76 @@ pub fn init_test_env() -> MaaResult<()> {
     maa_framework::configure_logging(log_dir.to_str().unwrap())?;
 
     Ok(())
+}
+
+const XDB_FAKE_SERVER_SCRIPT: &str = r#"
+import sys
+sys.path.insert(0, sys.argv[1])
+from fake_server import FakeServer
+FakeServer.server_version = "1.6.0"
+class Server(FakeServer):
+    def handle_call(self, name, params):
+        result, data = super().handle_call(name, params)
+        if name == "devices":
+            result["devices"][0]["state"] = "paired"
+        return result, data
+server = Server()
+print(server.server_address[1], flush=True)
+sys.stdin.read()
+"#;
+
+/// XDeviceBridge fake server - exactly like Python's ios_management_test DiscoveryServer
+pub struct XdbFakeServer {
+    child: Child,
+    pub port: u16,
+}
+
+impl XdbFakeServer {
+    pub fn start() -> Self {
+        let support = get_test_resources_dir()
+            .ancestors()
+            .nth(3)
+            .expect("MaaFramework root")
+            .join("3rdparty/XDeviceBridge/tests/support");
+        assert!(
+            support.join("fake_server.py").exists(),
+            "fake_server.py MUST exist at {:?}. Run: git submodule update --init --recursive",
+            support
+        );
+        let (child, port) = ["python3", "python"]
+            .into_iter()
+            .find_map(|python| Self::spawn(python, &support))
+            .expect("Python MUST be available to run the XDeviceBridge fake server");
+        Self { child, port }
+    }
+
+    fn spawn(python: &str, support: &Path) -> Option<(Child, u16)> {
+        let mut child = Command::new(python)
+            .arg("-c")
+            .arg(XDB_FAKE_SERVER_SCRIPT)
+            .arg(support)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .ok()?;
+        let mut line = String::new();
+        let _ = BufReader::new(child.stdout.take()?).read_line(&mut line);
+        match line.trim().parse() {
+            Ok(port) => Some((child, port)),
+            Err(_) => {
+                let _ = child.kill();
+                let _ = child.wait();
+                None
+            }
+        }
+    }
+}
+
+impl Drop for XdbFakeServer {
+    fn drop(&mut self) {
+        let _ = self.child.kill();
+        let _ = self.child.wait();
+    }
 }
 
 /// ImageController - exactly like Python's DbgController with CarouselImage
