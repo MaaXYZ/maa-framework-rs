@@ -59,6 +59,7 @@ shim ! (MaaResourceGetCustomActionList (res : * const MaaResource , buffer : * m
 shim ! (MaaResourceGetDefaultRecognitionParam (res : * const MaaResource , reco_type : * const :: std :: os :: raw :: c_char , buffer : * mut MaaStringBuffer) -> MaaBool) ;
 shim ! (MaaResourceGetDefaultActionParam (res : * const MaaResource , action_type : * const :: std :: os :: raw :: c_char , buffer : * mut MaaStringBuffer) -> MaaBool) ;
 shim ! (MaaAdbControllerCreate (adb_path : * const :: std :: os :: raw :: c_char , address : * const :: std :: os :: raw :: c_char , screencap_methods : MaaAdbScreencapMethod , input_methods : MaaAdbInputMethod , config : * const :: std :: os :: raw :: c_char , agent_path : * const :: std :: os :: raw :: c_char) -> * mut MaaController) ;
+shim ! (MaaIOSControllerCreate (udid : * const :: std :: os :: raw :: c_char , screencap_methods : MaaIOSScreencapMethod , connection_method : MaaIOSConnectionMethod , config_json : * const :: std :: os :: raw :: c_char) -> * mut MaaController) ;
 shim ! (MaaWin32ControllerCreate (hWnd : * mut :: std :: os :: raw :: c_void , screencap_method : MaaWin32ScreencapMethod , mouse_method : MaaWin32InputMethod , keyboard_method : MaaWin32InputMethod) -> * mut MaaController) ;
 shim ! (MaaMacOSControllerCreate (window_id : u32 , screencap_method : MaaMacOSScreencapMethod , input_method : MaaMacOSInputMethod) -> * mut MaaController) ;
 shim ! (MaaAndroidNativeControllerCreate (config_json : * const :: std :: os :: raw :: c_char) -> * mut MaaController) ;
@@ -209,6 +210,18 @@ shim ! (MaaToolkitAdbDeviceGetAddress (device : * const MaaToolkitAdbDevice) -> 
 shim ! (MaaToolkitAdbDeviceGetScreencapMethods (device : * const MaaToolkitAdbDevice) -> MaaAdbScreencapMethod) ;
 shim ! (MaaToolkitAdbDeviceGetInputMethods (device : * const MaaToolkitAdbDevice) -> MaaAdbInputMethod) ;
 shim ! (MaaToolkitAdbDeviceGetConfig (device : * const MaaToolkitAdbDevice) -> * const :: std :: os :: raw :: c_char) ;
+shim ! (MaaToolkitIOSDeviceListCreate () -> * mut MaaToolkitIOSDeviceList) ;
+shim ! (MaaToolkitIOSDeviceListDestroy (list : * mut MaaToolkitIOSDeviceList) -> ()) ;
+shim ! (MaaToolkitIOSDeviceFind (list : * mut MaaToolkitIOSDeviceList) -> MaaBool) ;
+shim ! (MaaToolkitIOSDeviceFindWithOptions (connection_method : MaaIOSConnectionMethod , options_json : * const :: std :: os :: raw :: c_char , cancel_callback : MaaToolkitIOSDeviceCancelCallback , userdata : * mut :: std :: os :: raw :: c_void , list : * mut MaaToolkitIOSDeviceList) -> MaaBool) ;
+shim ! (MaaToolkitIOSDeviceListSize (list : * const MaaToolkitIOSDeviceList) -> MaaSize) ;
+shim ! (MaaToolkitIOSDeviceListAt (list : * const MaaToolkitIOSDeviceList , index : MaaSize) -> * const MaaToolkitIOSDevice) ;
+shim ! (MaaToolkitIOSDeviceGetName (device : * const MaaToolkitIOSDevice) -> * const :: std :: os :: raw :: c_char) ;
+shim ! (MaaToolkitIOSDeviceGetUdid (device : * const MaaToolkitIOSDevice) -> * const :: std :: os :: raw :: c_char) ;
+shim ! (MaaToolkitIOSDeviceGetState (device : * const MaaToolkitIOSDevice) -> * const :: std :: os :: raw :: c_char) ;
+shim ! (MaaToolkitIOSDeviceGetConnections (device : * const MaaToolkitIOSDevice) -> * const :: std :: os :: raw :: c_char) ;
+shim ! (MaaToolkitIOSDeviceGetScreencapMethods (device : * const MaaToolkitIOSDevice) -> MaaIOSScreencapMethod) ;
+shim ! (MaaToolkitIOSDeviceListGetWarnings (list : * const MaaToolkitIOSDeviceList) -> * const :: std :: os :: raw :: c_char) ;
 shim ! (MaaToolkitDesktopWindowListCreate () -> * mut MaaToolkitDesktopWindowList) ;
 shim ! (MaaToolkitDesktopWindowListDestroy (handle : * mut MaaToolkitDesktopWindowList) -> ()) ;
 shim ! (MaaToolkitDesktopWindowFindAll (buffer : * mut MaaToolkitDesktopWindowList) -> MaaBool) ;
