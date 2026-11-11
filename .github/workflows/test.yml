@@ -185,7 +185,8 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5.2.0
         with:
-            python-version: "3.9"
+            # setup-python has no Python 3.9 build for Ubuntu 26.04.
+            python-version: "3.12"
 
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
