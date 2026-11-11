@@ -99,6 +99,7 @@ pub use common::LinuxControllerConfig;
 pub use common::LinuxInputMethod;
 pub use common::LinuxScreencapMethod;
 pub use common::MaaStatus;
+pub use common::{IosConnectionMethod, IosScreencapMethod};
 pub use error::{MaaError, MaaResult};
 
 pub use maa_framework_sys as sys;

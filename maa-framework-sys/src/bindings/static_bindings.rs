@@ -1643,6 +1643,66 @@ unsafe extern "C" {
         device: *const MaaToolkitAdbDevice,
     ) -> *const ::std::os::raw::c_char;
 }
+pub type MaaToolkitIOSDeviceCancelCallback = ::std::option::Option<
+    unsafe extern "system" fn(userdata: *mut ::std::os::raw::c_void) -> MaaBool,
+>;
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceListCreate() -> *mut MaaToolkitIOSDeviceList;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceListDestroy(list: *mut MaaToolkitIOSDeviceList);
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceFind(list: *mut MaaToolkitIOSDeviceList) -> MaaBool;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceFindWithOptions(
+        connection_method: MaaIOSConnectionMethod,
+        options_json: *const ::std::os::raw::c_char,
+        cancel_callback: MaaToolkitIOSDeviceCancelCallback,
+        userdata: *mut ::std::os::raw::c_void,
+        list: *mut MaaToolkitIOSDeviceList,
+    ) -> MaaBool;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceListSize(list: *const MaaToolkitIOSDeviceList) -> MaaSize;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceListAt(
+        list: *const MaaToolkitIOSDeviceList,
+        index: MaaSize,
+    ) -> *const MaaToolkitIOSDevice;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceGetName(
+        device: *const MaaToolkitIOSDevice,
+    ) -> *const ::std::os::raw::c_char;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceGetUdid(
+        device: *const MaaToolkitIOSDevice,
+    ) -> *const ::std::os::raw::c_char;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceGetState(
+        device: *const MaaToolkitIOSDevice,
+    ) -> *const ::std::os::raw::c_char;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceGetConnections(
+        device: *const MaaToolkitIOSDevice,
+    ) -> *const ::std::os::raw::c_char;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceGetScreencapMethods(
+        device: *const MaaToolkitIOSDevice,
+    ) -> MaaIOSScreencapMethod;
+}
+unsafe extern "C" {
+    pub fn MaaToolkitIOSDeviceListGetWarnings(
+        list: *const MaaToolkitIOSDeviceList,
+    ) -> *const ::std::os::raw::c_char;
+}
 unsafe extern "C" {
     pub fn MaaToolkitDesktopWindowListCreate() -> *mut MaaToolkitDesktopWindowList;
 }

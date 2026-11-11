@@ -21,6 +21,7 @@
 
 // Toolkit
 #include <MaaToolkit/AdbDevice/MaaToolkitAdbDevice.h>
+#include <MaaToolkit/IOSDevice/MaaToolkitIOSDevice.h>
 #include <MaaToolkit/DesktopWindow/MaaToolkitDesktopWindow.h>
 #include <MaaToolkit/Config/MaaToolkitConfig.h>
 #include <MaaToolkit/MacOS/MaaToolkitMacOS.h>

@@ -167,6 +167,62 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+## iOS devices
+
+`Controller::new_ios` and `Toolkit::find_ios_devices` support physical iOS devices
+through XDeviceBridge. These APIs first appeared in MaaFramework **5.16.0-beta.1**;
+5.15 SDKs do not provide them. The Rust crate version does not establish native
+SDK compatibility.
+
+```rust
+use maa_framework::{IosConnectionMethod, IosScreencapMethod};
+use maa_framework::{controller::Controller, toolkit::Toolkit};
+
+fn example() -> maa_framework::MaaResult<()> {
+    let result = Toolkit::find_ios_devices()?;
+    for warning in &result.warnings {
+        eprintln!("{warning}");
+    }
+    if let Some(device) = result.devices.first() {
+        let controller = Controller::new_ios(
+            &device.udid,
+            IosScreencapMethod::DEFAULT,
+            IosConnectionMethod::Auto,
+            &serde_json::json!({}),
+        )?;
+        let connection = controller.post_connection()?;
+        let status = controller.wait(connection);
+        println!("Connection status: {status:?}");
+    }
+    Ok(())
+}
+```
+
+`find_ios_devices_with_options` accepts a connection method, serializable options
+(`timeout_ms`, `server_port`) and an optional borrowed `AtomicBool` cancellation
+flag. Results own their strings and transport JSON. Discovery failure/cancellation
+returns `MaaError::IosDiscoveryFailed` with warnings. Discovery records and a
+successful constructor do not establish a working device connection.
+
+Dynamic loading permits older SDKs to load; these new safe APIs return
+`MaaError::ApiUnavailable` if a required symbol is missing, including a cleanup
+symbol. Raw `sys` shims retain their existing panic behavior. Static mode requires
+the iOS symbols when linking code that uses them; regenerating bindings requires
+5.16 headers. Both modes still need the iOS control unit, `xdb_client` and a running
+XDeviceBridge Server 1.6.0 or later. Missing backend support can return a null controller or
+failed discovery even when all symbols are present. `max_bitrate` and `max_fps`
+controller options require xdb Server 1.6.0 or later.
+
+The Linux device-free FFI contract suite uses a small C fixture:
+
+```bash
+cargo test -p maa-framework --features dynamic --test ios_contract -- --test-threads=1
+python3 maa-framework/tests/fixtures/run_ios_static_smoke.py
+```
+
+These tests check ABI, ownership, cancellation and missing-symbol handling; they
+do not validate discovery, pairing, input or capture on real devices.
+
 ## 🔧 Features
 
 | Feature | Description | Default |

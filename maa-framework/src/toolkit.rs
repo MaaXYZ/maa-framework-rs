@@ -6,6 +6,27 @@ use crate::{MaaError, MaaResult, common, sys};
 use std::ffi::{CStr, CString};
 use std::path::{Path, PathBuf};
 use std::sync::Once;
+use std::sync::atomic::{AtomicBool, Ordering};
+
+/// An iOS discovery record. Its presence does not prove device connectivity.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IosDevice {
+    pub name: String,
+    pub udid: String,
+    /// Typically `discovered`, `paired`, or `connected`.
+    pub state: String,
+    /// Transport candidates, including address, interface and pairing details.
+    pub connections: Vec<serde_json::Value>,
+    /// Native capture flags; unknown future bits are preserved.
+    pub screencap_methods: u64,
+}
+
+/// Owned iOS discovery results, including diagnostics from a successful scan.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IosDiscoveryResult {
+    pub devices: Vec<IosDevice>,
+    pub warnings: Vec<String>,
+}
 
 /// Information about a connected ADB device.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -101,6 +122,103 @@ impl Toolkit {
         let c_config = CString::new(default_config)?;
         let ret = unsafe { sys::MaaToolkitConfigInitOption(c_path.as_ptr(), c_config.as_ptr()) };
         common::check_bool(ret)
+    }
+
+    /// Discover an iOS USB/Wi-Fi snapshot using XDeviceBridge.
+    ///
+    /// Requires MaaFramework 5.16.0-beta.1+, the iOS discovery backend, and
+    /// XDeviceBridge Server 1.6.0+. Discovery does not pair devices, install DDI,
+    /// or start a media session. All returned data is
+    /// copied before the native list is destroyed. Failure/cancellation returns
+    /// [`MaaError::IosDiscoveryFailed`] with the native warnings.
+    pub fn find_ios_devices() -> MaaResult<IosDiscoveryResult> {
+        Self::find_ios_devices_impl(None)
+    }
+
+    /// Discover iOS devices with transport selection, JSON options and cancellation.
+    ///
+    /// Options include `timeout_ms` (0..60000, default 3000) and `server_port`
+    /// (default `XDB_PORT` or 17423). USB enumeration has a separate one-second
+    /// budget. Set `cancel` to true from another thread to request cancellation.
+    /// The synchronous call retains the flag until all native callback work ends.
+    /// Missing dynamic symbols return [`MaaError::ApiUnavailable`] before allocation.
+    pub fn find_ios_devices_with_options<T: Serialize>(
+        connection_method: common::IosConnectionMethod,
+        options: &T,
+        cancel: Option<&AtomicBool>,
+    ) -> MaaResult<IosDiscoveryResult> {
+        let options = CString::new(serde_json::to_string(options)?)?;
+        Self::find_ios_devices_impl(Some((connection_method, &options, cancel)))
+    }
+
+    fn find_ios_devices_impl(
+        options: Option<(common::IosConnectionMethod, &CStr, Option<&AtomicBool>)>,
+    ) -> MaaResult<IosDiscoveryResult> {
+        if crate::is_agent_server_context() {
+            return Err(Self::unsupported("Toolkit::find_ios_devices"));
+        }
+
+        #[cfg(feature = "dynamic")]
+        sys::require_ios_discovery_api(options.is_some()).map_err(MaaError::ApiUnavailable)?;
+
+        let list = unsafe { sys::MaaToolkitIOSDeviceListCreate() };
+        if list.is_null() {
+            return Err(MaaError::NullPointer);
+        }
+        let _guard = IosDeviceListGuard(list);
+
+        let ret = unsafe {
+            match options {
+                Some((connection_method, options, cancel)) => {
+                    let (callback, userdata): (sys::MaaToolkitIOSDeviceCancelCallback, _) =
+                        match cancel {
+                            Some(flag) => (
+                                Some(ios_discovery_cancelled),
+                                (flag as *const AtomicBool).cast_mut().cast(),
+                            ),
+                            None => (None, std::ptr::null_mut()),
+                        };
+                    sys::MaaToolkitIOSDeviceFindWithOptions(
+                        connection_method as sys::MaaIOSConnectionMethod,
+                        options.as_ptr(),
+                        callback,
+                        userdata,
+                        list,
+                    )
+                }
+                None => sys::MaaToolkitIOSDeviceFind(list),
+            }
+        };
+
+        // Warnings and every device field borrow from the list. Copy them while
+        // the guard is alive, including on the native failure/cancellation path.
+        let warnings: Vec<String> = serde_json::from_str(&unsafe {
+            copy_ios_string(sys::MaaToolkitIOSDeviceListGetWarnings(list))?
+        })?;
+        if ret == 0 {
+            return Err(MaaError::IosDiscoveryFailed { warnings });
+        }
+
+        let mut devices = Vec::new();
+        let count = unsafe { sys::MaaToolkitIOSDeviceListSize(list) };
+        for index in 0..count {
+            let device = unsafe { sys::MaaToolkitIOSDeviceListAt(list, index) };
+            if device.is_null() {
+                return Err(MaaError::NullPointer);
+            }
+            unsafe {
+                devices.push(IosDevice {
+                    name: copy_ios_string(sys::MaaToolkitIOSDeviceGetName(device))?,
+                    udid: copy_ios_string(sys::MaaToolkitIOSDeviceGetUdid(device))?,
+                    state: copy_ios_string(sys::MaaToolkitIOSDeviceGetState(device))?,
+                    connections: serde_json::from_str(&copy_ios_string(
+                        sys::MaaToolkitIOSDeviceGetConnections(device),
+                    )?)?,
+                    screencap_methods: sys::MaaToolkitIOSDeviceGetScreencapMethods(device),
+                });
+            }
+        }
+        Ok(IosDiscoveryResult { devices, warnings })
     }
 
     /// Find connected ADB devices.
@@ -331,6 +449,30 @@ impl Toolkit {
             }
             Ok(instances)
         }
+    }
+}
+
+// The C contract allows a worker thread to invoke this callback. Atomic reads
+// cannot panic or reenter the framework; FindWithOptions joins that work before
+// returning, so the borrowed flag outlives every invocation.
+unsafe extern "system" fn ios_discovery_cancelled(userdata: *mut std::ffi::c_void) -> sys::MaaBool {
+    unsafe { &*userdata.cast::<AtomicBool>() }.load(Ordering::Relaxed) as sys::MaaBool
+}
+
+/// Copy a native, list-owned NUL-terminated string before the list can be freed.
+unsafe fn copy_ios_string(ptr: *const std::ffi::c_char) -> MaaResult<String> {
+    if ptr.is_null() {
+        return Err(MaaError::NullPointer);
+    }
+    Ok(unsafe { CStr::from_ptr(ptr) }
+        .to_string_lossy()
+        .into_owned())
+}
+
+struct IosDeviceListGuard(*mut sys::MaaToolkitIOSDeviceList);
+impl Drop for IosDeviceListGuard {
+    fn drop(&mut self) {
+        unsafe { sys::MaaToolkitIOSDeviceListDestroy(self.0) }
     }
 }
 

@@ -340,6 +340,9 @@ fn generate_bindings_with_bindgen(include_dir: &[PathBuf], out_path: &PathBuf, i
 
     bindings_builder = bindings_builder
         .wrap_unsafe_ops(true)
+        // MAA_CALL is stdcall on Windows and C elsewhere. Keep checked-in
+        // bindings portable even when they are generated on a Unix host.
+        .override_abi(bindgen::Abi::System, "MaaToolkitIOSDeviceCancelCallback")
         .allowlist_function("Maa.*")
         .allowlist_type("Maa.*")
         .allowlist_var("Maa.*")

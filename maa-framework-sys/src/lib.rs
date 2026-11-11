@@ -118,6 +118,102 @@ pub unsafe fn load_library(path: &std::path::Path) -> Result<(), String> {
         .map_err(|_| "Library already loaded".to_string())
 }
 
+/// Check all symbols required to create and safely destroy an iOS controller.
+///
+/// Missing optional symbols do not prevent loading an older framework. Call this
+/// before creating an owning controller to avoid a missing-symbol panic in Drop.
+#[cfg(feature = "dynamic")]
+pub fn require_ios_controller_api() -> Result<(), String> {
+    let lib = INSTANCE
+        .get()
+        .ok_or_else(|| "<library not loaded>".to_string())?;
+    for (name, present) in [
+        ("MaaIOSControllerCreate", lib.MaaIOSControllerCreate.is_ok()),
+        ("MaaControllerDestroy", lib.MaaControllerDestroy.is_ok()),
+        (
+            "MaaControllerClearSinks",
+            lib.MaaControllerClearSinks.is_ok(),
+        ),
+    ] {
+        if !present {
+            return Err(name.to_string());
+        }
+    }
+    Ok(())
+}
+
+/// Check the complete iOS discovery symbol set before allocating a list.
+///
+/// This includes destruction and every accessor, so an older or partial toolkit
+/// cannot cause a missing-symbol panic while a list guard is being unwound.
+#[cfg(feature = "dynamic")]
+pub fn require_ios_discovery_api(with_options: bool) -> Result<(), String> {
+    let lib = INSTANCE
+        .get()
+        .ok_or_else(|| "<library not loaded>".to_string())?;
+    for (name, present) in [
+        (
+            "MaaToolkitIOSDeviceListCreate",
+            lib.MaaToolkitIOSDeviceListCreate.is_ok(),
+        ),
+        (
+            "MaaToolkitIOSDeviceListDestroy",
+            lib.MaaToolkitIOSDeviceListDestroy.is_ok(),
+        ),
+        (
+            "MaaToolkitIOSDeviceListSize",
+            lib.MaaToolkitIOSDeviceListSize.is_ok(),
+        ),
+        (
+            "MaaToolkitIOSDeviceListAt",
+            lib.MaaToolkitIOSDeviceListAt.is_ok(),
+        ),
+        (
+            "MaaToolkitIOSDeviceGetName",
+            lib.MaaToolkitIOSDeviceGetName.is_ok(),
+        ),
+        (
+            "MaaToolkitIOSDeviceGetUdid",
+            lib.MaaToolkitIOSDeviceGetUdid.is_ok(),
+        ),
+        (
+            "MaaToolkitIOSDeviceGetState",
+            lib.MaaToolkitIOSDeviceGetState.is_ok(),
+        ),
+        (
+            "MaaToolkitIOSDeviceGetConnections",
+            lib.MaaToolkitIOSDeviceGetConnections.is_ok(),
+        ),
+        (
+            "MaaToolkitIOSDeviceGetScreencapMethods",
+            lib.MaaToolkitIOSDeviceGetScreencapMethods.is_ok(),
+        ),
+        (
+            "MaaToolkitIOSDeviceListGetWarnings",
+            lib.MaaToolkitIOSDeviceListGetWarnings.is_ok(),
+        ),
+    ] {
+        if !present {
+            return Err(name.to_string());
+        }
+    }
+    let (name, present) = if with_options {
+        (
+            "MaaToolkitIOSDeviceFindWithOptions",
+            lib.MaaToolkitIOSDeviceFindWithOptions.is_ok(),
+        )
+    } else {
+        (
+            "MaaToolkitIOSDeviceFind",
+            lib.MaaToolkitIOSDeviceFind.is_ok(),
+        )
+    };
+    if !present {
+        return Err(name.to_string());
+    }
+    Ok(())
+}
+
 #[cfg(feature = "dynamic")]
 macro_rules! shim {
     ($name:ident ( $($arg:ident : $type:ty),* $(,)? ) -> $ret:ty) => {

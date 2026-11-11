@@ -550,6 +550,9 @@ pub const MaaMacOSPermissionEnum_MaaMacOSPermissionScreenCapture: MaaMacOSPermis
 pub const MaaMacOSPermissionEnum_MaaMacOSPermissionAccessibility: MaaMacOSPermissionEnum = 2;
 pub type MaaMacOSPermissionEnum = ::std::os::raw::c_uint;
 pub type MaaMacOSPermission = i32;
+pub type MaaToolkitIOSDeviceCancelCallback = ::std::option::Option<
+    unsafe extern "system" fn(userdata: *mut ::std::os::raw::c_void) -> MaaBool,
+>;
 pub struct MaaFramework {
     __library: CompositeLibrary,
     pub MaaTaskerCreate: Result<unsafe extern "C" fn() -> *mut MaaTasker, ::libloading::Error>,
@@ -1646,6 +1649,59 @@ pub struct MaaFramework {
         unsafe extern "C" fn(device: *const MaaToolkitAdbDevice) -> *const ::std::os::raw::c_char,
         ::libloading::Error,
     >,
+    pub MaaToolkitIOSDeviceListCreate:
+        Result<unsafe extern "C" fn() -> *mut MaaToolkitIOSDeviceList, ::libloading::Error>,
+    pub MaaToolkitIOSDeviceListDestroy:
+        Result<unsafe extern "C" fn(list: *mut MaaToolkitIOSDeviceList), ::libloading::Error>,
+    pub MaaToolkitIOSDeviceFind: Result<
+        unsafe extern "C" fn(list: *mut MaaToolkitIOSDeviceList) -> MaaBool,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitIOSDeviceFindWithOptions: Result<
+        unsafe extern "C" fn(
+            connection_method: MaaIOSConnectionMethod,
+            options_json: *const ::std::os::raw::c_char,
+            cancel_callback: MaaToolkitIOSDeviceCancelCallback,
+            userdata: *mut ::std::os::raw::c_void,
+            list: *mut MaaToolkitIOSDeviceList,
+        ) -> MaaBool,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitIOSDeviceListSize: Result<
+        unsafe extern "C" fn(list: *const MaaToolkitIOSDeviceList) -> MaaSize,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitIOSDeviceListAt: Result<
+        unsafe extern "C" fn(
+            list: *const MaaToolkitIOSDeviceList,
+            index: MaaSize,
+        ) -> *const MaaToolkitIOSDevice,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitIOSDeviceGetName: Result<
+        unsafe extern "C" fn(device: *const MaaToolkitIOSDevice) -> *const ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitIOSDeviceGetUdid: Result<
+        unsafe extern "C" fn(device: *const MaaToolkitIOSDevice) -> *const ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitIOSDeviceGetState: Result<
+        unsafe extern "C" fn(device: *const MaaToolkitIOSDevice) -> *const ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitIOSDeviceGetConnections: Result<
+        unsafe extern "C" fn(device: *const MaaToolkitIOSDevice) -> *const ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitIOSDeviceGetScreencapMethods: Result<
+        unsafe extern "C" fn(device: *const MaaToolkitIOSDevice) -> MaaIOSScreencapMethod,
+        ::libloading::Error,
+    >,
+    pub MaaToolkitIOSDeviceListGetWarnings: Result<
+        unsafe extern "C" fn(list: *const MaaToolkitIOSDeviceList) -> *const ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
     pub MaaToolkitDesktopWindowListCreate:
         Result<unsafe extern "C" fn() -> *mut MaaToolkitDesktopWindowList, ::libloading::Error>,
     pub MaaToolkitDesktopWindowListDestroy:
@@ -2166,6 +2222,30 @@ impl MaaFramework {
             unsafe { __library.get(b"MaaToolkitAdbDeviceGetInputMethods\0") }.map(|sym| *sym);
         let MaaToolkitAdbDeviceGetConfig =
             unsafe { __library.get(b"MaaToolkitAdbDeviceGetConfig\0") }.map(|sym| *sym);
+        let MaaToolkitIOSDeviceListCreate =
+            unsafe { __library.get(b"MaaToolkitIOSDeviceListCreate\0") }.map(|sym| *sym);
+        let MaaToolkitIOSDeviceListDestroy =
+            unsafe { __library.get(b"MaaToolkitIOSDeviceListDestroy\0") }.map(|sym| *sym);
+        let MaaToolkitIOSDeviceFind =
+            unsafe { __library.get(b"MaaToolkitIOSDeviceFind\0") }.map(|sym| *sym);
+        let MaaToolkitIOSDeviceFindWithOptions =
+            unsafe { __library.get(b"MaaToolkitIOSDeviceFindWithOptions\0") }.map(|sym| *sym);
+        let MaaToolkitIOSDeviceListSize =
+            unsafe { __library.get(b"MaaToolkitIOSDeviceListSize\0") }.map(|sym| *sym);
+        let MaaToolkitIOSDeviceListAt =
+            unsafe { __library.get(b"MaaToolkitIOSDeviceListAt\0") }.map(|sym| *sym);
+        let MaaToolkitIOSDeviceGetName =
+            unsafe { __library.get(b"MaaToolkitIOSDeviceGetName\0") }.map(|sym| *sym);
+        let MaaToolkitIOSDeviceGetUdid =
+            unsafe { __library.get(b"MaaToolkitIOSDeviceGetUdid\0") }.map(|sym| *sym);
+        let MaaToolkitIOSDeviceGetState =
+            unsafe { __library.get(b"MaaToolkitIOSDeviceGetState\0") }.map(|sym| *sym);
+        let MaaToolkitIOSDeviceGetConnections =
+            unsafe { __library.get(b"MaaToolkitIOSDeviceGetConnections\0") }.map(|sym| *sym);
+        let MaaToolkitIOSDeviceGetScreencapMethods =
+            unsafe { __library.get(b"MaaToolkitIOSDeviceGetScreencapMethods\0") }.map(|sym| *sym);
+        let MaaToolkitIOSDeviceListGetWarnings =
+            unsafe { __library.get(b"MaaToolkitIOSDeviceListGetWarnings\0") }.map(|sym| *sym);
         let MaaToolkitDesktopWindowListCreate =
             unsafe { __library.get(b"MaaToolkitDesktopWindowListCreate\0") }.map(|sym| *sym);
         let MaaToolkitDesktopWindowListDestroy =
@@ -2440,6 +2520,18 @@ impl MaaFramework {
             MaaToolkitAdbDeviceGetScreencapMethods,
             MaaToolkitAdbDeviceGetInputMethods,
             MaaToolkitAdbDeviceGetConfig,
+            MaaToolkitIOSDeviceListCreate,
+            MaaToolkitIOSDeviceListDestroy,
+            MaaToolkitIOSDeviceFind,
+            MaaToolkitIOSDeviceFindWithOptions,
+            MaaToolkitIOSDeviceListSize,
+            MaaToolkitIOSDeviceListAt,
+            MaaToolkitIOSDeviceGetName,
+            MaaToolkitIOSDeviceGetUdid,
+            MaaToolkitIOSDeviceGetState,
+            MaaToolkitIOSDeviceGetConnections,
+            MaaToolkitIOSDeviceGetScreencapMethods,
+            MaaToolkitIOSDeviceListGetWarnings,
             MaaToolkitDesktopWindowListCreate,
             MaaToolkitDesktopWindowListDestroy,
             MaaToolkitDesktopWindowFindAll,
@@ -4939,6 +5031,140 @@ impl MaaFramework {
                 .MaaToolkitAdbDeviceGetConfig
                 .as_ref()
                 .expect("Expected function, got error."))(device)
+        }
+    }
+    pub unsafe fn MaaToolkitIOSDeviceListCreate(&self) -> *mut MaaToolkitIOSDeviceList {
+        unsafe {
+            (self
+                .MaaToolkitIOSDeviceListCreate
+                .as_ref()
+                .expect("Expected function, got error."))()
+        }
+    }
+    pub unsafe fn MaaToolkitIOSDeviceListDestroy(&self, list: *mut MaaToolkitIOSDeviceList) {
+        unsafe {
+            (self
+                .MaaToolkitIOSDeviceListDestroy
+                .as_ref()
+                .expect("Expected function, got error."))(list)
+        }
+    }
+    pub unsafe fn MaaToolkitIOSDeviceFind(&self, list: *mut MaaToolkitIOSDeviceList) -> MaaBool {
+        unsafe {
+            (self
+                .MaaToolkitIOSDeviceFind
+                .as_ref()
+                .expect("Expected function, got error."))(list)
+        }
+    }
+    pub unsafe fn MaaToolkitIOSDeviceFindWithOptions(
+        &self,
+        connection_method: MaaIOSConnectionMethod,
+        options_json: *const ::std::os::raw::c_char,
+        cancel_callback: MaaToolkitIOSDeviceCancelCallback,
+        userdata: *mut ::std::os::raw::c_void,
+        list: *mut MaaToolkitIOSDeviceList,
+    ) -> MaaBool {
+        unsafe {
+            (self
+                .MaaToolkitIOSDeviceFindWithOptions
+                .as_ref()
+                .expect("Expected function, got error."))(
+                connection_method,
+                options_json,
+                cancel_callback,
+                userdata,
+                list,
+            )
+        }
+    }
+    pub unsafe fn MaaToolkitIOSDeviceListSize(
+        &self,
+        list: *const MaaToolkitIOSDeviceList,
+    ) -> MaaSize {
+        unsafe {
+            (self
+                .MaaToolkitIOSDeviceListSize
+                .as_ref()
+                .expect("Expected function, got error."))(list)
+        }
+    }
+    pub unsafe fn MaaToolkitIOSDeviceListAt(
+        &self,
+        list: *const MaaToolkitIOSDeviceList,
+        index: MaaSize,
+    ) -> *const MaaToolkitIOSDevice {
+        unsafe {
+            (self
+                .MaaToolkitIOSDeviceListAt
+                .as_ref()
+                .expect("Expected function, got error."))(list, index)
+        }
+    }
+    pub unsafe fn MaaToolkitIOSDeviceGetName(
+        &self,
+        device: *const MaaToolkitIOSDevice,
+    ) -> *const ::std::os::raw::c_char {
+        unsafe {
+            (self
+                .MaaToolkitIOSDeviceGetName
+                .as_ref()
+                .expect("Expected function, got error."))(device)
+        }
+    }
+    pub unsafe fn MaaToolkitIOSDeviceGetUdid(
+        &self,
+        device: *const MaaToolkitIOSDevice,
+    ) -> *const ::std::os::raw::c_char {
+        unsafe {
+            (self
+                .MaaToolkitIOSDeviceGetUdid
+                .as_ref()
+                .expect("Expected function, got error."))(device)
+        }
+    }
+    pub unsafe fn MaaToolkitIOSDeviceGetState(
+        &self,
+        device: *const MaaToolkitIOSDevice,
+    ) -> *const ::std::os::raw::c_char {
+        unsafe {
+            (self
+                .MaaToolkitIOSDeviceGetState
+                .as_ref()
+                .expect("Expected function, got error."))(device)
+        }
+    }
+    pub unsafe fn MaaToolkitIOSDeviceGetConnections(
+        &self,
+        device: *const MaaToolkitIOSDevice,
+    ) -> *const ::std::os::raw::c_char {
+        unsafe {
+            (self
+                .MaaToolkitIOSDeviceGetConnections
+                .as_ref()
+                .expect("Expected function, got error."))(device)
+        }
+    }
+    pub unsafe fn MaaToolkitIOSDeviceGetScreencapMethods(
+        &self,
+        device: *const MaaToolkitIOSDevice,
+    ) -> MaaIOSScreencapMethod {
+        unsafe {
+            (self
+                .MaaToolkitIOSDeviceGetScreencapMethods
+                .as_ref()
+                .expect("Expected function, got error."))(device)
+        }
+    }
+    pub unsafe fn MaaToolkitIOSDeviceListGetWarnings(
+        &self,
+        list: *const MaaToolkitIOSDeviceList,
+    ) -> *const ::std::os::raw::c_char {
+        unsafe {
+            (self
+                .MaaToolkitIOSDeviceListGetWarnings
+                .as_ref()
+                .expect("Expected function, got error."))(list)
         }
     }
     pub unsafe fn MaaToolkitDesktopWindowListCreate(&self) -> *mut MaaToolkitDesktopWindowList {

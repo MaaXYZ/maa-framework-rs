@@ -210,6 +210,18 @@ shim ! (MaaToolkitAdbDeviceGetAddress (device : * const MaaToolkitAdbDevice) -> 
 shim ! (MaaToolkitAdbDeviceGetScreencapMethods (device : * const MaaToolkitAdbDevice) -> MaaAdbScreencapMethod) ;
 shim ! (MaaToolkitAdbDeviceGetInputMethods (device : * const MaaToolkitAdbDevice) -> MaaAdbInputMethod) ;
 shim ! (MaaToolkitAdbDeviceGetConfig (device : * const MaaToolkitAdbDevice) -> * const :: std :: os :: raw :: c_char) ;
+shim ! (MaaToolkitIOSDeviceListCreate () -> * mut MaaToolkitIOSDeviceList) ;
+shim ! (MaaToolkitIOSDeviceListDestroy (list : * mut MaaToolkitIOSDeviceList) -> ()) ;
+shim ! (MaaToolkitIOSDeviceFind (list : * mut MaaToolkitIOSDeviceList) -> MaaBool) ;
+shim ! (MaaToolkitIOSDeviceFindWithOptions (connection_method : MaaIOSConnectionMethod , options_json : * const :: std :: os :: raw :: c_char , cancel_callback : MaaToolkitIOSDeviceCancelCallback , userdata : * mut :: std :: os :: raw :: c_void , list : * mut MaaToolkitIOSDeviceList) -> MaaBool) ;
+shim ! (MaaToolkitIOSDeviceListSize (list : * const MaaToolkitIOSDeviceList) -> MaaSize) ;
+shim ! (MaaToolkitIOSDeviceListAt (list : * const MaaToolkitIOSDeviceList , index : MaaSize) -> * const MaaToolkitIOSDevice) ;
+shim ! (MaaToolkitIOSDeviceGetName (device : * const MaaToolkitIOSDevice) -> * const :: std :: os :: raw :: c_char) ;
+shim ! (MaaToolkitIOSDeviceGetUdid (device : * const MaaToolkitIOSDevice) -> * const :: std :: os :: raw :: c_char) ;
+shim ! (MaaToolkitIOSDeviceGetState (device : * const MaaToolkitIOSDevice) -> * const :: std :: os :: raw :: c_char) ;
+shim ! (MaaToolkitIOSDeviceGetConnections (device : * const MaaToolkitIOSDevice) -> * const :: std :: os :: raw :: c_char) ;
+shim ! (MaaToolkitIOSDeviceGetScreencapMethods (device : * const MaaToolkitIOSDevice) -> MaaIOSScreencapMethod) ;
+shim ! (MaaToolkitIOSDeviceListGetWarnings (list : * const MaaToolkitIOSDeviceList) -> * const :: std :: os :: raw :: c_char) ;
 shim ! (MaaToolkitDesktopWindowListCreate () -> * mut MaaToolkitDesktopWindowList) ;
 shim ! (MaaToolkitDesktopWindowListDestroy (handle : * mut MaaToolkitDesktopWindowList) -> ()) ;
 shim ! (MaaToolkitDesktopWindowFindAll (buffer : * mut MaaToolkitDesktopWindowList) -> MaaBool) ;
