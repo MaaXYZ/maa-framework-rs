@@ -700,7 +700,10 @@ impl Tasker {
         // Note: callbacks registered via add_context_sink will be cleaned up
     }
 
-    /// Clear all cached data.
+    /// Clear historical details and latest-node references.
+    ///
+    /// Pending and running tasks keep their IDs, entry and status, but their node ID lists
+    /// are reset. Previously cached node, recognition, action and wait-freezes IDs become invalid.
     pub fn clear_cache(&self) -> MaaResult<()> {
         let ret = unsafe { sys::MaaTaskerClearCache(self.inner.handle.as_ptr()) };
         crate::common::check_bool(ret)
