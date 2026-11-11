@@ -550,9 +550,8 @@ pub const MaaMacOSPermissionEnum_MaaMacOSPermissionScreenCapture: MaaMacOSPermis
 pub const MaaMacOSPermissionEnum_MaaMacOSPermissionAccessibility: MaaMacOSPermissionEnum = 2;
 pub type MaaMacOSPermissionEnum = ::std::os::raw::c_uint;
 pub type MaaMacOSPermission = i32;
-pub type MaaToolkitIOSDeviceCancelCallback = ::std::option::Option<
-    unsafe extern "C" fn(userdata: *mut ::std::os::raw::c_void) -> MaaBool,
->;
+pub type MaaToolkitIOSDeviceCancelCallback =
+    ::std::option::Option<unsafe extern "C" fn(userdata: *mut ::std::os::raw::c_void) -> MaaBool>;
 pub struct MaaFramework {
     __library: CompositeLibrary,
     pub MaaTaskerCreate: Result<unsafe extern "C" fn() -> *mut MaaTasker, ::libloading::Error>,
@@ -2794,6 +2793,7 @@ impl MaaFramework {
                 .expect("Expected function, got error."))(tasker)
         }
     }
+    #[doc = " Clear historical details and latest-node references. Pending and running tasks\n retain their IDs, entry and status, but their node ID lists are reset.\n Previously cached node, recognition, action and wait-freezes IDs are invalidated."]
     pub unsafe fn MaaTaskerClearCache(&self, tasker: *mut MaaTasker) -> MaaBool {
         unsafe {
             (self

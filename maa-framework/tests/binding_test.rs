@@ -197,6 +197,7 @@ impl CustomRecognition for MyRecognition {
 
         ANALYZED.store(true, Ordering::SeqCst);
 
+        // $all keeps the callback's order; the framework does not sort it
         Some((
             maa_framework::common::Rect {
                 x: 11,
@@ -204,7 +205,14 @@ impl CustomRecognition for MyRecognition {
                 width: 5,
                 height: 14,
             },
-            r#"{"message": "Hello World!"}"#.to_string(),
+            r#"{
+                "message": "Hello World!",
+                "$all": [
+                    {"box": [11, 4, 5, 14], "detail": {"message": "first"}},
+                    {"box": [21, 24, 25, 34], "detail": {"message": "second"}}
+                ]
+            }"#
+            .to_string(),
         ))
     }
 }
@@ -1252,7 +1260,8 @@ fn test_tasker_api() {
             "custom_recognition": "MyRec",
             "action": "Custom",
             "custom_action": "MyAct",
-            "custom_action_param": "Test111222333"
+            "custom_action_param": "Test111222333",
+            "index": -1
         }
     }"#;
     // Post task
@@ -1309,6 +1318,41 @@ fn test_tasker_api() {
         RUNNED.load(Ordering::SeqCst),
         "MyAction.run should be called"
     );
+
+    // index picks from the custom recognition's own result order
+    let rec_reco_id = detail
+        .nodes
+        .iter()
+        .flatten()
+        .find(|node| node.node_name == "Rec")
+        .expect("Rec node should be executed")
+        .reco_id;
+    let multi_detail = tasker
+        .get_recognition_detail(rec_reco_id)
+        .expect("get_recognition_detail should not error")
+        .expect("get_recognition_detail should return value");
+    assert!(multi_detail.hit, "multi result recognition should hit");
+    assert_eq!(
+        multi_detail.detail["all"].as_array().map(Vec::len),
+        Some(2),
+        "all should have 2 results"
+    );
+    assert_eq!(
+        multi_detail.detail["filtered"].as_array().map(Vec::len),
+        Some(2),
+        "filtered should have 2 results"
+    );
+    assert_eq!(
+        multi_detail.detail["best"]["box"],
+        serde_json::json!([21, 24, 25, 34]),
+        "index -1 should select the last result"
+    );
+    assert_eq!(
+        multi_detail.detail["best"]["detail"],
+        serde_json::json!({"message": "second"}),
+        "per result detail should be kept"
+    );
+    println!("  multi results: {}", multi_detail.detail["filtered"]);
 
     // Test clear_cache
     tasker.clear_cache().expect("Failed to clear cache");

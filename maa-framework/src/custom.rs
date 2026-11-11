@@ -63,7 +63,9 @@ pub trait CustomRecognition: Send + Sync {
     /// * `roi` - Region of Interest to restrict analysis
     ///
     /// # Returns
-    /// `Some((rect, detail))` if target found, `None` otherwise
+    /// `Some((rect, detail))` if target found, `None` otherwise.
+    /// To return multiple results, make `detail` a JSON object with `$all` / `$filtered`,
+    /// each an array of `{"box": [x, y, w, h], "detail": any}`; the node's `index` picks the final one.
     fn analyze(
         &self,
         context: &Context,

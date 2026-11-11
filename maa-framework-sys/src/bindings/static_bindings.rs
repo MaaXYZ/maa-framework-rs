@@ -426,6 +426,7 @@ unsafe extern "C" {
     pub fn MaaTaskerGetController(tasker: *const MaaTasker) -> *mut MaaController;
 }
 unsafe extern "C" {
+    #[doc = " Clear historical details and latest-node references. Pending and running tasks\n retain their IDs, entry and status, but their node ID lists are reset.\n Previously cached node, recognition, action and wait-freezes IDs are invalidated."]
     pub fn MaaTaskerClearCache(tasker: *mut MaaTasker) -> MaaBool;
 }
 unsafe extern "C" {
@@ -1643,9 +1644,8 @@ unsafe extern "C" {
         device: *const MaaToolkitAdbDevice,
     ) -> *const ::std::os::raw::c_char;
 }
-pub type MaaToolkitIOSDeviceCancelCallback = ::std::option::Option<
-    unsafe extern "C" fn(userdata: *mut ::std::os::raw::c_void) -> MaaBool,
->;
+pub type MaaToolkitIOSDeviceCancelCallback =
+    ::std::option::Option<unsafe extern "C" fn(userdata: *mut ::std::os::raw::c_void) -> MaaBool>;
 unsafe extern "C" {
     pub fn MaaToolkitIOSDeviceListCreate() -> *mut MaaToolkitIOSDeviceList;
 }
