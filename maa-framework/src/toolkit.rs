@@ -3,9 +3,10 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{MaaError, MaaResult, common, sys};
-use std::ffi::{CStr, CString};
+use std::ffi::{CStr, CString, c_void};
 use std::path::{Path, PathBuf};
 use std::sync::Once;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 /// Information about a connected ADB device.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,6 +23,21 @@ pub struct AdbDevice {
     pub input_methods: u64,
     /// Device configuration as JSON.
     pub config: serde_json::Value,
+}
+
+/// Information about a discovered iOS device.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IosDevice {
+    /// Device display name.
+    pub name: String,
+    /// Device UDID.
+    pub udid: String,
+    /// `discovered`, `paired` or `connected`; a record does not prove connectivity.
+    pub state: String,
+    /// Transport candidates with address, port, interface and pairing state.
+    pub connections: Vec<serde_json::Value>,
+    /// Supported screencap methods (bitflags).
+    pub screencap_methods: u64,
 }
 
 /// Information about a desktop window or Wayland display.
@@ -189,6 +205,99 @@ impl Toolkit {
         }
     }
 
+    /// Find iOS devices over USB and Wi-Fi using XDeviceBridge.
+    ///
+    /// Discovery does not pair devices, install DDI or start media.
+    /// Failure returns [`MaaError::IosDiscoveryFailed`] with the native warnings.
+    pub fn find_ios_devices() -> MaaResult<Vec<IosDevice>> {
+        if crate::is_agent_server_context() {
+            return Err(Self::unsupported("Toolkit::find_ios_devices"));
+        }
+        Self::find_ios_devices_impl(|list| unsafe { sys::MaaToolkitIOSDeviceFind(list) })
+    }
+
+    /// Find iOS devices with transport selection, options and cancellation.
+    ///
+    /// # Arguments
+    /// * `connection_method` - Transport to scan
+    /// * `options` - Serialized to JSON: `timeout_ms` (0..60000, default 3000) and `server_port`
+    /// * `cancel` - Set to `true` from another thread to cancel discovery
+    pub fn find_ios_devices_with_options<T: Serialize>(
+        connection_method: common::IosConnectionMethod,
+        options: &T,
+        cancel: Option<&AtomicBool>,
+    ) -> MaaResult<Vec<IosDevice>> {
+        if crate::is_agent_server_context() {
+            return Err(Self::unsupported("Toolkit::find_ios_devices_with_options"));
+        }
+        let c_options = CString::new(serde_json::to_string(options)?)?;
+        let (callback, userdata): (sys::MaaToolkitIOSDeviceCancelCallback, *mut c_void) =
+            match cancel {
+                Some(flag) => (
+                    Some(ios_discovery_cancelled),
+                    flag as *const AtomicBool as *mut c_void,
+                ),
+                None => (None, std::ptr::null_mut()),
+            };
+        Self::find_ios_devices_impl(|list| unsafe {
+            sys::MaaToolkitIOSDeviceFindWithOptions(
+                connection_method as sys::MaaIOSConnectionMethod,
+                c_options.as_ptr(),
+                callback,
+                userdata,
+                list,
+            )
+        })
+    }
+
+    fn find_ios_devices_impl(
+        find: impl FnOnce(*mut sys::MaaToolkitIOSDeviceList) -> sys::MaaBool,
+    ) -> MaaResult<Vec<IosDevice>> {
+        let list = unsafe { sys::MaaToolkitIOSDeviceListCreate() };
+        if list.is_null() {
+            return Err(MaaError::NullPointer);
+        }
+
+        let _guard = IosDeviceListGuard(list);
+
+        unsafe {
+            if find(list) == 0 {
+                let warnings = CStr::from_ptr(sys::MaaToolkitIOSDeviceListGetWarnings(list));
+                return Err(MaaError::IosDiscoveryFailed {
+                    warnings: serde_json::from_str(&warnings.to_string_lossy())?,
+                });
+            }
+
+            let count = sys::MaaToolkitIOSDeviceListSize(list);
+            let mut devices = Vec::with_capacity(count as usize);
+
+            for i in 0..count {
+                let device_ptr = sys::MaaToolkitIOSDeviceListAt(list, i);
+                if device_ptr.is_null() {
+                    continue;
+                }
+
+                let connections =
+                    CStr::from_ptr(sys::MaaToolkitIOSDeviceGetConnections(device_ptr));
+
+                devices.push(IosDevice {
+                    name: CStr::from_ptr(sys::MaaToolkitIOSDeviceGetName(device_ptr))
+                        .to_string_lossy()
+                        .into_owned(),
+                    udid: CStr::from_ptr(sys::MaaToolkitIOSDeviceGetUdid(device_ptr))
+                        .to_string_lossy()
+                        .into_owned(),
+                    state: CStr::from_ptr(sys::MaaToolkitIOSDeviceGetState(device_ptr))
+                        .to_string_lossy()
+                        .into_owned(),
+                    connections: serde_json::from_str(&connections.to_string_lossy())?,
+                    screencap_methods: sys::MaaToolkitIOSDeviceGetScreencapMethods(device_ptr),
+                });
+            }
+            Ok(devices)
+        }
+    }
+
     /// Find desktop windows on Windows/macOS or Wayland displays on Linux.
     ///
     /// # Returns
@@ -331,6 +440,18 @@ impl Toolkit {
             }
             Ok(instances)
         }
+    }
+}
+
+/// May run on a native worker thread; FindWithOptions joins it before returning.
+unsafe extern "C" fn ios_discovery_cancelled(userdata: *mut c_void) -> sys::MaaBool {
+    unsafe { &*(userdata as *const AtomicBool) }.load(Ordering::Relaxed) as sys::MaaBool
+}
+
+struct IosDeviceListGuard(*mut sys::MaaToolkitIOSDeviceList);
+impl Drop for IosDeviceListGuard {
+    fn drop(&mut self) {
+        unsafe { sys::MaaToolkitIOSDeviceListDestroy(self.0) }
     }
 }
 

@@ -185,6 +185,42 @@ impl Controller {
         Self::from_handle(handle)
     }
 
+    /// Create an iOS controller using a running XDeviceBridge server.
+    ///
+    /// Creation does not connect the device; call [`Self::post_connection`].
+    /// XDeviceBridge owns pairing credentials and DDI setup.
+    ///
+    /// # Arguments
+    /// * `udid` - Device UDID (required)
+    /// * `screencap_methods` - Permitted capture backends
+    /// * `connection_method` - Transport selection
+    /// * `config` - Serialized to JSON: `server_port`, `wifi_address`, `wifi_port`,
+    ///   `shared_control`, `max_bitrate`, `max_fps` and `hardware_decode`
+    pub fn new_ios<T: Serialize>(
+        udid: &str,
+        screencap_methods: common::IosScreencapMethod,
+        connection_method: common::IosConnectionMethod,
+        config: &T,
+    ) -> MaaResult<Self> {
+        if udid.is_empty() {
+            return Err(MaaError::InvalidArgument("iOS UDID is empty".to_string()));
+        }
+        let config_json = serde_json::to_string(config).map_err(|e| {
+            MaaError::InvalidConfig(format!("Failed to serialize iOS controller config: {}", e))
+        })?;
+        let c_udid = CString::new(udid)?;
+        let c_config = CString::new(config_json)?;
+        let handle = unsafe {
+            sys::MaaIOSControllerCreate(
+                c_udid.as_ptr(),
+                screencap_methods.bits(),
+                connection_method as sys::MaaIOSConnectionMethod,
+                c_config.as_ptr(),
+            )
+        };
+        Self::from_handle(handle)
+    }
+
     /// Create a new PlayCover controller for iOS app control on macOS.
     ///
     /// Supports multiple contacts through the `post_touch_*` methods with compatible PlayTools.

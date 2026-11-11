@@ -21,7 +21,7 @@ use maa_framework::tasker::Tasker;
 use maa_framework::toolkit::Toolkit;
 use maa_framework::{self, sys};
 
-use common::{get_test_resources_dir, init_test_env};
+use common::{XdbFakeServer, get_test_resources_dir, init_test_env};
 
 // ============================================================================
 // Custom Recognition/Action for testing
@@ -815,6 +815,71 @@ fn test_dbg_controller_creation() {
             panic!("Failed to create dbg controller: {}", e);
         }
     }
+}
+
+#[test]
+fn test_ios_management() {
+    println!("\n=== test_ios_management ===");
+
+    let _ = init_test_env();
+
+    let controller = Controller::new_ios(
+        "",
+        maa_framework::IosScreencapMethod::DEFAULT,
+        maa_framework::IosConnectionMethod::Auto,
+        &serde_json::json!({}),
+    );
+    assert!(
+        matches!(controller, Err(maa_framework::MaaError::InvalidArgument(_))),
+        "empty UDID should be rejected"
+    );
+
+    let server = XdbFakeServer::start();
+
+    let devices = Toolkit::find_ios_devices_with_options(
+        maa_framework::IosConnectionMethod::Auto,
+        &serde_json::json!({"timeout_ms": 0, "server_port": server.port}),
+        None,
+    )
+    .expect("iOS discovery should succeed");
+    let udids: Vec<_> = devices.iter().map(|device| device.udid.as_str()).collect();
+    assert_eq!(udids, ["mock-iphone"]);
+    assert_eq!(devices[0].state, "paired");
+    assert_eq!(devices[0].connections[0]["address"], "127.0.0.2");
+
+    let cancelled = AtomicBool::new(true);
+    let cancelled_devices = Toolkit::find_ios_devices_with_options(
+        maa_framework::IosConnectionMethod::Auto,
+        &serde_json::json!({"server_port": server.port}),
+        Some(&cancelled),
+    );
+    assert!(
+        matches!(
+            cancelled_devices,
+            Err(maa_framework::MaaError::IosDiscoveryFailed { .. })
+        ),
+        "cancelled iOS discovery should fail"
+    );
+
+    let controller = Controller::new_ios(
+        "mock-iphone",
+        maa_framework::IosScreencapMethod::DEFAULT,
+        maa_framework::IosConnectionMethod::Auto,
+        &serde_json::json!({"server_port": server.port, "wifi_address": "auto"}),
+    )
+    .expect("iOS controller should be created");
+    let connection = controller.post_connection().expect("post_connection");
+    assert!(
+        controller.wait(connection).succeeded(),
+        "iOS controller should connect"
+    );
+    let screencap = controller.post_screencap().expect("post_screencap");
+    assert!(
+        controller.wait(screencap).succeeded(),
+        "iOS screencap should succeed"
+    );
+
+    println!("  PASS: iOS management");
 }
 
 #[test]
