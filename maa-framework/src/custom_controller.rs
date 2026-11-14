@@ -84,15 +84,24 @@ pub trait CustomControllerCallback: Send + Sync {
 
 type BoxedCallback = Box<dyn CustomControllerCallback>;
 
+fn guard<T>(callback: &str, fallback: T, f: impl FnOnce() -> T) -> T {
+    std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).unwrap_or_else(|_| {
+        eprintln!(
+            "MaaFramework Rust Binding: Panic caught in custom controller {callback} callback"
+        );
+        fallback
+    })
+}
+
 // FFI trampolines
 unsafe extern "C" fn connect_trampoline(trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.connect() { 1 } else { 0 }
+    guard("connect", 0, || cb.connect() as sys::MaaBool)
 }
 
 unsafe extern "C" fn connected_trampoline(trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.connected() { 1 } else { 0 }
+    guard("connected", 0, || cb.connected() as sys::MaaBool)
 }
 
 unsafe extern "C" fn request_uuid_trampoline(
@@ -100,20 +109,26 @@ unsafe extern "C" fn request_uuid_trampoline(
     buffer: *mut sys::MaaStringBuffer,
 ) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if let Some(uuid) = cb.request_uuid() {
-        if let Ok(c_str) = std::ffi::CString::new(uuid) {
-            unsafe {
-                sys::MaaStringBufferSetEx(buffer, c_str.as_ptr(), c_str.as_bytes().len() as u64);
+    guard("request_uuid", 0, || {
+        if let Some(uuid) = cb.request_uuid() {
+            if let Ok(c_str) = std::ffi::CString::new(uuid) {
+                unsafe {
+                    sys::MaaStringBufferSetEx(
+                        buffer,
+                        c_str.as_ptr(),
+                        c_str.as_bytes().len() as u64,
+                    );
+                }
+                return 1;
             }
-            return 1;
         }
-    }
-    0
+        0
+    })
 }
 
 unsafe extern "C" fn get_features_trampoline(trans_arg: *mut c_void) -> sys::MaaControllerFeature {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    cb.get_features().bits()
+    guard("get_features", 0, || cb.get_features().bits())
 }
 
 unsafe extern "C" fn start_app_trampoline(
@@ -126,7 +141,7 @@ unsafe extern "C" fn start_app_trampoline(
     } else {
         std::borrow::Cow::Borrowed("")
     };
-    if cb.start_app(&intent_str) { 1 } else { 0 }
+    guard("start_app", 0, || cb.start_app(&intent_str) as sys::MaaBool)
 }
 
 unsafe extern "C" fn stop_app_trampoline(
@@ -139,7 +154,7 @@ unsafe extern "C" fn stop_app_trampoline(
     } else {
         std::borrow::Cow::Borrowed("")
     };
-    if cb.stop_app(&intent_str) { 1 } else { 0 }
+    guard("stop_app", 0, || cb.stop_app(&intent_str) as sys::MaaBool)
 }
 
 unsafe extern "C" fn screencap_trampoline(
@@ -147,18 +162,17 @@ unsafe extern "C" fn screencap_trampoline(
     buffer: *mut sys::MaaImageBuffer,
 ) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if let Some(data) = cb.screencap() {
-        let ret = unsafe {
+    guard("screencap", 0, || match cb.screencap() {
+        Some(data) => unsafe {
             sys::MaaImageBufferSetEncoded(buffer, data.as_ptr() as *mut u8, data.len() as u64)
-        };
-        return ret;
-    }
-    0
+        },
+        None => 0,
+    })
 }
 
 unsafe extern "C" fn click_trampoline(x: i32, y: i32, trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.click(x, y) { 1 } else { 0 }
+    guard("click", 0, || cb.click(x, y) as sys::MaaBool)
 }
 
 unsafe extern "C" fn swipe_trampoline(
@@ -170,11 +184,9 @@ unsafe extern "C" fn swipe_trampoline(
     trans_arg: *mut c_void,
 ) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.swipe(x1, y1, x2, y2, duration) {
-        1
-    } else {
-        0
-    }
+    guard("swipe", 0, || {
+        cb.swipe(x1, y1, x2, y2, duration) as sys::MaaBool
+    })
 }
 
 unsafe extern "C" fn touch_down_trampoline(
@@ -185,11 +197,9 @@ unsafe extern "C" fn touch_down_trampoline(
     trans_arg: *mut c_void,
 ) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.touch_down(contact, x, y, pressure) {
-        1
-    } else {
-        0
-    }
+    guard("touch_down", 0, || {
+        cb.touch_down(contact, x, y, pressure) as sys::MaaBool
+    })
 }
 
 unsafe extern "C" fn touch_move_trampoline(
@@ -200,21 +210,19 @@ unsafe extern "C" fn touch_move_trampoline(
     trans_arg: *mut c_void,
 ) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.touch_move(contact, x, y, pressure) {
-        1
-    } else {
-        0
-    }
+    guard("touch_move", 0, || {
+        cb.touch_move(contact, x, y, pressure) as sys::MaaBool
+    })
 }
 
 unsafe extern "C" fn touch_up_trampoline(contact: i32, trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.touch_up(contact) { 1 } else { 0 }
+    guard("touch_up", 0, || cb.touch_up(contact) as sys::MaaBool)
 }
 
 unsafe extern "C" fn click_key_trampoline(keycode: i32, trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.click_key(keycode) { 1 } else { 0 }
+    guard("click_key", 0, || cb.click_key(keycode) as sys::MaaBool)
 }
 
 unsafe extern "C" fn input_text_trampoline(
@@ -227,22 +235,22 @@ unsafe extern "C" fn input_text_trampoline(
     } else {
         std::borrow::Cow::Borrowed("")
     };
-    if cb.input_text(&text_str) { 1 } else { 0 }
+    guard("input_text", 0, || cb.input_text(&text_str) as sys::MaaBool)
 }
 
 unsafe extern "C" fn key_down_trampoline(keycode: i32, trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.key_down(keycode) { 1 } else { 0 }
+    guard("key_down", 0, || cb.key_down(keycode) as sys::MaaBool)
 }
 
 unsafe extern "C" fn key_up_trampoline(keycode: i32, trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.key_up(keycode) { 1 } else { 0 }
+    guard("key_up", 0, || cb.key_up(keycode) as sys::MaaBool)
 }
 
 unsafe extern "C" fn scroll_trampoline(dx: i32, dy: i32, trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.scroll(dx, dy) { 1 } else { 0 }
+    guard("scroll", 0, || cb.scroll(dx, dy) as sys::MaaBool)
 }
 
 unsafe extern "C" fn relative_move_trampoline(
@@ -251,7 +259,9 @@ unsafe extern "C" fn relative_move_trampoline(
     trans_arg: *mut c_void,
 ) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.relative_move(dx, dy) { 1 } else { 0 }
+    guard("relative_move", 0, || {
+        cb.relative_move(dx, dy) as sys::MaaBool
+    })
 }
 
 unsafe extern "C" fn shell_trampoline(
@@ -267,20 +277,26 @@ unsafe extern "C" fn shell_trampoline(
         std::borrow::Cow::Borrowed("")
     };
 
-    if let Some(output) = cb.shell(&cmd_str, timeout) {
-        if let Ok(c_str) = CString::new(output) {
-            unsafe {
-                sys::MaaStringBufferSetEx(buffer, c_str.as_ptr(), c_str.as_bytes().len() as u64);
+    guard("shell", 0, || {
+        if let Some(output) = cb.shell(&cmd_str, timeout) {
+            if let Ok(c_str) = CString::new(output) {
+                unsafe {
+                    sys::MaaStringBufferSetEx(
+                        buffer,
+                        c_str.as_ptr(),
+                        c_str.as_bytes().len() as u64,
+                    );
+                }
+                return 1;
             }
-            return 1;
         }
-    }
-    0
+        0
+    })
 }
 
 unsafe extern "C" fn inactive_trampoline(trans_arg: *mut c_void) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    if cb.inactive() { 1 } else { 0 }
+    guard("inactive", 0, || cb.inactive() as sys::MaaBool)
 }
 
 unsafe extern "C" fn get_info_trampoline(
@@ -288,14 +304,15 @@ unsafe extern "C" fn get_info_trampoline(
     buffer: *mut sys::MaaStringBuffer,
 ) -> sys::MaaBool {
     let cb = unsafe { &*(trans_arg as *const BoxedCallback) };
-    let info = cb.get_info();
-    if let Ok(c_str) = std::ffi::CString::new(info) {
-        unsafe {
-            sys::MaaStringBufferSetEx(buffer, c_str.as_ptr(), c_str.as_bytes().len() as u64);
+    guard("get_info", 0, || {
+        if let Ok(c_str) = std::ffi::CString::new(cb.get_info()) {
+            unsafe {
+                sys::MaaStringBufferSetEx(buffer, c_str.as_ptr(), c_str.as_bytes().len() as u64);
+            }
+            return 1;
         }
-        return 1;
-    }
-    0
+        0
+    })
 }
 
 pub fn create_custom_controller_callbacks() -> sys::MaaCustomControllerCallbacks {

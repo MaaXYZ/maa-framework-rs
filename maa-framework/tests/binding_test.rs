@@ -989,6 +989,43 @@ fn test_controller_screenshot_target_expand() {
     assert_eq!(capture_size(), (160, 90));
 }
 
+struct PanicController;
+
+impl CustomControllerCallback for PanicController {
+    fn connect(&self) -> bool {
+        true
+    }
+
+    fn screencap(&self) -> Option<Vec<u8>> {
+        panic!("expected screencap panic");
+    }
+}
+
+#[test]
+fn test_custom_controller_screencap_failure() {
+    init_test_env().unwrap();
+
+    let invalid = Controller::new_custom(MyController {
+        count: Arc::new(AtomicUsize::new(0)),
+        image: b"not an image".to_vec(),
+    })
+    .unwrap();
+    assert!(invalid.wait(invalid.post_connection().unwrap()).succeeded());
+    assert!(!invalid.wait(invalid.post_screencap().unwrap()).succeeded());
+
+    let panicking = Controller::new_custom(PanicController).unwrap();
+    assert!(
+        panicking
+            .wait(panicking.post_connection().unwrap())
+            .succeeded()
+    );
+    assert!(
+        !panicking
+            .wait(panicking.post_screencap().unwrap())
+            .succeeded()
+    );
+}
+
 #[test]
 fn test_controller_screencap() {
     println!("\n=== test_controller_screencap ===");
