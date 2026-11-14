@@ -1026,6 +1026,353 @@ fn test_custom_controller_screencap_failure() {
     );
 }
 
+#[derive(Default)]
+struct Signal(std::sync::Mutex<bool>, std::sync::Condvar);
+
+impl Signal {
+    fn set(&self) {
+        *self.0.lock().unwrap() = true;
+        self.1.notify_all();
+    }
+
+    fn clear(&self) {
+        *self.0.lock().unwrap() = false;
+    }
+
+    fn is_set(&self) -> bool {
+        *self.0.lock().unwrap()
+    }
+
+    fn wait(&self, timeout: std::time::Duration) -> bool {
+        let guard = self.0.lock().unwrap();
+        *self
+            .1
+            .wait_timeout_while(guard, timeout, |set| !*set)
+            .unwrap()
+            .0
+    }
+}
+
+#[derive(Default)]
+struct ClearCacheState {
+    entered: std::collections::HashMap<&'static str, Signal>,
+    release: std::collections::HashMap<&'static str, Signal>,
+    calls: std::sync::Mutex<Vec<String>>,
+    errors: std::sync::Mutex<Vec<String>>,
+    nested_task_ids: std::sync::Mutex<std::collections::HashMap<String, i64>>,
+}
+
+fn record_errors(state: &ClearCacheState, check: impl FnOnce() -> Result<(), String>) -> bool {
+    check()
+        .map_err(|error| state.errors.lock().unwrap().push(error))
+        .is_ok()
+}
+
+#[test]
+fn test_tasker_clear_cache() {
+    use maa_framework::common::{MaaStatus, Rect};
+    use maa_framework::custom::{FnAction, FnRecognition};
+    use std::time::Duration;
+
+    init_test_env().unwrap();
+    let mut state = ClearCacheState::default();
+    for name in ["Gate", "Pending"] {
+        state.entered.insert(name, Signal::default());
+        state.release.insert(name, Signal::default());
+    }
+    let state = Arc::new(state);
+    let context_tasker =
+        |context: &Context| unsafe { Tasker::from_raw(context.tasker_handle(), false) }.unwrap();
+
+    let bundle = std::env::temp_dir().join(format!("maa_clear_cache_{}", std::process::id()));
+    std::fs::create_dir_all(bundle.join("pipeline")).unwrap();
+    std::fs::write(bundle.join("pipeline").join("empty.json"), "{}").unwrap();
+    let resource = Resource::new().unwrap();
+    resource.use_cpu().unwrap();
+    assert!(
+        resource
+            .post_bundle(bundle.to_str().unwrap())
+            .unwrap()
+            .wait()
+            .succeeded()
+    );
+
+    let s = state.clone();
+    let gate = FnAction::new(move |_: &Context, args| {
+        s.entered[args.node_name].set();
+        s.release[args.node_name].wait(Duration::from_secs(10))
+    });
+    let s = state.clone();
+    let finish = FnAction::new(move |context: &Context, _| {
+        s.calls.lock().unwrap().push("action".to_string());
+        context
+            .get_task_job()
+            .get(false)
+            .unwrap()
+            .is_some_and(|detail| detail.status.running())
+    });
+    let s = state.clone();
+    let clear_subtask = FnAction::new(move |context: &Context, _| {
+        record_errors(&s, || {
+            let tasker = context_tasker(context);
+            tasker.clear_cache().map_err(|e| e.to_string())?;
+            let task_id = s.nested_task_ids.lock().unwrap()["NestedTask"];
+            let detail = tasker
+                .get_task_detail(task_id)
+                .unwrap()
+                .ok_or("no subtask")?;
+            (detail.status.running()
+                && detail.entry == "NestedTask"
+                && detail.node_id_list.is_empty())
+            .then_some(())
+            .ok_or_else(|| format!("subtask after clear: {detail:?}"))
+        })
+    });
+    let s = state.clone();
+    let clear = FnRecognition::new(move |context: &Context, args| {
+        let ok = record_errors(&s, || {
+            let tasker = context_tasker(context);
+            tasker.clear_cache().map_err(|e| e.to_string())?;
+            let detail = tasker
+                .get_task_detail(args.task_id)
+                .unwrap()
+                .ok_or("no task")?;
+            if !(detail.status.running()
+                && detail.entry == "Entry"
+                && detail.node_id_list.is_empty())
+            {
+                return Err(format!("task after clear: {detail:?}"));
+            }
+            let nested = context
+                .clone_context()
+                .unwrap()
+                .run_recognition("Nested", "{}", args.image)
+                .unwrap();
+            if !tasker
+                .get_recognition_detail(nested)
+                .unwrap()
+                .is_some_and(|d| d.hit)
+            {
+                return Err("nested recognition missed".to_string());
+            }
+            let subtask = context.run_task("NestedTask", "{}").unwrap();
+            if !tasker
+                .get_task_detail(subtask)
+                .unwrap()
+                .is_some_and(|d| d.status.succeeded())
+            {
+                return Err("nested task failed".to_string());
+            }
+            tasker.clear_cache().map_err(|e| e.to_string())?;
+            for (name, task_id) in s.nested_task_ids.lock().unwrap().iter() {
+                if tasker.get_task_detail(*task_id).unwrap().is_some() {
+                    return Err(format!("{name} detail leaked"));
+                }
+            }
+            Ok(())
+        });
+        if ok {
+            s.calls.lock().unwrap().push("clear".to_string());
+        }
+        None
+    });
+    let s = state.clone();
+    let hit = FnRecognition::new(move |_: &Context, args| {
+        s.calls.lock().unwrap().push(args.node_name.to_string());
+        Some((
+            Rect {
+                x: 0,
+                y: 0,
+                width: 1,
+                height: 1,
+            },
+            String::new(),
+        ))
+    });
+    resource
+        .register_custom_action("Gate", Box::new(gate))
+        .unwrap();
+    resource
+        .register_custom_action("Finish", Box::new(finish))
+        .unwrap();
+    resource
+        .register_custom_action("ClearSubtask", Box::new(clear_subtask))
+        .unwrap();
+    resource
+        .register_custom_recognition("Clear", Box::new(clear))
+        .unwrap();
+    resource
+        .register_custom_recognition("Hit", Box::new(hit))
+        .unwrap();
+
+    let mut image = maa_framework::buffer::MaaImageBuffer::new().unwrap();
+    image.set_raw_data(&[0; 32 * 32 * 3], 32, 32, 16).unwrap();
+    let controller = Controller::new_custom(MyController {
+        count: Arc::new(AtomicUsize::new(0)),
+        image: image.to_vec().unwrap(),
+    })
+    .unwrap();
+    assert!(
+        controller
+            .wait(controller.post_connection().unwrap())
+            .succeeded()
+    );
+    let tasker = Tasker::new().unwrap();
+    tasker.bind(&resource, &controller).unwrap();
+    let s = state.clone();
+    tasker
+        .add_context_sink(move |msg, details| {
+            if msg == "Node.PipelineNode.Starting" || msg == "Node.RecognitionNode.Succeeded" {
+                let details: serde_json::Value = serde_json::from_str(details).unwrap();
+                let name = details["name"].as_str().unwrap_or_default();
+                if name == "NestedTask" || name == "Nested" {
+                    let task_id = details["task_id"].as_i64().unwrap();
+                    s.nested_task_ids
+                        .lock()
+                        .unwrap()
+                        .insert(name.to_string(), task_id);
+                }
+            }
+        })
+        .unwrap();
+
+    let mut pipeline = serde_json::json!({
+        "Finished": {},
+        "Entry": {"next": ["Gate"]},
+        "Gate": {"action": "Custom", "custom_action": "Gate", "next": ["Clear", "Hit"]},
+        "Pending": {"action": "Custom", "custom_action": "Gate"},
+        "Clear": {"recognition": "Custom", "custom_recognition": "Clear"},
+        "Hit": {"recognition": "Custom", "custom_recognition": "Hit", "action": "Custom", "custom_action": "Finish"},
+        "Nested": {"recognition": "Custom", "custom_recognition": "Hit"},
+        "NestedTask": {"action": "Custom", "custom_action": "ClearSubtask"},
+    });
+    for node in pipeline.as_object_mut().unwrap().values_mut() {
+        let node = node.as_object_mut().unwrap();
+        for (key, value) in [
+            ("pre_delay", 0),
+            ("post_delay", 0),
+            ("rate_limit", 0),
+            ("timeout", 2000),
+        ] {
+            node.insert(key.to_string(), value.into());
+        }
+    }
+    let pipeline_json = pipeline.to_string();
+
+    let finished = tasker.post_task("Finished", &pipeline_json).unwrap();
+    assert!(finished.wait().succeeded());
+    let old_node_id = finished.get(false).unwrap().unwrap().node_id_list[0];
+    let old_reco_id = tasker
+        .get_node_detail(old_node_id)
+        .unwrap()
+        .unwrap()
+        .reco_id;
+    let running = tasker.post_task("Entry", &pipeline_json).unwrap();
+    assert!(state.entered["Gate"].wait(Duration::from_secs(5)));
+    let pending = tasker.post_task("Pending", &pipeline_json).unwrap();
+    assert!(running.running() && pending.pending());
+    assert!(!running.get(false).unwrap().unwrap().node_id_list.is_empty());
+
+    let mut waiters = Vec::new();
+    let mut start_waiter = |name: &'static str, job_id: i64| {
+        let started = Arc::new(Signal::default());
+        let done = Arc::new(Signal::default());
+        let (tasker, started_in, done_in) = (tasker.clone(), started.clone(), done.clone());
+        let handle = std::thread::spawn(move || {
+            started_in.set();
+            let status = unsafe { sys::MaaTaskerWait(tasker.raw(), job_id) };
+            done_in.set();
+            (name, status)
+        });
+        assert!(started.wait(Duration::from_secs(5)));
+        assert!(
+            !done.wait(Duration::from_millis(50)),
+            "{name}: wait returned before the job ran"
+        );
+        waiters.push((handle, done.clone()));
+        done
+    };
+    start_waiter("before_clear", running.id);
+
+    for _ in 0..2 {
+        tasker.clear_cache().unwrap();
+        assert!(running.running(), "clear_cache invalidated the running job");
+        assert!(pending.pending(), "clear_cache invalidated the queued job");
+        for (job, entry) in [(&running, "Entry"), (&pending, "Pending")] {
+            let detail = job.get(false).unwrap().unwrap();
+            assert_eq!(detail.entry, entry);
+            assert!(detail.node_id_list.is_empty());
+        }
+        assert!(finished.get(false).unwrap().is_none());
+        assert!(tasker.get_node_detail(old_node_id).unwrap().is_none());
+        assert!(
+            tasker
+                .get_recognition_detail(old_reco_id)
+                .unwrap()
+                .is_none()
+        );
+        assert!(tasker.get_latest_node("Finished").unwrap().is_none());
+    }
+
+    assert!(
+        running
+            .override_pipeline(r#"{"Hit": {"focus": "after-clear"}}"#)
+            .unwrap()
+    );
+    assert!(
+        pending
+            .override_pipeline(r#"{"Pending": {"focus": "after-clear"}}"#)
+            .unwrap()
+    );
+    start_waiter("after_clear", running.id);
+    let pending_done = start_waiter("pending", pending.id);
+    state.release["Gate"].set();
+    assert!(state.entered["Pending"].wait(Duration::from_secs(5)));
+    assert!(!pending_done.is_set());
+    state.release["Pending"].set();
+    for (handle, done) in waiters {
+        assert!(done.wait(Duration::from_secs(5)), "wait did not finish");
+        let (name, status) = handle.join().unwrap();
+        assert_eq!(MaaStatus(status), MaaStatus::SUCCEEDED, "{name}");
+    }
+    assert!(running.succeeded() && pending.succeeded());
+    assert!(
+        state.errors.lock().unwrap().is_empty(),
+        "{:?}",
+        state.errors.lock().unwrap()
+    );
+    assert_eq!(
+        *state.calls.lock().unwrap(),
+        ["Nested", "clear", "Hit", "action"]
+    );
+    assert!(running.get(false).unwrap().unwrap().status.succeeded());
+    assert!(pending.get(false).unwrap().unwrap().status.succeeded());
+
+    tasker.clear_cache().unwrap();
+    for job in [&running, &pending] {
+        assert!(job.get(false).unwrap().is_none());
+        assert_eq!(job.status(), MaaStatus::INVALID);
+    }
+
+    // post_stop cancels queued work without running its completion path.
+    state.entered["Gate"].clear();
+    state.release["Gate"].clear();
+    pipeline["Gate"]["next"] = serde_json::json!([]);
+    let pipeline_json = pipeline.to_string();
+    tasker.post_task("Gate", &pipeline_json).unwrap();
+    assert!(state.entered["Gate"].wait(Duration::from_secs(5)));
+    let cancelled = tasker.post_task("Pending", &pipeline_json).unwrap();
+    let stop = tasker.post_stop().unwrap();
+    state.release["Gate"].set();
+    maa_framework::job::Job::for_tasker(&tasker, stop).wait();
+    tasker.clear_cache().unwrap();
+    assert!(
+        cancelled.get(false).unwrap().is_none(),
+        "cancelled pending details must be reclaimable"
+    );
+    let _ = std::fs::remove_dir_all(bundle);
+}
+
 #[test]
 fn test_controller_screencap() {
     println!("\n=== test_controller_screencap ===");
