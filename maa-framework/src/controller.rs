@@ -391,6 +391,8 @@ impl Controller {
     }
 
     /// Post a click action at the specified coordinates.
+    ///
+    /// Coordinates are in the scaled space of [`Self::cached_image`]; the framework maps them back to raw device pixels.
     pub fn post_click(&self, x: i32, y: i32) -> MaaResult<common::MaaId> {
         let id = unsafe { sys::MaaControllerPostClick(self.inner.handle.as_ptr(), x, y) };
         Ok(id)
