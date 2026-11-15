@@ -145,8 +145,70 @@ fn run_context_pipeline_tests(context: &Context) -> MaaResult<()> {
         println!("FAILED: test_repeat_params: {:?}", e);
         e
     })?;
+    test_ocr_engine(context).map_err(|e| {
+        println!("FAILED: test_ocr_engine: {:?}", e);
+        e
+    })?;
 
     println!("  All Context-level pipeline tests PASSED");
+    Ok(())
+}
+
+fn test_ocr_engine(context: &Context) -> MaaResult<()> {
+    println!("  Testing OCR engine parsing and override...");
+    let new_ctx = context.clone_context()?;
+    let ocr = |ctx: &Context| match ctx
+        .get_node_object("OcrEngine")
+        .unwrap()
+        .unwrap()
+        .recognition
+    {
+        Recognition::OCR(ocr) => ocr,
+        other => panic!("Expected OCR, got {other:?}"),
+    };
+
+    new_ctx.override_pipeline(r#"{"OcrEngine": {"recognition": "OCR", "expected": "开始"}}"#)?;
+    assert_eq!(ocr(&new_ctx).engine, "Default");
+
+    new_ctx.override_pipeline(r#"{"OcrEngine": {"engine": "WeChatOCR"}}"#)?;
+    let param = ocr(&new_ctx);
+    assert_eq!(param.engine, "WeChatOCR");
+    assert_eq!(param.expected, vec!["开始"]);
+    let data: serde_json::Value =
+        serde_json::from_str(&new_ctx.get_node_data("OcrEngine")?.unwrap()).unwrap();
+    assert_eq!(data["recognition"]["param"]["engine"], "WeChatOCR");
+
+    new_ctx.override_pipeline(
+        r#"{"OcrEngine": {"recognition": {"type": "OCR", "param": {"engine": "Default", "only_rec": true}}}}"#,
+    )?;
+    assert_eq!(ocr(&new_ctx).engine, "Default");
+    assert!(
+        new_ctx
+            .override_pipeline(r#"{"OcrEngine": {"engine": "WeChatOCR"}}"#)
+            .is_err(),
+        "WeChatOCR MUST reject inherited only_rec"
+    );
+
+    for (name, param) in [
+        ("UnknownOcrEngine", r#"{"engine": "Unknown"}"#),
+        (
+            "WeChatOnlyRec",
+            r#"{"engine": "WeChatOCR", "only_rec": true}"#,
+        ),
+        (
+            "WeChatModel",
+            r#"{"engine": "WeChatOCR", "model": "custom_model"}"#,
+        ),
+    ] {
+        let pipeline =
+            format!(r#"{{"{name}": {{"recognition": {{"type": "OCR", "param": {param}}}}}}}"#);
+        assert!(
+            new_ctx.override_pipeline(&pipeline).is_err(),
+            "{name} MUST be rejected"
+        );
+    }
+
+    println!("    PASS: OCR engine parsing and override");
     Ok(())
 }
 

@@ -110,6 +110,25 @@ impl Tasker {
         Self::fetch_recognition_detail(self.inner.handle.as_ptr(), reco_id)
     }
 
+    /// Get the current image retention status of a recognition.
+    ///
+    /// Returns `available`, `not_captured`, `disabled`, `budget_exceeded` or `evicted`,
+    /// or `None` when the recognition ID no longer exists.
+    pub fn get_recognition_image_status(
+        &self,
+        reco_id: crate::common::MaaId,
+    ) -> MaaResult<Option<String>> {
+        let buffer = crate::buffer::MaaStringBuffer::new()?;
+        let ret = unsafe {
+            sys::MaaTaskerGetRecognitionImageStatus(
+                self.inner.handle.as_ptr(),
+                reco_id,
+                buffer.raw(),
+            )
+        };
+        Ok((ret != 0).then(|| buffer.as_str().to_string()))
+    }
+
     /// Get action details by ID.
     pub fn get_action_detail(
         &self,
@@ -931,85 +950,77 @@ impl Tasker {
 
     /// Set whether to save debug drawings.
     pub fn set_save_draw(save: bool) -> MaaResult<()> {
-        let val = if save { 1 } else { 0 };
-        let ret = unsafe {
-            sys::MaaGlobalSetOption(
-                sys::MaaGlobalOptionEnum_MaaGlobalOption_SaveDraw as i32,
-                &val as *const _ as *mut _,
-                std::mem::size_of_val(&val) as u64,
-            )
-        };
-        common::check_bool(ret)
+        crate::set_save_draw(save)
     }
 
     /// Set the stdout logging level.
     pub fn set_stdout_level(level: sys::MaaLoggingLevel) -> MaaResult<()> {
-        let ret = unsafe {
-            sys::MaaGlobalSetOption(
-                sys::MaaGlobalOptionEnum_MaaGlobalOption_StdoutLevel as i32,
-                &level as *const _ as *mut _,
-                std::mem::size_of_val(&level) as u64,
-            )
-        };
-        common::check_bool(ret)
+        crate::set_stdout_level(level)
     }
 
     /// Enable or disable debug mode (raw image capture, etc).
     pub fn set_debug_mode(debug: bool) -> MaaResult<()> {
-        let val = if debug { 1 } else { 0 };
-        let ret = unsafe {
-            sys::MaaGlobalSetOption(
-                sys::MaaGlobalOptionEnum_MaaGlobalOption_DebugMode as i32,
-                &val as *const _ as *mut _,
-                std::mem::size_of_val(&val) as u64,
-            )
-        };
-        common::check_bool(ret)
+        crate::set_debug_mode(debug)
     }
 
     /// Set whether to save screenshots on error.
     pub fn set_save_on_error(save: bool) -> MaaResult<()> {
-        let val = if save { 1 } else { 0 };
-        let ret = unsafe {
-            sys::MaaGlobalSetOption(
-                sys::MaaGlobalOptionEnum_MaaGlobalOption_SaveOnError as i32,
-                &val as *const _ as *mut _,
-                std::mem::size_of_val(&val) as u64,
-            )
-        };
-        common::check_bool(ret)
+        crate::set_save_on_error(save)
     }
 
     /// Set the JPEG quality for debug drawings (0-100).
     pub fn set_draw_quality(quality: i32) -> MaaResult<()> {
-        let ret = unsafe {
-            sys::MaaGlobalSetOption(
-                sys::MaaGlobalOptionEnum_MaaGlobalOption_DrawQuality as i32,
-                &quality as *const _ as *mut _,
-                std::mem::size_of_val(&quality) as u64,
-            )
-        };
-        common::check_bool(ret)
+        crate::set_draw_quality(quality)
     }
 
     /// Set the limit for recognition image cache.
     pub fn set_reco_image_cache_limit(limit: usize) -> MaaResult<()> {
-        let ret = unsafe {
-            sys::MaaGlobalSetOption(
-                sys::MaaGlobalOptionEnum_MaaGlobalOption_RecoImageCacheLimit as i32,
-                &limit as *const _ as *mut _,
-                std::mem::size_of_val(&limit) as u64,
-            )
-        };
-        common::check_bool(ret)
+        crate::set_reco_image_cache_limit(limit as u64)
+    }
+
+    /// See [`crate::set_reco_image_raw`].
+    pub fn set_reco_image_raw(enable: bool) -> MaaResult<()> {
+        crate::set_reco_image_raw(enable)
+    }
+
+    /// See [`crate::set_reco_image_draws`].
+    pub fn set_reco_image_draws(enable: bool) -> MaaResult<()> {
+        crate::set_reco_image_draws(enable)
+    }
+
+    /// See [`crate::set_reco_image_cache_bytes`].
+    pub fn set_reco_image_cache_bytes(limit: usize) -> MaaResult<()> {
+        crate::set_reco_image_cache_bytes(limit)
+    }
+
+    /// See [`crate::set_capture_config`].
+    pub fn set_capture_config(enable: bool) -> MaaResult<()> {
+        crate::set_capture_config(enable)
     }
 
     /// Load a plugin from the specified path.
+    ///
+    /// Load plugins before creating any Resource, Controller or Tasker.
     pub fn load_plugin<P: AsRef<std::path::Path>>(path: P) -> MaaResult<()> {
         let path_str = path.as_ref().to_string_lossy();
         let c_path = std::ffi::CString::new(path_str.as_ref())?;
         let ret = unsafe { sys::MaaGlobalLoadPlugin(c_path.as_ptr()) };
         common::check_bool(ret)
+    }
+
+    /// See [`crate::get_plugin_list`].
+    pub fn get_plugin_list() -> MaaResult<Vec<String>> {
+        crate::get_plugin_list()
+    }
+
+    /// See [`crate::flush_plugins`].
+    pub fn flush_plugins() -> MaaResult<()> {
+        crate::flush_plugins()
+    }
+
+    /// See [`crate::shutdown_plugins`].
+    pub fn shutdown_plugins() -> MaaResult<()> {
+        crate::shutdown_plugins()
     }
 }
 

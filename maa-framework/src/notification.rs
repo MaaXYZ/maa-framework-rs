@@ -38,6 +38,8 @@ pub enum NotificationType {
     Succeeded,
     /// Operation failed
     Failed,
+    /// Operation was stopped
+    Cancelled,
     /// Unknown notification type
     Unknown,
 }
@@ -58,9 +60,14 @@ impl NotificationType {
         matches!(self, Self::Failed)
     }
 
-    /// Check if the operation is complete (succeeded or failed).
+    /// Check if this is a cancelled notification.
+    pub fn is_cancelled(&self) -> bool {
+        matches!(self, Self::Cancelled)
+    }
+
+    /// Check if the operation is complete (succeeded, failed or cancelled).
     pub fn is_complete(&self) -> bool {
-        matches!(self, Self::Succeeded | Self::Failed)
+        matches!(self, Self::Succeeded | Self::Failed | Self::Cancelled)
     }
 }
 
@@ -72,6 +79,8 @@ impl From<&str> for NotificationType {
             NotificationType::Succeeded
         } else if s.ends_with(".Failed") {
             NotificationType::Failed
+        } else if s.ends_with(".Cancelled") {
+            NotificationType::Cancelled
         } else {
             NotificationType::Unknown
         }
@@ -81,7 +90,7 @@ impl From<&str> for NotificationType {
 // === Event Detail Structures ===
 
 /// Resource loading event detail.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ResourceLoadingDetail {
     /// Resource ID
     pub res_id: i64,
@@ -89,6 +98,65 @@ pub struct ResourceLoadingDetail {
     pub hash: String,
     /// Path being loaded
     pub path: String,
+    /// Load status, present in terminal notifications only
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub status: Option<crate::common::MaaStatus>,
+    /// Load diagnostics, present in terminal notifications only
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub errors: Option<Vec<ResourceLoadError>>,
+}
+
+/// A resource loading diagnostic.
+///
+/// Fields other than `code` are present only when their source is known.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ResourceLoadError {
+    /// Error code, e.g. `path_not_found` or `node_reference_not_found`
+    pub code: String,
+    /// Source file
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub file: Option<String>,
+    /// Node name
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub node: Option<String>,
+    /// Source location as a JSON Pointer
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pointer: Option<String>,
+    /// Field name
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub field: Option<String>,
+    /// Referenced target
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target: Option<String>,
+}
+
+/// Operation that created or directly contains an execution.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ParentOperation {
+    /// `task`, `node`, `list`, `recognition`, `action` or `wait_freezes`
+    pub kind: String,
+    /// Execution ID of that operation
+    pub id: i64,
+}
+
+/// Common runtime fields of context notifications; absent before MaaFramework 6.0.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct RuntimeFields {
+    /// Context ID; clones receive new IDs
+    #[serde(default)]
+    pub context_id: Option<i64>,
+    /// Parent task ID, `0` for a root task
+    #[serde(default)]
+    pub parent_task_id: Option<i64>,
+    /// Operation that created the task, `None` for a root task
+    #[serde(default)]
+    pub task_parent: Option<ParentOperation>,
+    /// Direct parent operation
+    #[serde(default)]
+    pub parent: Option<ParentOperation>,
+    /// Termination reason, e.g. `completed`, `matched` or `cancelled`
+    #[serde(default)]
+    pub reason: Option<String>,
 }
 
 /// Controller action event detail.
@@ -121,6 +189,21 @@ pub struct TaskerTaskDetail {
     /// Resource hash
     #[serde(default)]
     pub hash: String,
+    /// Termination reason in terminal notifications; a stopped task may succeed with `cancelled`
+    #[serde(default)]
+    pub reason: Option<String>,
+}
+
+/// Nested task event detail (`Context.Task.*`).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContextTaskDetail {
+    /// Nested task ID
+    pub task_id: i64,
+    /// Entry node name
+    pub entry: String,
+    /// Common runtime fields
+    #[serde(flatten)]
+    pub runtime: RuntimeFields,
 }
 
 /// Next list item for node traversal.
@@ -149,6 +232,27 @@ pub struct NodeNextListDetail {
     /// Focus configuration
     #[serde(default)]
     pub focus: Value,
+    /// ID of this candidate scan
+    #[serde(default)]
+    pub list_id: Option<i64>,
+    /// Current pipeline node ID
+    #[serde(default)]
+    pub node_id: Option<i64>,
+    /// Scan round, starting at 1 for each pipeline node
+    #[serde(default)]
+    pub round: Option<i64>,
+    /// `entry`, `next` or `on_error`
+    #[serde(default)]
+    pub list_type: Option<String>,
+    /// Zero-based index of the selected item, on success only
+    #[serde(default)]
+    pub selected_index: Option<i64>,
+    /// Recognition ID of the selected item, on success only
+    #[serde(default)]
+    pub reco_id: Option<i64>,
+    /// Common runtime fields
+    #[serde(flatten)]
+    pub runtime: RuntimeFields,
 }
 
 /// Node wait-freezes event detail.
@@ -176,6 +280,9 @@ pub struct NodeWaitFreezesDetail {
     /// Focus configuration
     #[serde(default)]
     pub focus: Value,
+    /// Common runtime fields
+    #[serde(flatten)]
+    pub runtime: RuntimeFields,
 }
 
 /// Node recognition event detail.
@@ -192,6 +299,12 @@ pub struct NodeRecognitionDetail {
     pub focus: Value,
     /// Anchor name
     pub anchor: Option<String>,
+    /// Effective pipeline, when [`crate::set_capture_config`] is enabled
+    #[serde(default)]
+    pub pipeline: Option<Value>,
+    /// Common runtime fields
+    #[serde(flatten)]
+    pub runtime: RuntimeFields,
 }
 
 /// Node action event detail.
@@ -206,6 +319,15 @@ pub struct NodeActionDetail {
     /// Focus configuration
     #[serde(default)]
     pub focus: Value,
+    /// Recognition ID used by this action
+    #[serde(default)]
+    pub reco_id: Option<i64>,
+    /// Effective pipeline, when [`crate::set_capture_config`] is enabled
+    #[serde(default)]
+    pub pipeline: Option<Value>,
+    /// Common runtime fields
+    #[serde(flatten)]
+    pub runtime: RuntimeFields,
 }
 
 /// Node pipeline node event detail.
@@ -220,6 +342,31 @@ pub struct NodePipelineNodeDetail {
     /// Focus configuration
     #[serde(default)]
     pub focus: Value,
+    /// Common runtime fields
+    #[serde(flatten)]
+    pub runtime: RuntimeFields,
+}
+
+/// Scheduler transition event detail (`Node.Transition`).
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct NodeTransitionDetail {
+    /// Task ID
+    pub task_id: i64,
+    /// Source node execution ID, `0` for the initial transition
+    pub from_node_id: i64,
+    /// Target node execution ID
+    pub to_node_id: i64,
+    /// Source node name
+    pub from: String,
+    /// Target node name
+    pub to: String,
+    /// `entry`, `next`, `on_error` or `jump_back`
+    pub reason: String,
+    /// Whether the selected node has the `jump_back` attribute
+    pub jump_back: Option<bool>,
+    /// Recognition ID of the selected node
+    pub reco_id: Option<i64>,
 }
 
 // === Message Constants ===
@@ -241,40 +388,56 @@ pub mod msg {
     pub const TASKER_TASK_SUCCEEDED: &str = "Tasker.Task.Succeeded";
     pub const TASKER_TASK_FAILED: &str = "Tasker.Task.Failed";
 
+    // Context nested task events
+    pub const CONTEXT_TASK_STARTING: &str = "Context.Task.Starting";
+    pub const CONTEXT_TASK_SUCCEEDED: &str = "Context.Task.Succeeded";
+    pub const CONTEXT_TASK_FAILED: &str = "Context.Task.Failed";
+    pub const CONTEXT_TASK_CANCELLED: &str = "Context.Task.Cancelled";
+
+    // Scheduler transition event
+    pub const NODE_TRANSITION: &str = "Node.Transition";
+
     // Node pipeline events
     pub const NODE_PIPELINE_NODE_STARTING: &str = "Node.PipelineNode.Starting";
     pub const NODE_PIPELINE_NODE_SUCCEEDED: &str = "Node.PipelineNode.Succeeded";
     pub const NODE_PIPELINE_NODE_FAILED: &str = "Node.PipelineNode.Failed";
+    pub const NODE_PIPELINE_NODE_CANCELLED: &str = "Node.PipelineNode.Cancelled";
 
     // Node recognition events
     pub const NODE_RECOGNITION_STARTING: &str = "Node.Recognition.Starting";
     pub const NODE_RECOGNITION_SUCCEEDED: &str = "Node.Recognition.Succeeded";
     pub const NODE_RECOGNITION_FAILED: &str = "Node.Recognition.Failed";
+    pub const NODE_RECOGNITION_CANCELLED: &str = "Node.Recognition.Cancelled";
 
     // Node action events
     pub const NODE_ACTION_STARTING: &str = "Node.Action.Starting";
     pub const NODE_ACTION_SUCCEEDED: &str = "Node.Action.Succeeded";
     pub const NODE_ACTION_FAILED: &str = "Node.Action.Failed";
+    pub const NODE_ACTION_CANCELLED: &str = "Node.Action.Cancelled";
 
     // Node wait freezes events
     pub const NODE_WAIT_FREEZES_STARTING: &str = "Node.WaitFreezes.Starting";
     pub const NODE_WAIT_FREEZES_SUCCEEDED: &str = "Node.WaitFreezes.Succeeded";
     pub const NODE_WAIT_FREEZES_FAILED: &str = "Node.WaitFreezes.Failed";
+    pub const NODE_WAIT_FREEZES_CANCELLED: &str = "Node.WaitFreezes.Cancelled";
 
     // Node next list events
     pub const NODE_NEXT_LIST_STARTING: &str = "Node.NextList.Starting";
     pub const NODE_NEXT_LIST_SUCCEEDED: &str = "Node.NextList.Succeeded";
     pub const NODE_NEXT_LIST_FAILED: &str = "Node.NextList.Failed";
+    pub const NODE_NEXT_LIST_CANCELLED: &str = "Node.NextList.Cancelled";
 
     // Node recognition node trace events
     pub const NODE_RECOGNITION_NODE_STARTING: &str = "Node.RecognitionNode.Starting";
     pub const NODE_RECOGNITION_NODE_SUCCEEDED: &str = "Node.RecognitionNode.Succeeded";
     pub const NODE_RECOGNITION_NODE_FAILED: &str = "Node.RecognitionNode.Failed";
+    pub const NODE_RECOGNITION_NODE_CANCELLED: &str = "Node.RecognitionNode.Cancelled";
 
     // Node action node trace events
     pub const NODE_ACTION_NODE_STARTING: &str = "Node.ActionNode.Starting";
     pub const NODE_ACTION_NODE_SUCCEEDED: &str = "Node.ActionNode.Succeeded";
     pub const NODE_ACTION_NODE_FAILED: &str = "Node.ActionNode.Failed";
+    pub const NODE_ACTION_NODE_CANCELLED: &str = "Node.ActionNode.Cancelled";
 }
 
 // === Parse Functions ===
@@ -344,6 +507,8 @@ pub enum ContextEvent {
     NodePipelineNode(NotificationType, NodePipelineNodeDetail),
     NodeRecognitionNode(NotificationType, NodePipelineNodeDetail),
     NodeActionNode(NotificationType, NodePipelineNodeDetail),
+    ContextTask(NotificationType, ContextTaskDetail),
+    NodeTransition(NodeTransitionDetail),
     Unknown(String, Value),
 }
 
@@ -387,6 +552,16 @@ impl ContextEvent {
         if msg.starts_with("Node.ActionNode") {
             let detail = parse_node_pipeline_node(details)?;
             return Some(ContextEvent::NodeActionNode(noti_type, detail));
+        }
+
+        if msg.starts_with("Context.Task.") {
+            let detail = serde_json::from_str(details).ok()?;
+            return Some(ContextEvent::ContextTask(noti_type, detail));
+        }
+
+        if msg == msg::NODE_TRANSITION {
+            let detail = serde_json::from_str(details).ok()?;
+            return Some(ContextEvent::NodeTransition(detail));
         }
 
         Some(ContextEvent::Unknown(
@@ -454,6 +629,12 @@ pub trait ContextEventHandler: Send + Sync {
     /// Called when a node action node (trace) event occurs.
     fn on_node_action_node(&self, _noti_type: NotificationType, _detail: NodePipelineNodeDetail) {}
 
+    /// Called when a nested task event occurs.
+    fn on_context_task(&self, _noti_type: NotificationType, _detail: ContextTaskDetail) {}
+
+    /// Called after the selected node finishes and the scheduler moves on.
+    fn on_node_transition(&self, _detail: NodeTransitionDetail) {}
+
     /// Called when an unknown notification is received.
     fn on_unknown(&self, _msg: &str, _details: &Value) {}
 }
@@ -495,6 +676,16 @@ pub enum MaaEvent {
     /// Triggered when a task fails.
     TaskerTaskFailed(TaskerTaskDetail),
 
+    // --- Context Task Events ---
+    /// Triggered when a nested task started by `Context::run_task` begins.
+    ContextTaskStarting(ContextTaskDetail),
+    /// Triggered when a nested task succeeds.
+    ContextTaskSucceeded(ContextTaskDetail),
+    /// Triggered when a nested task fails.
+    ContextTaskFailed(ContextTaskDetail),
+    /// Triggered when a nested task is stopped.
+    ContextTaskCancelled(ContextTaskDetail),
+
     // --- Node Pipeline Events ---
     /// Triggered when a node in the pipeline starts execution.
     NodePipelineNodeStarting(NodePipelineNodeDetail),
@@ -502,6 +693,8 @@ pub enum MaaEvent {
     NodePipelineNodeSucceeded(NodePipelineNodeDetail),
     /// Triggered when a node in the pipeline fails.
     NodePipelineNodeFailed(NodePipelineNodeDetail),
+    /// Triggered when a node in the pipeline is stopped.
+    NodePipelineNodeCancelled(NodePipelineNodeDetail),
 
     // --- Node Recognition Events ---
     /// Triggered when image recognition begins for a node.
@@ -510,6 +703,8 @@ pub enum MaaEvent {
     NodeRecognitionSucceeded(NodeRecognitionDetail),
     /// Triggered when image recognition fails.
     NodeRecognitionFailed(NodeRecognitionDetail),
+    /// Triggered when image recognition is stopped.
+    NodeRecognitionCancelled(NodeRecognitionDetail),
 
     // --- Node Action Events ---
     /// Triggered before a node action is executed.
@@ -518,6 +713,8 @@ pub enum MaaEvent {
     NodeActionSucceeded(NodeActionDetail),
     /// Triggered if a node action fails.
     NodeActionFailed(NodeActionDetail),
+    /// Triggered if a node action is stopped.
+    NodeActionCancelled(NodeActionDetail),
 
     // --- Node Wait Freezes Events ---
     /// Triggered when wait-freezes processing starts.
@@ -526,14 +723,18 @@ pub enum MaaEvent {
     NodeWaitFreezesSucceeded(NodeWaitFreezesDetail),
     /// Triggered when wait-freezes processing fails.
     NodeWaitFreezesFailed(NodeWaitFreezesDetail),
+    /// Triggered when wait-freezes processing is stopped.
+    NodeWaitFreezesCancelled(NodeWaitFreezesDetail),
 
     // --- Node Next List Events ---
     /// Triggered when processing the "next" list for a node.
     NodeNextListStarting(NodeNextListDetail),
     /// Triggered when the "next" list processing succeeds.
     NodeNextListSucceeded(NodeNextListDetail),
-    /// Triggered when the "next" list processing fails.
+    /// Triggered when no node is selected in this round.
     NodeNextListFailed(NodeNextListDetail),
+    /// Triggered when the "next" list processing is stopped.
+    NodeNextListCancelled(NodeNextListDetail),
 
     // --- Trace Events ---
     /// Trace event: Recognition node starting.
@@ -542,6 +743,8 @@ pub enum MaaEvent {
     NodeRecognitionNodeSucceeded(NodePipelineNodeDetail),
     /// Trace event: Recognition node failed.
     NodeRecognitionNodeFailed(NodePipelineNodeDetail),
+    /// Trace event: Recognition node stopped.
+    NodeRecognitionNodeCancelled(NodePipelineNodeDetail),
 
     /// Trace event: Action node starting.
     NodeActionNodeStarting(NodePipelineNodeDetail),
@@ -549,6 +752,11 @@ pub enum MaaEvent {
     NodeActionNodeSucceeded(NodePipelineNodeDetail),
     /// Trace event: Action node failed.
     NodeActionNodeFailed(NodePipelineNodeDetail),
+    /// Trace event: Action node stopped.
+    NodeActionNodeCancelled(NodePipelineNodeDetail),
+
+    /// Triggered after the selected node finishes and the scheduler moves on.
+    NodeTransition(NodeTransitionDetail),
 
     // --- Fallback ---
     /// Represents an unknown or unparsable event.
@@ -574,266 +782,81 @@ impl MaaEvent {
     /// * `msg` - The notification type identifier (e.g., "Resource.Loading.Starting").
     /// * `details` - The JSON string containing event details.
     pub fn from_json(msg: &str, details: &str) -> Self {
+        fn parse<T: serde::de::DeserializeOwned>(
+            msg: &str,
+            details: &str,
+            variant: fn(T) -> MaaEvent,
+        ) -> MaaEvent {
+            serde_json::from_str(details)
+                .map(variant)
+                .unwrap_or_else(|e| MaaEvent::Unknown {
+                    msg: msg.to_string(),
+                    raw_json: details.to_string(),
+                    err: Some(e.to_string()),
+                })
+        }
+
+        use MaaEvent as E;
         match msg {
-            // Resource
-            msg::RESOURCE_LOADING_STARTING => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::ResourceLoadingStarting(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::RESOURCE_LOADING_SUCCEEDED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::ResourceLoadingSucceeded(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::RESOURCE_LOADING_FAILED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::ResourceLoadingFailed(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
+            msg::RESOURCE_LOADING_STARTING => parse(msg, details, E::ResourceLoadingStarting),
+            msg::RESOURCE_LOADING_SUCCEEDED => parse(msg, details, E::ResourceLoadingSucceeded),
+            msg::RESOURCE_LOADING_FAILED => parse(msg, details, E::ResourceLoadingFailed),
 
-            // Controller
-            msg::CONTROLLER_ACTION_STARTING => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::ControllerActionStarting(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::CONTROLLER_ACTION_SUCCEEDED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::ControllerActionSucceeded(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::CONTROLLER_ACTION_FAILED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::ControllerActionFailed(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
+            msg::CONTROLLER_ACTION_STARTING => parse(msg, details, E::ControllerActionStarting),
+            msg::CONTROLLER_ACTION_SUCCEEDED => parse(msg, details, E::ControllerActionSucceeded),
+            msg::CONTROLLER_ACTION_FAILED => parse(msg, details, E::ControllerActionFailed),
 
-            // Tasker
-            msg::TASKER_TASK_STARTING => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::TaskerTaskStarting(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::TASKER_TASK_SUCCEEDED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::TaskerTaskSucceeded(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::TASKER_TASK_FAILED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::TaskerTaskFailed(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
+            msg::TASKER_TASK_STARTING => parse(msg, details, E::TaskerTaskStarting),
+            msg::TASKER_TASK_SUCCEEDED => parse(msg, details, E::TaskerTaskSucceeded),
+            msg::TASKER_TASK_FAILED => parse(msg, details, E::TaskerTaskFailed),
 
-            // Node Pipeline
-            msg::NODE_PIPELINE_NODE_STARTING => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodePipelineNodeStarting(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::NODE_PIPELINE_NODE_SUCCEEDED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodePipelineNodeSucceeded(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::NODE_PIPELINE_NODE_FAILED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodePipelineNodeFailed(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
+            msg::CONTEXT_TASK_STARTING => parse(msg, details, E::ContextTaskStarting),
+            msg::CONTEXT_TASK_SUCCEEDED => parse(msg, details, E::ContextTaskSucceeded),
+            msg::CONTEXT_TASK_FAILED => parse(msg, details, E::ContextTaskFailed),
+            msg::CONTEXT_TASK_CANCELLED => parse(msg, details, E::ContextTaskCancelled),
 
-            // Node Recognition
-            msg::NODE_RECOGNITION_STARTING => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodeRecognitionStarting(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::NODE_RECOGNITION_SUCCEEDED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodeRecognitionSucceeded(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::NODE_RECOGNITION_FAILED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodeRecognitionFailed(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
+            msg::NODE_PIPELINE_NODE_STARTING => parse(msg, details, E::NodePipelineNodeStarting),
+            msg::NODE_PIPELINE_NODE_SUCCEEDED => parse(msg, details, E::NodePipelineNodeSucceeded),
+            msg::NODE_PIPELINE_NODE_FAILED => parse(msg, details, E::NodePipelineNodeFailed),
+            msg::NODE_PIPELINE_NODE_CANCELLED => parse(msg, details, E::NodePipelineNodeCancelled),
 
-            // Node Action
-            msg::NODE_ACTION_STARTING => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodeActionStarting(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::NODE_ACTION_SUCCEEDED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodeActionSucceeded(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::NODE_ACTION_FAILED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodeActionFailed(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
+            msg::NODE_RECOGNITION_STARTING => parse(msg, details, E::NodeRecognitionStarting),
+            msg::NODE_RECOGNITION_SUCCEEDED => parse(msg, details, E::NodeRecognitionSucceeded),
+            msg::NODE_RECOGNITION_FAILED => parse(msg, details, E::NodeRecognitionFailed),
+            msg::NODE_RECOGNITION_CANCELLED => parse(msg, details, E::NodeRecognitionCancelled),
 
-            // Node Wait Freezes
-            msg::NODE_WAIT_FREEZES_STARTING => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodeWaitFreezesStarting(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::NODE_WAIT_FREEZES_SUCCEEDED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodeWaitFreezesSucceeded(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::NODE_WAIT_FREEZES_FAILED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodeWaitFreezesFailed(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
+            msg::NODE_ACTION_STARTING => parse(msg, details, E::NodeActionStarting),
+            msg::NODE_ACTION_SUCCEEDED => parse(msg, details, E::NodeActionSucceeded),
+            msg::NODE_ACTION_FAILED => parse(msg, details, E::NodeActionFailed),
+            msg::NODE_ACTION_CANCELLED => parse(msg, details, E::NodeActionCancelled),
 
-            // Node Next List
-            msg::NODE_NEXT_LIST_STARTING => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodeNextListStarting(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::NODE_NEXT_LIST_SUCCEEDED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodeNextListSucceeded(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::NODE_NEXT_LIST_FAILED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodeNextListFailed(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
+            msg::NODE_WAIT_FREEZES_STARTING => parse(msg, details, E::NodeWaitFreezesStarting),
+            msg::NODE_WAIT_FREEZES_SUCCEEDED => parse(msg, details, E::NodeWaitFreezesSucceeded),
+            msg::NODE_WAIT_FREEZES_FAILED => parse(msg, details, E::NodeWaitFreezesFailed),
+            msg::NODE_WAIT_FREEZES_CANCELLED => parse(msg, details, E::NodeWaitFreezesCancelled),
 
-            // Node Recognition Node
-            msg::NODE_RECOGNITION_NODE_STARTING => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodeRecognitionNodeStarting(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::NODE_RECOGNITION_NODE_SUCCEEDED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodeRecognitionNodeSucceeded(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::NODE_RECOGNITION_NODE_FAILED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodeRecognitionNodeFailed(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
+            msg::NODE_NEXT_LIST_STARTING => parse(msg, details, E::NodeNextListStarting),
+            msg::NODE_NEXT_LIST_SUCCEEDED => parse(msg, details, E::NodeNextListSucceeded),
+            msg::NODE_NEXT_LIST_FAILED => parse(msg, details, E::NodeNextListFailed),
+            msg::NODE_NEXT_LIST_CANCELLED => parse(msg, details, E::NodeNextListCancelled),
 
-            // Node Action Node
-            msg::NODE_ACTION_NODE_STARTING => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodeActionNodeStarting(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::NODE_ACTION_NODE_SUCCEEDED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodeActionNodeSucceeded(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
-            msg::NODE_ACTION_NODE_FAILED => match serde_json::from_str(details) {
-                Ok(d) => MaaEvent::NodeActionNodeFailed(d),
-                Err(e) => MaaEvent::Unknown {
-                    msg: msg.to_string(),
-                    raw_json: details.to_string(),
-                    err: Some(e.to_string()),
-                },
-            },
+            msg::NODE_RECOGNITION_NODE_STARTING => {
+                parse(msg, details, E::NodeRecognitionNodeStarting)
+            }
+            msg::NODE_RECOGNITION_NODE_SUCCEEDED => {
+                parse(msg, details, E::NodeRecognitionNodeSucceeded)
+            }
+            msg::NODE_RECOGNITION_NODE_FAILED => parse(msg, details, E::NodeRecognitionNodeFailed),
+            msg::NODE_RECOGNITION_NODE_CANCELLED => {
+                parse(msg, details, E::NodeRecognitionNodeCancelled)
+            }
+
+            msg::NODE_ACTION_NODE_STARTING => parse(msg, details, E::NodeActionNodeStarting),
+            msg::NODE_ACTION_NODE_SUCCEEDED => parse(msg, details, E::NodeActionNodeSucceeded),
+            msg::NODE_ACTION_NODE_FAILED => parse(msg, details, E::NodeActionNodeFailed),
+            msg::NODE_ACTION_NODE_CANCELLED => parse(msg, details, E::NodeActionNodeCancelled),
+
+            msg::NODE_TRANSITION => parse(msg, details, E::NodeTransition),
 
             _ => MaaEvent::Unknown {
                 msg: msg.to_string(),
@@ -864,7 +887,8 @@ mod tests {
             "reco_ids": [100, 101],
             "elapsed": 233,
             "focus": null
-        }).to_string();
+        })
+        .to_string();
 
         if let Some(ContextEvent::NodeWaitFreezes(t, d)) =
             ContextEvent::from_notification(msg_wf, &detail_wf)
@@ -878,7 +902,8 @@ mod tests {
         }
         let msg_reco = "Node.Recognition.Succeeded";
         let detail_reco =
-            json!({ "task_id": 1, "reco_id": 100, "name": "R", "focus": null, "anchor": "A1" }).to_string();
+            json!({ "task_id": 1, "reco_id": 100, "name": "R", "focus": null, "anchor": "A1" })
+                .to_string();
 
         if let Some(ContextEvent::NodeRecognition(t, d)) =
             ContextEvent::from_notification(msg_reco, &detail_reco)
@@ -900,5 +925,72 @@ mod tests {
         } else {
             panic!("Node.RecognitionNode parse failed");
         }
+    }
+    #[test]
+    fn test_runtime_event_parsing() {
+        let mut payload = json!({
+            "task_id": 10,
+            "name": "A",
+            "list": [{"name": "B", "jump_back": false, "anchor": false}],
+            "focus": null
+        });
+        match ContextEvent::from_notification("Node.NextList.Succeeded", &payload.to_string()) {
+            Some(ContextEvent::NodeNextList(_, d)) => {
+                assert_eq!(d.list_id, None);
+                assert_eq!(d.runtime, RuntimeFields::default());
+            }
+            other => panic!("Node.NextList parse failed: {other:?}"),
+        }
+
+        let extra = json!({
+            "context_id": 12, "parent_task_id": 9, "parent": {"kind": "node", "id": 25},
+            "list_id": 50, "node_id": 25, "round": 2, "list_type": "on_error", "reason": "cancelled"
+        });
+        payload
+            .as_object_mut()
+            .unwrap()
+            .extend(extra.as_object().unwrap().clone());
+        match MaaEvent::from_json("Node.NextList.Cancelled", &payload.to_string()) {
+            MaaEvent::NodeNextListCancelled(d) => {
+                assert_eq!(
+                    (
+                        d.runtime.context_id,
+                        d.runtime.parent_task_id,
+                        d.list_id,
+                        d.round
+                    ),
+                    (Some(12), Some(9), Some(50), Some(2))
+                );
+                assert_eq!(d.list_type.as_deref(), Some("on_error"));
+                assert_eq!(
+                    d.runtime.parent,
+                    Some(ParentOperation {
+                        kind: "node".to_string(),
+                        id: 25
+                    })
+                );
+                assert_eq!(d.runtime.reason.as_deref(), Some("cancelled"));
+            }
+            other => panic!("Node.NextList.Cancelled parse failed: {other:?}"),
+        }
+        assert_eq!(
+            parse_type("Node.NextList.Cancelled"),
+            NotificationType::Cancelled
+        );
+
+        let child = json!({"task_id": 11, "entry": "Child", "parent_task_id": 10}).to_string();
+        match ContextEvent::from_notification("Context.Task.Starting", &child) {
+            Some(ContextEvent::ContextTask(NotificationType::Starting, d)) => {
+                assert_eq!(d.runtime.parent_task_id, Some(10))
+            }
+            other => panic!("Context.Task parse failed: {other:?}"),
+        }
+
+        match MaaEvent::from_json("Node.Transition", r#"{"reason": "jump_back"}"#) {
+            MaaEvent::NodeTransition(d) => assert_eq!(d.reason, "jump_back"),
+            other => panic!("Node.Transition parse failed: {other:?}"),
+        }
+        assert_eq!(parse_type("Unknown.Cancelled"), NotificationType::Cancelled);
+        assert!(NotificationType::Cancelled.is_complete());
     }
 }

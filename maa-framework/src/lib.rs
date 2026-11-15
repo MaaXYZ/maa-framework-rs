@@ -157,7 +157,8 @@ pub fn configure_logging(log_dir: &str) -> MaaResult<()> {
 /// Enable or disable debug mode.
 ///
 /// In debug mode:
-/// - Recognition details include raw images and draws
+/// - Recognition details include raw images and draws, unless overridden by
+///   [`set_reco_image_raw`] / [`set_reco_image_draws`]
 /// - All tasks are treated as focus tasks and produce callbacks
 ///
 /// # Arguments
@@ -224,11 +225,75 @@ pub fn set_reco_image_cache_limit(limit: u64) -> MaaResult<()> {
     )
 }
 
+fn set_bool_option(key: sys::MaaGlobalOptionEnum, enable: bool) -> MaaResult<()> {
+    let mut val = enable;
+    set_global_option(
+        key as i32,
+        &mut val as *mut _ as *mut _,
+        std::mem::size_of::<bool>() as u64,
+    )
+}
+
+/// Preserve recognition input images. Unset follows debug mode.
+pub fn set_reco_image_raw(enable: bool) -> MaaResult<()> {
+    set_bool_option(
+        sys::MaaGlobalOptionEnum_MaaGlobalOption_RecoImageRaw,
+        enable,
+    )
+}
+
+/// Generate recognition annotation images. Unset follows save draw and debug mode.
+pub fn set_reco_image_draws(enable: bool) -> MaaResult<()> {
+    set_bool_option(
+        sys::MaaGlobalOptionEnum_MaaGlobalOption_RecoImageDraws,
+        enable,
+    )
+}
+
+/// Set the encoded recognition image byte limit per Tasker (default unlimited, 0 disables caching).
+pub fn set_reco_image_cache_bytes(limit: usize) -> MaaResult<()> {
+    let mut val = limit;
+    set_global_option(
+        sys::MaaGlobalOptionEnum_MaaGlobalOption_RecoImageCacheBytes as i32,
+        &mut val as *mut _ as *mut _,
+        std::mem::size_of::<usize>() as u64,
+    )
+}
+
+/// Include the effective pipeline in recognition and action notifications (default false).
+pub fn set_capture_config(enable: bool) -> MaaResult<()> {
+    set_bool_option(
+        sys::MaaGlobalOptionEnum_MaaGlobalOption_CaptureConfig,
+        enable,
+    )
+}
+
 /// Load a plugin from the specified path.
+///
+/// Load plugins before creating any Resource, Controller or Tasker.
 pub fn load_plugin(path: &str) -> MaaResult<()> {
     let c_path = CString::new(path)?;
     let ret = unsafe { sys::MaaGlobalLoadPlugin(c_path.as_ptr()) };
     common::check_bool(ret)
+}
+
+/// Get the loaded plugin library paths, including plugins that have been shut down.
+pub fn get_plugin_list() -> MaaResult<Vec<String>> {
+    let buffer = buffer::MaaStringListBuffer::new()?;
+    common::check_bool(unsafe { sys::MaaGlobalGetPluginList(buffer.as_ptr()) })?;
+    Ok(buffer.iter().map(str::to_string).collect())
+}
+
+/// Invoke plugin flush hooks. Call from a normal host thread, never from a callback.
+pub fn flush_plugins() -> MaaResult<()> {
+    common::check_bool(unsafe { sys::MaaGlobalFlushPlugins() })
+}
+
+/// Shut down all plugins; fails while any framework object is still alive.
+///
+/// Idempotent. Plugin libraries stay loaded but are disabled for the rest of the process.
+pub fn shutdown_plugins() -> MaaResult<()> {
+    common::check_bool(unsafe { sys::MaaGlobalShutdownPlugins() })
 }
 
 /// Loads the MaaFramework dynamic library.

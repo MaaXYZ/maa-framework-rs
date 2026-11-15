@@ -989,6 +989,79 @@ fn test_controller_screenshot_target_expand() {
     assert_eq!(capture_size(), (160, 90));
 }
 
+#[test]
+fn test_resource_wechat_ocr_config() {
+    init_test_env().unwrap();
+    let resource = Resource::new().unwrap();
+    let cwd = std::env::current_dir().unwrap().canonicalize().unwrap();
+    for config in [
+        serde_json::json!({"runtime_dir": cwd}),
+        serde_json::json!({"sdk_path": "relative.dll", "runtime_dir": "relative", "ocr_path": "relative.exe"}),
+        serde_json::json!({
+            "sdk_path": "/test/WeChatOCR.dll",
+            "runtime_dir": "/test/runtime",
+            "ocr_path": "/test/runtime/WeChatOCR.exe",
+        }),
+    ] {
+        assert!(
+            resource.configure_wechat_ocr(&config).is_err(),
+            "{config} MUST be rejected"
+        );
+    }
+}
+
+#[test]
+fn test_resource_load_detail() {
+    use maa_framework::notification::ResourceLoadingDetail;
+
+    init_test_env().unwrap();
+    let bundle = std::env::temp_dir().join(format!("maa_load_detail_{}", std::process::id()));
+    std::fs::create_dir_all(bundle.join("pipeline")).unwrap();
+    std::fs::write(
+        bundle.join("pipeline").join("nodes.json"),
+        r#"{"Entry": {}}"#,
+    )
+    .unwrap();
+
+    let resource = Resource::new().unwrap();
+    let snapshots = Arc::new(std::sync::Mutex::new(Vec::new()));
+    let (sink_resource, sink_snapshots) = (resource.clone(), snapshots.clone());
+    resource
+        .add_sink(move |msg, details| {
+            if msg.ends_with(".Succeeded") || msg.ends_with(".Failed") {
+                let event: ResourceLoadingDetail = serde_json::from_str(details).unwrap();
+                let snapshot = sink_resource.get_load_detail(event.res_id).unwrap();
+                sink_snapshots.lock().unwrap().push((event, snapshot));
+            }
+        })
+        .unwrap();
+
+    let missing = resource
+        .post_pipeline(bundle.join("missing.json").to_str().unwrap())
+        .unwrap();
+    assert!(missing.wait().failed());
+    let first = resource.get_load_detail(missing.id).unwrap().unwrap();
+    assert_eq!(first.errors.as_ref().unwrap()[0].code, "path_not_found");
+
+    let success = resource.post_bundle(bundle.to_str().unwrap()).unwrap();
+    assert!(success.wait().succeeded());
+    let detail = resource.get_load_detail(success.id).unwrap().unwrap();
+    assert_eq!(detail.errors, Some(Vec::new()));
+    assert_eq!(detail.status, Some(maa_framework::MaaStatus::SUCCEEDED));
+    assert_eq!(resource.get_load_detail(missing.id).unwrap(), Some(first));
+
+    resource.clear_sinks();
+    let snapshots = snapshots.lock().unwrap();
+    assert_eq!(snapshots.len(), 2);
+    for (event, snapshot) in snapshots.iter() {
+        assert_eq!(Some(event), snapshot.as_ref());
+    }
+    assert!(resource.get_load_detail(0).unwrap().is_none());
+    resource.clear().unwrap();
+    assert!(resource.get_load_detail(missing.id).unwrap().is_none());
+    let _ = std::fs::remove_dir_all(bundle);
+}
+
 struct PanicController;
 
 impl CustomControllerCallback for PanicController {

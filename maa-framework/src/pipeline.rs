@@ -338,12 +338,21 @@ pub struct OCR {
     /// Recognition only (skip detection, requires precise ROI). Default: false.
     #[serde(default)]
     pub only_rec: bool,
-    /// Model folder path relative to `model/ocr`. Default: root.
+    /// PPOCR model folder path relative to `model/ocr`. Default: root.
     #[serde(default)]
     pub model: String,
     /// Color filter expression. Default: empty.
     #[serde(default)]
     pub color_filter: String,
+    /// OCR engine: `Default` (PPOCR) or `WeChatOCR`. Default: "Default".
+    ///
+    /// `WeChatOCR` requires [`Resource::configure_wechat_ocr`](crate::resource::Resource::configure_wechat_ocr),
+    /// `only_rec: false` and an empty `model`.
+    #[serde(
+        default = "default_ocr_engine",
+        skip_serializing_if = "String::is_empty"
+    )]
+    pub engine: String,
 }
 
 /// A neural network class selected by its index or label name.
@@ -881,6 +890,9 @@ fn default_count_one() -> i32 {
 }
 fn default_ocr_threshold() -> f64 {
     0.3
+}
+fn default_ocr_engine() -> String {
+    "Default".to_string()
 }
 fn default_detect_threshold() -> Vec<f64> {
     vec![0.3]

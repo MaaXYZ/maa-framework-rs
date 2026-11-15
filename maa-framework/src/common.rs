@@ -588,10 +588,10 @@ pub struct RecognitionDetail {
     pub box_rect: Rect,
     /// Algorithm-specific detail JSON
     pub detail: serde_json::Value,
-    /// Raw screenshot (PNG encoded, only valid in debug mode)
+    /// Raw screenshot (PNG encoded), available when enabled and retained by the image cache
     #[serde(skip)]
     pub raw_image: Option<Vec<u8>>,
-    /// Debug draw images (PNG encoded, only valid in debug mode)
+    /// Debug draw images (PNG encoded), available when enabled and retained by the image cache
     #[serde(skip)]
     pub draw_images: Vec<Vec<u8>>,
     /// Sub-process recognition details (for And/Or combinators)

@@ -96,6 +96,36 @@ impl Resource {
         common::check_bool(ret)
     }
 
+    /// Get the diagnostics snapshot of a completed loading operation.
+    ///
+    /// The snapshot matches the terminal `Resource.Loading.*` notification and is available
+    /// before that callback. Returns `None` for unknown, pending and cleared IDs.
+    pub fn get_load_detail(
+        &self,
+        res_id: common::MaaId,
+    ) -> MaaResult<Option<crate::notification::ResourceLoadingDetail>> {
+        fetch_load_detail(self.inner.handle.as_ptr(), res_id)
+    }
+
+    /// Configure the optional WeChatOCR engine (Windows x64 and Linux x64).
+    ///
+    /// Call on a local Resource before any `post_*`; [`clear`](Self::clear) resets it.
+    /// An empty object `{}` enables SDK and runtime discovery. Select it with
+    /// `engine: "WeChatOCR"` in OCR nodes. Options:
+    /// <https://github.com/MaaXYZ/WeChatOCR-SDK#readme>
+    pub fn configure_wechat_ocr<T: serde::Serialize>(&self, config: &T) -> MaaResult<()> {
+        let json = serde_json::to_string(config)?;
+        let ret = unsafe {
+            sys::MaaResourceSetOption(
+                self.inner.handle.as_ptr(),
+                sys::MaaResOptionEnum_MaaResOption_WeChatOCR as i32,
+                json.as_ptr() as *mut std::ffi::c_void,
+                json.len() as u64,
+            )
+        };
+        common::check_bool(ret)
+    }
+
     /// Get the status of a loading operation.
     pub fn status(&self, id: common::MaaId) -> common::MaaStatus {
         let status = unsafe { sys::MaaResourceStatus(self.inner.handle.as_ptr(), id) };
@@ -690,6 +720,17 @@ impl Resource {
     }
 }
 
+fn fetch_load_detail(
+    handle: *mut sys::MaaResource,
+    res_id: common::MaaId,
+) -> MaaResult<Option<crate::notification::ResourceLoadingDetail>> {
+    let buffer = crate::buffer::MaaStringBuffer::new()?;
+    if unsafe { sys::MaaResourceGetLoadDetail(handle, res_id, buffer.raw()) } == 0 {
+        return Ok(None);
+    }
+    Ok(Some(serde_json::from_str(buffer.as_str())?))
+}
+
 impl Drop for ResourceInner {
     fn drop(&mut self) {
         unsafe {
@@ -773,6 +814,14 @@ impl<'a> ResourceRef<'a> {
     pub fn wait(&self, id: common::MaaId) -> common::MaaStatus {
         let status = unsafe { sys::MaaResourceWait(self.handle, id) };
         common::MaaStatus(status)
+    }
+
+    /// See [`Resource::get_load_detail`].
+    pub fn get_load_detail(
+        &self,
+        res_id: common::MaaId,
+    ) -> MaaResult<Option<crate::notification::ResourceLoadingDetail>> {
+        fetch_load_detail(self.handle, res_id)
     }
 
     /// Get resource hash.
