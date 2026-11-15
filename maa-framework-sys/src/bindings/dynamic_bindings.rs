@@ -189,6 +189,14 @@ pub const MaaGlobalOptionEnum_MaaGlobalOption_SaveOnError: MaaGlobalOptionEnum =
 pub const MaaGlobalOptionEnum_MaaGlobalOption_DrawQuality: MaaGlobalOptionEnum = 8;
 #[doc = " Recognition image cache limit\n\n value: size_t, eg: 4096; val_size: sizeof(size_t)\n default value is 4096"]
 pub const MaaGlobalOptionEnum_MaaGlobalOption_RecoImageCacheLimit: MaaGlobalOptionEnum = 9;
+#[doc = " Preserve recognition input PNGs. value: bool. Unset follows DebugMode."]
+pub const MaaGlobalOptionEnum_MaaGlobalOption_RecoImageRaw: MaaGlobalOptionEnum = 10;
+#[doc = " Generate recognition annotation images. value: bool. Unset follows SaveDraw/DebugMode and Debug-build defaults."]
+pub const MaaGlobalOptionEnum_MaaGlobalOption_RecoImageDraws: MaaGlobalOptionEnum = 11;
+#[doc = " Encoded recognition image byte limit per Tasker. value: size_t. Zero disables new image caching; default unlimited."]
+pub const MaaGlobalOptionEnum_MaaGlobalOption_RecoImageCacheBytes: MaaGlobalOptionEnum = 12;
+#[doc = " Include the effective pipeline in recognition/action notifications. value: bool; default false."]
+pub const MaaGlobalOptionEnum_MaaGlobalOption_CaptureConfig: MaaGlobalOptionEnum = 13;
 pub type MaaGlobalOptionEnum = ::std::os::raw::c_uint;
 pub type MaaResOption = MaaOption;
 pub type MaaInferenceDevice = i32;
@@ -218,6 +226,8 @@ pub const MaaResOptionEnum_MaaResOption_Invalid: MaaResOptionEnum = 0;
 pub const MaaResOptionEnum_MaaResOption_InferenceDevice: MaaResOptionEnum = 1;
 #[doc = " Use the specified inference execution provider\n Please set this option before loading the model.\n Once resource loading starts (any MaaResourcePost*), switching to or from NCNN fails until MaaResourceClear().\n\n value: MaaInferenceExecutionProvider, eg: 0; val_size: sizeof(MaaInferenceExecutionProvider)\n default value is MaaInferenceExecutionProvider_Auto"]
 pub const MaaResOptionEnum_MaaResOption_InferenceExecutionProvider: MaaResOptionEnum = 2;
+#[doc = " Configure the optional WeChatOCR engine (Windows x64 and Linux x64).\n value: UTF-8 JSON bytes; val_size excludes the optional terminating NUL.\n Empty JSON {} enables SDK/runtime discovery. sdk_path is optional; runtime_dir and\n ocr_path must be supplied together or both omitted. Explicit paths must be absolute.\n Configure a local Resource before any MaaResourcePost* call; remote resources do not support it.\n MaaResourceClear resets the configuration. Select engine=\"WeChatOCR\" in OCR nodes.\n Configuration options: https://github.com/MaaXYZ/WeChatOCR-SDK#readme"]
+pub const MaaResOptionEnum_MaaResOption_WeChatOCR: MaaResOptionEnum = 3;
 pub type MaaResOptionEnum = ::std::os::raw::c_uint;
 pub type MaaCtrlOption = MaaOption;
 pub const MaaCtrlOptionEnum_MaaCtrlOption_Invalid: MaaCtrlOptionEnum = 0;
@@ -662,6 +672,14 @@ pub struct MaaFramework {
         ) -> MaaBool,
         ::libloading::Error,
     >,
+    pub MaaTaskerGetRecognitionImageStatus: Result<
+        unsafe extern "C" fn(
+            tasker: *const MaaTasker,
+            reco_id: MaaRecoId,
+            buffer: *mut MaaStringBuffer,
+        ) -> MaaBool,
+        ::libloading::Error,
+    >,
     pub MaaTaskerGetRecognitionDetail: Result<
         unsafe extern "C" fn(
             tasker: *const MaaTasker,
@@ -856,6 +874,14 @@ pub struct MaaFramework {
             key: MaaResOption,
             value: MaaOptionValue,
             val_size: MaaOptionValueSize,
+        ) -> MaaBool,
+        ::libloading::Error,
+    >,
+    pub MaaResourceGetLoadDetail: Result<
+        unsafe extern "C" fn(
+            res: *const MaaResource,
+            res_id: MaaResId,
+            buffer: *mut MaaStringBuffer,
         ) -> MaaBool,
         ::libloading::Error,
     >,
@@ -1308,6 +1334,12 @@ pub struct MaaFramework {
         unsafe extern "C" fn(library_path: *const ::std::os::raw::c_char) -> MaaBool,
         ::libloading::Error,
     >,
+    pub MaaGlobalGetPluginList: Result<
+        unsafe extern "C" fn(buffer: *mut MaaStringListBuffer) -> MaaBool,
+        ::libloading::Error,
+    >,
+    pub MaaGlobalFlushPlugins: Result<unsafe extern "C" fn() -> MaaBool, ::libloading::Error>,
+    pub MaaGlobalShutdownPlugins: Result<unsafe extern "C" fn() -> MaaBool, ::libloading::Error>,
     pub MaaSetGlobalOption: Result<
         unsafe extern "C" fn(
             key: MaaGlobalOption,
@@ -1870,6 +1902,8 @@ impl MaaFramework {
             unsafe { __library.get(b"MaaTaskerClearCache\0") }.map(|sym| *sym);
         let MaaTaskerOverridePipeline =
             unsafe { __library.get(b"MaaTaskerOverridePipeline\0") }.map(|sym| *sym);
+        let MaaTaskerGetRecognitionImageStatus =
+            unsafe { __library.get(b"MaaTaskerGetRecognitionImageStatus\0") }.map(|sym| *sym);
         let MaaTaskerGetRecognitionDetail =
             unsafe { __library.get(b"MaaTaskerGetRecognitionDetail\0") }.map(|sym| *sym);
         let MaaTaskerGetActionDetail =
@@ -1923,6 +1957,8 @@ impl MaaFramework {
         let MaaResourceLoaded = unsafe { __library.get(b"MaaResourceLoaded\0") }.map(|sym| *sym);
         let MaaResourceSetOption =
             unsafe { __library.get(b"MaaResourceSetOption\0") }.map(|sym| *sym);
+        let MaaResourceGetLoadDetail =
+            unsafe { __library.get(b"MaaResourceGetLoadDetail\0") }.map(|sym| *sym);
         let MaaResourceGetHash = unsafe { __library.get(b"MaaResourceGetHash\0") }.map(|sym| *sym);
         let MaaResourceGetNodeList =
             unsafe { __library.get(b"MaaResourceGetNodeList\0") }.map(|sym| *sym);
@@ -2062,6 +2098,12 @@ impl MaaFramework {
         let MaaGlobalSetOption = unsafe { __library.get(b"MaaGlobalSetOption\0") }.map(|sym| *sym);
         let MaaGlobalLoadPlugin =
             unsafe { __library.get(b"MaaGlobalLoadPlugin\0") }.map(|sym| *sym);
+        let MaaGlobalGetPluginList =
+            unsafe { __library.get(b"MaaGlobalGetPluginList\0") }.map(|sym| *sym);
+        let MaaGlobalFlushPlugins =
+            unsafe { __library.get(b"MaaGlobalFlushPlugins\0") }.map(|sym| *sym);
+        let MaaGlobalShutdownPlugins =
+            unsafe { __library.get(b"MaaGlobalShutdownPlugins\0") }.map(|sym| *sym);
         let MaaSetGlobalOption = unsafe { __library.get(b"MaaSetGlobalOption\0") }.map(|sym| *sym);
         let MaaStringBufferCreate =
             unsafe { __library.get(b"MaaStringBufferCreate\0") }.map(|sym| *sym);
@@ -2331,6 +2373,7 @@ impl MaaFramework {
             MaaTaskerGetController,
             MaaTaskerClearCache,
             MaaTaskerOverridePipeline,
+            MaaTaskerGetRecognitionImageStatus,
             MaaTaskerGetRecognitionDetail,
             MaaTaskerGetActionDetail,
             MaaTaskerGetWaitFreezesDetail,
@@ -2361,6 +2404,7 @@ impl MaaFramework {
             MaaResourceWait,
             MaaResourceLoaded,
             MaaResourceSetOption,
+            MaaResourceGetLoadDetail,
             MaaResourceGetHash,
             MaaResourceGetNodeList,
             MaaResourceGetCustomRecognitionList,
@@ -2433,6 +2477,9 @@ impl MaaFramework {
             MaaContextClearHitCount,
             MaaGlobalSetOption,
             MaaGlobalLoadPlugin,
+            MaaGlobalGetPluginList,
+            MaaGlobalFlushPlugins,
+            MaaGlobalShutdownPlugins,
             MaaSetGlobalOption,
             MaaStringBufferCreate,
             MaaStringBufferDestroy,
@@ -2815,6 +2862,20 @@ impl MaaFramework {
                 .expect("Expected function, got error."))(
                 tasker, task_id, pipeline_override
             )
+        }
+    }
+    #[doc = " Query current image retention: available, not_captured, disabled,\n budget_exceeded, or evicted. Unknown recognition IDs return false."]
+    pub unsafe fn MaaTaskerGetRecognitionImageStatus(
+        &self,
+        tasker: *const MaaTasker,
+        reco_id: MaaRecoId,
+        buffer: *mut MaaStringBuffer,
+    ) -> MaaBool {
+        unsafe {
+            (self
+                .MaaTaskerGetRecognitionImageStatus
+                .as_ref()
+                .expect("Expected function, got error."))(tasker, reco_id, buffer)
         }
     }
     #[doc = " @param[out] hit"]
@@ -3218,6 +3279,20 @@ impl MaaFramework {
                 .MaaResourceSetOption
                 .as_ref()
                 .expect("Expected function, got error."))(res, key, value, val_size)
+        }
+    }
+    #[doc = " Completed load snapshot as JSON; unavailable IDs return false. Cleared by MaaResourceClear."]
+    pub unsafe fn MaaResourceGetLoadDetail(
+        &self,
+        res: *const MaaResource,
+        res_id: MaaResId,
+        buffer: *mut MaaStringBuffer,
+    ) -> MaaBool {
+        unsafe {
+            (self
+                .MaaResourceGetLoadDetail
+                .as_ref()
+                .expect("Expected function, got error."))(res, res_id, buffer)
         }
     }
     pub unsafe fn MaaResourceGetHash(
@@ -4163,7 +4238,7 @@ impl MaaFramework {
                 .expect("Expected function, got error."))(key, value, val_size)
         }
     }
-    #[doc = " load a plugin with full path or name only, name only will search in system directory and current directory\n or\n load plugins with recursive search in the directory"]
+    #[doc = " Load before creating Resource/Controller/Tasker instances.\n load a plugin with full path or name only, name only will search in system directory and current directory\n or\n load plugins with recursive search in the directory"]
     pub unsafe fn MaaGlobalLoadPlugin(
         &self,
         library_path: *const ::std::os::raw::c_char,
@@ -4173,6 +4248,33 @@ impl MaaFramework {
                 .MaaGlobalLoadPlugin
                 .as_ref()
                 .expect("Expected function, got error."))(library_path)
+        }
+    }
+    #[doc = " Loaded library paths, including libraries retained after plugin shutdown."]
+    pub unsafe fn MaaGlobalGetPluginList(&self, buffer: *mut MaaStringListBuffer) -> MaaBool {
+        unsafe {
+            (self
+                .MaaGlobalGetPluginList
+                .as_ref()
+                .expect("Expected function, got error."))(buffer)
+        }
+    }
+    #[doc = " Invoke optional flush hooks on a normal host thread, never from a callback/DllMain."]
+    pub unsafe fn MaaGlobalFlushPlugins(&self) -> MaaBool {
+        unsafe {
+            (self
+                .MaaGlobalFlushPlugins
+                .as_ref()
+                .expect("Expected function, got error."))()
+        }
+    }
+    #[doc = " Destroy all framework objects first. Idempotent; retains DLLs and disables plugins."]
+    pub unsafe fn MaaGlobalShutdownPlugins(&self) -> MaaBool {
+        unsafe {
+            (self
+                .MaaGlobalShutdownPlugins
+                .as_ref()
+                .expect("Expected function, got error."))()
         }
     }
     pub unsafe fn MaaSetGlobalOption(

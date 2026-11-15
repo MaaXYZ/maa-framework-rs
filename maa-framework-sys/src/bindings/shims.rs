@@ -22,6 +22,7 @@ shim ! (MaaTaskerGetResource (tasker : * const MaaTasker) -> * mut MaaResource) 
 shim ! (MaaTaskerGetController (tasker : * const MaaTasker) -> * mut MaaController) ;
 shim ! (MaaTaskerClearCache (tasker : * mut MaaTasker) -> MaaBool) ;
 shim ! (MaaTaskerOverridePipeline (tasker : * mut MaaTasker , task_id : MaaTaskId , pipeline_override : * const :: std :: os :: raw :: c_char) -> MaaBool) ;
+shim ! (MaaTaskerGetRecognitionImageStatus (tasker : * const MaaTasker , reco_id : MaaRecoId , buffer : * mut MaaStringBuffer) -> MaaBool) ;
 shim ! (MaaTaskerGetRecognitionDetail (tasker : * const MaaTasker , reco_id : MaaRecoId , node_name : * mut MaaStringBuffer , algorithm : * mut MaaStringBuffer , hit : * mut MaaBool , box_ : * mut MaaRect , detail_json : * mut MaaStringBuffer , raw : * mut MaaImageBuffer , draws : * mut MaaImageListBuffer) -> MaaBool) ;
 shim ! (MaaTaskerGetActionDetail (tasker : * const MaaTasker , action_id : MaaActId , node_name : * mut MaaStringBuffer , action : * mut MaaStringBuffer , box_ : * mut MaaRect , success : * mut MaaBool , detail_json : * mut MaaStringBuffer) -> MaaBool) ;
 shim ! (MaaTaskerGetWaitFreezesDetail (tasker : * const MaaTasker , wf_id : MaaWfId , node_name : * mut MaaStringBuffer , phase : * mut MaaStringBuffer , success : * mut MaaBool , elapsed_ms : * mut MaaSize , reco_id_list : * mut MaaRecoId , reco_id_list_size : * mut MaaSize , roi : * mut MaaRect) -> MaaBool) ;
@@ -52,6 +53,7 @@ shim ! (MaaResourceStatus (res : * const MaaResource , id : MaaResId) -> MaaStat
 shim ! (MaaResourceWait (res : * const MaaResource , id : MaaResId) -> MaaStatus) ;
 shim ! (MaaResourceLoaded (res : * const MaaResource) -> MaaBool) ;
 shim ! (MaaResourceSetOption (res : * mut MaaResource , key : MaaResOption , value : MaaOptionValue , val_size : MaaOptionValueSize) -> MaaBool) ;
+shim ! (MaaResourceGetLoadDetail (res : * const MaaResource , res_id : MaaResId , buffer : * mut MaaStringBuffer) -> MaaBool) ;
 shim ! (MaaResourceGetHash (res : * const MaaResource , buffer : * mut MaaStringBuffer) -> MaaBool) ;
 shim ! (MaaResourceGetNodeList (res : * const MaaResource , buffer : * mut MaaStringListBuffer) -> MaaBool) ;
 shim ! (MaaResourceGetCustomRecognitionList (res : * const MaaResource , buffer : * mut MaaStringListBuffer) -> MaaBool) ;
@@ -124,6 +126,9 @@ shim ! (MaaContextGetHitCount (context : * mut MaaContext , node_name : * const 
 shim ! (MaaContextClearHitCount (context : * mut MaaContext , node_name : * const :: std :: os :: raw :: c_char) -> MaaBool) ;
 shim ! (MaaGlobalSetOption (key : MaaGlobalOption , value : MaaOptionValue , val_size : MaaOptionValueSize) -> MaaBool) ;
 shim ! (MaaGlobalLoadPlugin (library_path : * const :: std :: os :: raw :: c_char) -> MaaBool) ;
+shim ! (MaaGlobalGetPluginList (buffer : * mut MaaStringListBuffer) -> MaaBool) ;
+shim ! (MaaGlobalFlushPlugins () -> MaaBool) ;
+shim ! (MaaGlobalShutdownPlugins () -> MaaBool) ;
 shim ! (MaaSetGlobalOption (key : MaaGlobalOption , value : MaaOptionValue , val_size : MaaOptionValueSize) -> MaaBool) ;
 shim ! (MaaStringBufferCreate () -> * mut MaaStringBuffer) ;
 shim ! (MaaStringBufferDestroy (handle : * mut MaaStringBuffer) -> ()) ;
