@@ -186,6 +186,14 @@ pub const MaaGlobalOptionEnum_MaaGlobalOption_SaveOnError: MaaGlobalOptionEnum =
 pub const MaaGlobalOptionEnum_MaaGlobalOption_DrawQuality: MaaGlobalOptionEnum = 8;
 #[doc = " Recognition image cache limit\n\n value: size_t, eg: 4096; val_size: sizeof(size_t)\n default value is 4096"]
 pub const MaaGlobalOptionEnum_MaaGlobalOption_RecoImageCacheLimit: MaaGlobalOptionEnum = 9;
+#[doc = " Preserve recognition input PNGs. value: bool. Unset follows DebugMode."]
+pub const MaaGlobalOptionEnum_MaaGlobalOption_RecoImageRaw: MaaGlobalOptionEnum = 10;
+#[doc = " Generate recognition annotation images. value: bool. Unset follows SaveDraw/DebugMode and Debug-build defaults."]
+pub const MaaGlobalOptionEnum_MaaGlobalOption_RecoImageDraws: MaaGlobalOptionEnum = 11;
+#[doc = " Encoded recognition image byte limit per Tasker. value: size_t. Zero disables new image caching; default unlimited."]
+pub const MaaGlobalOptionEnum_MaaGlobalOption_RecoImageCacheBytes: MaaGlobalOptionEnum = 12;
+#[doc = " Include the effective pipeline in recognition/action notifications. value: bool; default false."]
+pub const MaaGlobalOptionEnum_MaaGlobalOption_CaptureConfig: MaaGlobalOptionEnum = 13;
 pub type MaaGlobalOptionEnum = ::std::os::raw::c_uint;
 pub type MaaResOption = MaaOption;
 pub type MaaInferenceDevice = i32;
@@ -215,6 +223,8 @@ pub const MaaResOptionEnum_MaaResOption_Invalid: MaaResOptionEnum = 0;
 pub const MaaResOptionEnum_MaaResOption_InferenceDevice: MaaResOptionEnum = 1;
 #[doc = " Use the specified inference execution provider\n Please set this option before loading the model.\n Once resource loading starts (any MaaResourcePost*), switching to or from NCNN fails until MaaResourceClear().\n\n value: MaaInferenceExecutionProvider, eg: 0; val_size: sizeof(MaaInferenceExecutionProvider)\n default value is MaaInferenceExecutionProvider_Auto"]
 pub const MaaResOptionEnum_MaaResOption_InferenceExecutionProvider: MaaResOptionEnum = 2;
+#[doc = " Configure the optional WeChatOCR engine (Windows x64 and Linux x64).\n value: UTF-8 JSON bytes; val_size excludes the optional terminating NUL.\n Empty JSON {} enables SDK/runtime discovery. sdk_path is optional; runtime_dir and\n ocr_path must be supplied together or both omitted. Explicit paths must be absolute.\n Configure a local Resource before any MaaResourcePost* call; remote resources do not support it.\n MaaResourceClear resets the configuration. Select engine=\"WeChatOCR\" in OCR nodes.\n Configuration options: https://github.com/MaaXYZ/WeChatOCR-SDK#readme"]
+pub const MaaResOptionEnum_MaaResOption_WeChatOCR: MaaResOptionEnum = 3;
 pub type MaaResOptionEnum = ::std::os::raw::c_uint;
 pub type MaaCtrlOption = MaaOption;
 pub const MaaCtrlOptionEnum_MaaCtrlOption_Invalid: MaaCtrlOptionEnum = 0;
@@ -437,6 +447,14 @@ unsafe extern "C" {
     ) -> MaaBool;
 }
 unsafe extern "C" {
+    #[doc = " Query current image retention: available, not_captured, disabled,\n budget_exceeded, or evicted. Unknown recognition IDs return false."]
+    pub fn MaaTaskerGetRecognitionImageStatus(
+        tasker: *const MaaTasker,
+        reco_id: MaaRecoId,
+        buffer: *mut MaaStringBuffer,
+    ) -> MaaBool;
+}
+unsafe extern "C" {
     #[doc = " @param[out] hit"]
     pub fn MaaTaskerGetRecognitionDetail(
         tasker: *const MaaTasker,
@@ -628,6 +646,14 @@ unsafe extern "C" {
         key: MaaResOption,
         value: MaaOptionValue,
         val_size: MaaOptionValueSize,
+    ) -> MaaBool;
+}
+unsafe extern "C" {
+    #[doc = " Completed load snapshot as JSON; unavailable IDs return false. Cleared by MaaResourceClear."]
+    pub fn MaaResourceGetLoadDetail(
+        res: *const MaaResource,
+        res_id: MaaResId,
+        buffer: *mut MaaStringBuffer,
     ) -> MaaBool;
 }
 unsafe extern "C" {
@@ -1069,8 +1095,20 @@ unsafe extern "C" {
     ) -> MaaBool;
 }
 unsafe extern "C" {
-    #[doc = " load a plugin with full path or name only, name only will search in system directory and current directory\n or\n load plugins with recursive search in the directory"]
+    #[doc = " Load before creating Resource/Controller/Tasker instances.\n load a plugin with full path or name only, name only will search in system directory and current directory\n or\n load plugins with recursive search in the directory"]
     pub fn MaaGlobalLoadPlugin(library_path: *const ::std::os::raw::c_char) -> MaaBool;
+}
+unsafe extern "C" {
+    #[doc = " Loaded library paths, including libraries retained after plugin shutdown."]
+    pub fn MaaGlobalGetPluginList(buffer: *mut MaaStringListBuffer) -> MaaBool;
+}
+unsafe extern "C" {
+    #[doc = " Invoke optional flush hooks on a normal host thread, never from a callback/DllMain."]
+    pub fn MaaGlobalFlushPlugins() -> MaaBool;
+}
+unsafe extern "C" {
+    #[doc = " Destroy all framework objects first. Idempotent; retains DLLs and disables plugins."]
+    pub fn MaaGlobalShutdownPlugins() -> MaaBool;
 }
 unsafe extern "C" {
     pub fn MaaSetGlobalOption(
