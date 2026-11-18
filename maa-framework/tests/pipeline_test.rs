@@ -673,6 +673,7 @@ fn test_recognition_types(context: &Context) -> MaaResult<()> {
         "RecoOCR": {
             "recognition": "OCR",
             "expected": ["Hello", "World"],
+            "condition": "$0 != 0",
             "threshold": 0.5,
             "replace": [["0", "O"], ["1", "I"]],
             "only_rec": true,
@@ -686,6 +687,7 @@ fn test_recognition_types(context: &Context) -> MaaResult<()> {
     match obj.recognition {
         Recognition::OCR(ocr) => {
             assert_eq!(ocr.expected.len(), 2);
+            assert_eq!(ocr.condition, "$0 != 0");
             assert_eq!(ocr.only_rec, true);
             assert_eq!(ocr.model, "custom_model");
             assert_eq!(ocr.color_filter, "RecoColorMatch");
@@ -1545,6 +1547,71 @@ fn test_input_auto_up_roundtrip() {
             let node = resource.get_node_object("AutoUpTest").unwrap().unwrap();
             assert_eq!(serde_json::to_value(node.action).unwrap(), serialized);
         }
+    }
+}
+
+#[test]
+fn test_ocr_condition_roundtrip() {
+    use serde_json::json;
+
+    init_test_env().unwrap();
+    let resource = Resource::new().unwrap();
+    let condition = |resource: &Resource| match resource
+        .get_node_object("Node")
+        .unwrap()
+        .unwrap()
+        .recognition
+    {
+        Recognition::OCR(ocr) => ocr.condition,
+        other => panic!("Expected OCR, got {other:?}"),
+    };
+
+    for v2 in [false, true] {
+        let params = json!({"expected": r"(\d+)/(\d+)", "condition": "$2 > 50"});
+        let node = if v2 {
+            json!({"recognition": {"type": "OCR", "param": params}})
+        } else {
+            let mut node = params.clone();
+            node["recognition"] = json!("OCR");
+            node
+        };
+        resource
+            .override_pipeline(&json!({ "Node": node }).to_string())
+            .unwrap();
+        let dumped = resource.get_node_data("Node").unwrap().unwrap();
+        let restored = Resource::new().unwrap();
+        restored
+            .override_pipeline(&format!(r#"{{"Node": {dumped}}}"#))
+            .unwrap();
+        assert_eq!(restored.get_node_data("Node").unwrap().unwrap(), dumped);
+        assert_eq!(condition(&resource), "$2 > 50");
+
+        for (override_json, expected) in [
+            (r#"{"Node": {"threshold": 0.9}}"#, "$2 > 50"),
+            (r#"{"Node": {"condition": "$1 == $2"}}"#, "$1 == $2"),
+            (r#"{"Node": {"condition": ""}}"#, ""),
+        ] {
+            resource.override_pipeline(override_json).unwrap();
+            assert_eq!(condition(&resource), expected);
+        }
+    }
+
+    let default = resource
+        .get_default_recognition_param("OCR")
+        .unwrap()
+        .unwrap();
+    assert_eq!(default["condition"], "");
+    resource
+        .override_pipeline(r#"{"Node": {"recognition": "OCR", "condition": "$0 > 50"}}"#)
+        .unwrap();
+    let before = resource.get_node_data("Node").unwrap();
+    for invalid in ["> 50", "$1 = 50", "$1 + 2 > 50", "0 < $1 < 100", "$1 > nan"] {
+        let override_json = json!({"Node": {"condition": invalid}}).to_string();
+        assert!(
+            resource.override_pipeline(&override_json).is_err(),
+            "{invalid} MUST be rejected"
+        );
+        assert_eq!(resource.get_node_data("Node").unwrap(), before);
     }
 }
 

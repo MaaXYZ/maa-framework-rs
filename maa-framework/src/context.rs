@@ -386,7 +386,8 @@ impl Context {
     /// # Arguments
     ///
     /// * `time` - Time in milliseconds the screen must remain stable (0 to use param).
-    /// * `hit_box` - Optional region of interest as (x, y, width, height). `None` uses full screen.
+    /// * `hit_box` - Region used by the default `target` (`Self`). With `None`, the default
+    ///   parameters fail; set `wait_freezes_param.target` to `[0, 0, 0, 0]` to wait on the full screen.
     /// * `wait_freezes_param` - Optional detailed wait configuration.
     ///
     /// # Returns

@@ -500,6 +500,9 @@ impl PortalHelper {
 
     /// Open the ScreenCast portal stream (create DBus session, select sources,
     /// and start the stream).
+    ///
+    /// Opening again before [`get_pipewire_fd`](Self::get_pipewire_fd) replaces the
+    /// previous stream; after it, opening again fails, so use a new helper.
     pub fn open_stream(&self) -> MaaResult<()> {
         common::check_bool(unsafe { sys::MaaToolkitPortalHelperOpenStream(self.handle) })
     }
@@ -515,6 +518,10 @@ impl PortalHelper {
     }
 
     /// The PipeWire socket FD, or `-1` if the stream has not been opened yet.
+    ///
+    /// The first successful call transfers ownership to the caller: pass it to a consumer
+    /// that takes ownership (e.g. `pw_socket_fd`) or close it. Repeated calls return the
+    /// same FD; dropping the helper afterwards leaves the FD and its session alive.
     pub fn get_pipewire_fd(&self) -> i32 {
         unsafe { sys::MaaToolkitPortalHelperGetPipeWireFD(self.handle) }
     }

@@ -345,6 +345,7 @@ bitflags::bitflags! {
         const RAW_BY_NETCAT = 1 << 3;
         const MINICAP_DIRECT = 1 << 4;
         const MINICAP_STREAM = 1 << 5;
+        /// Emulators only: MuMu 12, LDPlayer 9, AVD, Androws and ModAVD.
         const EMULATOR_EXTRAS = 1 << 6;
         const ALL = !0;
     }
@@ -376,6 +377,7 @@ bitflags::bitflags! {
         const ADB_SHELL = 1;
         const MINITOUCH_AND_ADB_KEY = 1 << 1;
         const MAATOUCH = 1 << 2;
+        /// Emulators only: MuMu 12, Androws and ModAVD.
         const EMULATOR_EXTRAS = 1 << 3;
         const ALL = !0;
     }

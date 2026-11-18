@@ -344,6 +344,12 @@ pub struct OCR {
     /// Color filter expression. Default: empty.
     #[serde(default)]
     pub color_filter: String,
+    /// Numeric comparison on regex captures, e.g. `$2 > 50` or `$1 == $2`. Default: empty (disabled).
+    ///
+    /// `$0` is the whole match (the whole text when `expected` is empty); filtering precedes
+    /// `order_by` and `index`.
+    #[serde(default)]
+    pub condition: String,
     /// OCR engine: `Default` (PPOCR) or `WeChatOCR`. Default: "Default".
     ///
     /// `WeChatOCR` requires [`Resource::configure_wechat_ocr`](crate::resource::Resource::configure_wechat_ocr),
